@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, LogOut, ChevronDown } from 'lucide-react'
+import { Menu, X, LogOut, ChevronDown, User } from 'lucide-react'
 import Logo from './Logo'
 import { useAuth } from './admin/AuthProvider'
 import { signOut } from 'firebase/auth'
@@ -17,6 +17,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [adminName, setAdminName] = useState('')
   const [adminPhoto, setAdminPhoto] = useState('')
+  const [memberData, setMemberData] = useState<any>(null)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [userRole, setUserRole] = useState<'owner' | 'admin' | 'member'>('member')
   const [scrolled, setScrolled] = useState(false)
@@ -69,48 +70,70 @@ export default function Navbar() {
   }, [user])
 
   useEffect(() => {
-    const fetchAdminProfile = async () => {
+    const fetchUserProfile = async () => {
       if (user) {
         try {
-          const response = await fetch(`/api/admin/profile/${user.uid}`)
-          if (response.ok) {
-            const profile = await response.json()
+          // Try to fetch admin profile first
+          const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
+          if (adminResponse.ok) {
+            const profile = await adminResponse.json()
             setAdminName(profile?.name || '')
             setAdminPhoto(profile?.photo || '')
           } else {
-            setAdminName('')
-            setAdminPhoto('')
+            // If not admin, try to fetch member data
+            const { getMembers } = await import('@/lib/db')
+            const members = await getMembers()
+            const member = members.find((m: any) => m.email === user.email)
+            if (member) {
+              setMemberData(member)
+              setAdminName(member.name)
+              setAdminPhoto(member.photo)
+            } else {
+              setAdminName('')
+              setAdminPhoto('')
+            }
           }
         } catch (error) {
-          console.error('Error fetching admin profile:', error)
+          console.error('Error fetching user profile:', error)
           setAdminName('')
           setAdminPhoto('')
         }
       } else {
         setAdminName('')
         setAdminPhoto('')
+        setMemberData(null)
       }
     }
-    fetchAdminProfile()
+    fetchUserProfile()
   }, [user])
 
-  // Refresh admin name periodically to catch updates
+  // Refresh user profile periodically to catch updates
   useEffect(() => {
     if (user) {
       const interval = setInterval(async () => {
         try {
-          const response = await fetch(`/api/admin/profile/${user.uid}`)
-          if (response.ok) {
-            const profile = await response.json()
+          const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
+          if (adminResponse.ok) {
+            const profile = await adminResponse.json()
             if (profile?.name && profile.name !== adminName) {
               setAdminName(profile.name)
             }
             if (profile?.photo && profile.photo !== adminPhoto) {
               setAdminPhoto(profile.photo)
             }
+          } else {
+            // Check member data
+            const { getMembers } = await import('@/lib/db')
+            const members = await getMembers()
+            const member = members.find((m: any) => m.email === user.email)
+            if (member && member.name !== adminName) {
+              setMemberData(member)
+              setAdminName(member.name)
+              setAdminPhoto(member.photo)
+            }
           }
         } catch (error) {
-          console.error('Error refreshing admin profile:', error)
+          console.error('Error refreshing user profile:', error)
         }
       }, 30000) // Check every 30 seconds
 
@@ -231,11 +254,21 @@ export default function Navbar() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="relative">
-                    <img 
-                      src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user.email?.split('@')[0] || 'Admin')}&background=6366f1&color=ffffff&size=36&rounded=true`}
-                      alt="Profile"
-                      className="w-8 h-8 lg:w-9 lg:h-9 rounded-full ring-2 ring-cyan-400/30 group-hover:ring-cyan-400/60 transition-all duration-300 object-cover"
-                    />
+                    <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-full ring-2 ring-cyan-400/30 group-hover:ring-cyan-400/60 transition-all duration-300 bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center overflow-hidden">
+                      {adminPhoto ? (
+                        <img 
+                          src={adminPhoto} 
+                          alt={adminName || 'Profile'}
+                          className="w-full h-full object-cover rounded-full"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <User className={`h-4 w-4 lg:h-5 lg:w-5 text-white ${adminPhoto ? 'hidden' : ''}`} />
+                    </div>
                     <motion.div
                       className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/20 to-blue-500/20"
                       animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
@@ -394,11 +427,21 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                   >
                     <div className="flex items-center space-x-3">
-                      <img 
-                        src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user.email?.split('@')[0] || 'Admin')}&background=6366f1&color=ffffff&size=24&rounded=true`}
-                        alt="Profile"
-                        className="w-6 h-6 rounded-full object-cover"
-                      />
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center overflow-hidden">
+                        {adminPhoto ? (
+                          <img 
+                            src={adminPhoto} 
+                            alt={adminName || 'Profile'}
+                            className="w-full h-full object-cover rounded-full"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              target.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <User className={`h-3 w-3 text-white ${adminPhoto ? 'hidden' : ''}`} />
+                      </div>
                       <div className="flex flex-col">
                         <span className="text-sm font-medium">{adminName || user.email?.split('@')[0] || 'User'}</span>
                         <span className="text-xs text-gray-400">{userRole === 'owner' ? 'Owner' : userRole === 'admin' ? 'Administrator' : 'Member'}</span>
