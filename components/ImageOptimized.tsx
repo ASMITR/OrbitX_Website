@@ -11,7 +11,7 @@ interface Props {
   height?: number
   fill?: boolean
   priority?: boolean
-  placeholder?: string
+  placeholder?: 'blur' | 'empty'
 }
 
 export default function ImageOptimized({ 

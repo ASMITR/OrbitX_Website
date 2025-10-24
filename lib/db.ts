@@ -1,4 +1,4 @@
-import { Event, Project, Member, ContactMessage, Blog } from './types'
+import { Event, Project, Member, ContactMessage, Blog, Badge } from './types'
 import { db } from './firebase'
 import { getCache, setCache } from './cache'
 import {

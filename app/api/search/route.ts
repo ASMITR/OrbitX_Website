@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-})
+}) : null
 
 export async function POST(request: NextRequest) {
   let query = ''
@@ -14,6 +14,10 @@ export async function POST(request: NextRequest) {
     
     if (!query) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 })
+    }
+
+    if (!openai) {
+      throw new Error('OpenAI not configured')
     }
 
     const completion = await openai.chat.completions.create({
