@@ -184,19 +184,17 @@ This workshop is perfect for engineering students, professionals looking to tran
             >
               <div className="glass-card p-4 mb-4">
                 <div className="relative h-96 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg overflow-hidden group">
-                  <img 
-                    src={displayEvent.images[selectedImage]} 
-                    alt={displayEvent.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                      if (nextElement) nextElement.style.display = 'flex';
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-8xl opacity-20">🎯</div>
-                  </div>
+                  {displayEvent.images && displayEvent.images[selectedImage] ? (
+                    <img 
+                      src={displayEvent.images[selectedImage]} 
+                      alt={displayEvent.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-8xl opacity-20">🎯</div>
+                    </div>
+                  )}
                   
                   {/* Image Navigation */}
                   {displayEvent.images.length > 1 && (
@@ -234,19 +232,17 @@ This workshop is perfect for engineering students, professionals looking to tran
                         selectedImage === index ? 'border-blue-400 ring-2 ring-blue-400/50' : 'border-white/20 hover:border-white/40'
                       }`}
                     >
-                      <img 
-                        src={displayEvent.images[index]} 
-                        alt={`${displayEvent.title} ${index + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                          if (nextElement) nextElement.style.display = 'flex';
-                        }}
-                      />
-                      <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                        <span className="text-lg opacity-50">🎯</span>
-                      </div>
+                      {displayEvent.images[index] ? (
+                        <img 
+                          src={displayEvent.images[index]} 
+                          alt={`${displayEvent.title} ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                          <span className="text-lg opacity-50">🎯</span>
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>

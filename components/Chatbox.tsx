@@ -14,14 +14,7 @@ interface Message {
 export default function Chatbox() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Hello! I can help you search for information. Just type your question!',
-      isUser: false,
-      timestamp: new Date()
-    }
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,6 +24,14 @@ export default function Chatbox() {
 
   useEffect(() => {
     setIsMounted(true)
+    setMessages([
+      {
+        id: '1',
+        text: 'Hello! I can help you search for information. Just type your question!',
+        isUser: false,
+        timestamp: new Date()
+      }
+    ])
   }, [])
 
   useEffect(() => {
@@ -44,14 +45,16 @@ export default function Chatbox() {
   }
 
   const clearChat = () => {
-    setMessages([
-      {
-        id: '1',
-        text: 'Hello! I can help you search for information. Just type your question!',
-        isUser: false,
-        timestamp: new Date()
-      }
-    ])
+    if (isMounted) {
+      setMessages([
+        {
+          id: '1',
+          text: 'Hello! I can help you search for information. Just type your question!',
+          isUser: false,
+          timestamp: new Date()
+        }
+      ])
+    }
   }
 
   const scrollToBottom = () => {
@@ -61,16 +64,23 @@ export default function Chatbox() {
   const getAnswer = async (query: string): Promise<string> => {
     try {
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
       
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: query.trim() }),
+        body: JSON.stringify({ 
+          message: query.trim(),
+          conversationHistory: messages.slice(-6)
+        }),
         signal: controller.signal
       })
+      
+      if (response.status === 404) {
+        throw new Error('Chat service is currently unavailable. Please try again later.')
+      }
       
       clearTimeout(timeoutId)
       
@@ -86,7 +96,7 @@ export default function Chatbox() {
       console.error('Chat API error:', error)
       
       if (error.name === 'AbortError') {
-        return 'Request timed out. Please try with a shorter question.'
+        return '⏰ Request timed out. Please try with a shorter question or check your connection.'
       }
       
       if (error.message?.includes('Failed to fetch') || error.message?.includes('network')) {

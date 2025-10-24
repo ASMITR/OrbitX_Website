@@ -1,69 +1,101 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { searchGoogle, formatSearchResults } from '@/lib/googleSearch'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { message } = body
+    const { message, conversationHistory } = body
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
-    // Try Python chatbot model first
-    try {
-      const pythonResponse = await fetch('http://localhost:5000/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: message.trim() }),
-        signal: AbortSignal.timeout(5000) // 5 second timeout
-      })
+    // Try Gemini AI first
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        console.log('Attempting Gemini AI request...')
+        const model = genAI.getGenerativeModel({ 
+          model: 'gemini-pro',
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          }
+        })
+        
+        // Build context from conversation history
+        let contextPrompt = `You are OrbitX AI Assistant for OrbitX space science club at ZCOER, Pune.
 
-      if (pythonResponse.ok) {
-        const data = await pythonResponse.json()
-        if (data.response) {
-          return NextResponse.json({ response: data.response })
+OrbitX Info:
+- Mission: "Exploring Beyond Horizons"
+- Location: ZCOER, Pune, Maharashtra
+- Email: orbitx@zcoer.edu.in
+- 6 Teams: Design & Innovation, Technical, Management & Operations, Public Outreach, Documentation, Social Media & Editing
+- Focus: Space technology, astronomy, research, student collaboration
+
+`
+
+        // Add recent conversation context
+        if (conversationHistory && conversationHistory.length > 0) {
+          contextPrompt += "Recent conversation:\n"
+          conversationHistory.slice(-4).forEach((msg: any) => {
+            contextPrompt += `${msg.isUser ? 'User' : 'Assistant'}: ${msg.text}\n`
+          })
+          contextPrompt += "\n"
+        }
+
+        contextPrompt += `Current question: ${message.trim()}\n\nProvide a helpful, unique response about OrbitX or space science. Vary your responses and be engaging. Use emojis appropriately.`
+
+        const result = await model.generateContent(contextPrompt)
+        const response = await result.response
+        const text = response.text()
+        
+        if (text && text.trim()) {
+          console.log('Gemini AI response successful')
+          return NextResponse.json({ response: text.trim() })
+        }
+      } catch (geminiError: any) {
+        console.error('Gemini AI error:', geminiError.message || geminiError)
+        
+        // Check for rate limit error
+        if (geminiError.message?.includes('quota') || geminiError.message?.includes('rate')) {
+          return NextResponse.json({ 
+            response: '⏰ I\'m getting too many requests right now. Please wait a moment and try again! In the meantime, feel free to explore our website or contact us at orbitx@zcoer.edu.in' 
+          })
         }
       }
-    } catch (pythonError) {
-      console.log('Python chatbot unavailable, using fallback')
+    } else {
+      console.log('No Gemini API key found')
     }
 
-    // Check if user is asking for current/latest information
-    const searchKeywords = ['latest', 'current', 'recent', 'news', 'today', 'now', 'update']
-    const shouldSearch = searchKeywords.some(keyword => message.toLowerCase().includes(keyword))
-    
-    if (shouldSearch) {
-      try {
-        const searchQuery = message.replace(/latest|current|recent|news|today|now|update/gi, '').trim()
-        const searchResults = await searchGoogle(searchQuery)
-        const formattedResults = formatSearchResults(searchResults, searchQuery)
-        return NextResponse.json({ response: formattedResults })
-      } catch (searchError) {
-        console.log('Google Search failed, using fallback')
-      }
-    }
 
-    // Fallback to rule-based response
-    const fallbackResponse = generateFallbackResponse(message.trim())
+
+    // Fallback to rule-based response with randomization
+    const fallbackResponse = generateFallbackResponse(message.trim(), conversationHistory)
     return NextResponse.json({ response: fallbackResponse })
   } catch (error: any) {
     console.error('Chat API error:', error)
     
     // Always return a helpful fallback response
-    const fallbackResponse = generateFallbackResponse('help')
+    const fallbackResponse = generateFallbackResponse(message.trim(), conversationHistory)
     return NextResponse.json({ response: fallbackResponse })
   }
 }
 
-function generateFallbackResponse(message: string): string {
+function generateFallbackResponse(message: string, conversationHistory?: any[]): string {
   const lowerMessage = message.toLowerCase()
   
-  // Greetings
+  // Greetings with variations
   if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-    return '🚀 Hello! I\'m OrbitX AI Assistant. I can help you learn about our space science & astronomy club, teams, projects, events, and how to join us. What would you like to know?'
+    const greetings = [
+      '🚀 Hello! I\'m OrbitX AI Assistant. I can help you learn about our space science & astronomy club, teams, projects, events, and how to join us. What would you like to know?',
+      '🌌 Hi there! Welcome to OrbitX! I\'m here to help you explore our space science club. Ask me about our teams, projects, or how to join us!',
+      '✨ Hey! Great to meet you! I\'m the OrbitX AI Assistant. Ready to learn about space exploration and our amazing club? What interests you most?'
+    ]
+    return greetings[Math.floor(Math.random() * greetings.length)]
   }
   
   // Teams information

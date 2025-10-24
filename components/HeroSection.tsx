@@ -1,66 +1,95 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight, Sparkles, Rocket } from 'lucide-react'
+import { useMemo } from 'react'
 
 export default function HeroSection() {
+  const shouldReduceMotion = useReducedMotion()
+  
+  const fastVariants = useMemo(() => ({
+    hidden: { opacity: 0, y: 20, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: { duration: 0.4, ease: "easeOut" }
+    }
+  }), [])
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-4 pt-16">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center px-4 pt-16 gpu-accelerated">
+      {/* Optimized background elements */}
+      <div className="absolute inset-0 overflow-hidden will-change-transform">
         <motion.div
-          animate={{
-            rotate: 360,
-          }}
+          animate={shouldReduceMotion ? {} : { rotate: 360 }}
           transition={{
-            duration: 50,
+            duration: 30,
             repeat: Infinity,
             ease: "linear"
           }}
-          className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-3xl"
+          className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-gradient-to-r from-blue-500/15 to-purple-500/15 blur-3xl will-change-transform"
         />
         <motion.div
-          animate={{
-            rotate: -360,
-          }}
+          animate={shouldReduceMotion ? {} : { rotate: -360 }}
           transition={{
-            duration: 40,
+            duration: 25,
             repeat: Infinity,
             ease: "linear"
           }}
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 blur-3xl"
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-gradient-to-r from-purple-500/15 to-pink-500/15 blur-3xl will-change-transform"
         />
+        
+        {/* Advanced floating particles */}
+        {!shouldReduceMotion && Array.from({ length: 12 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-blue-400/60 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`
+            }}
+            animate={{
+              y: [-20, 20, -20],
+              x: [-10, 10, -10],
+              opacity: [0.2, 0.8, 0.2],
+              scale: [0.5, 1.2, 0.5]
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
       </div>
 
       <div className="relative z-10 text-center max-w-4xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          variants={fastVariants}
+          initial="hidden"
+          animate="visible"
           className="mb-8"
         >
-          {/* Main Logo with Advanced Animations */}
+          {/* Advanced Logo Section */}
           <motion.div 
-            className="mb-12 relative"
-            initial={{ scale: 0.5, opacity: 0, rotateY: 180 }}
-            animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-            transition={{ 
-              duration: 1.2, 
-              ease: "easeOut",
-              type: "spring",
-              stiffness: 100
-            }}
+            className="mb-12 relative will-change-transform"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            {/* Glow effect behind logo */}
+            {/* Dynamic glow effect */}
             <motion.div
-              className="absolute inset-0 blur-2xl opacity-30"
-              animate={{
-                scale: [1, 1.1, 1],
-                opacity: [0.3, 0.6, 0.3]
+              className="absolute inset-0 blur-2xl opacity-40 will-change-transform"
+              animate={shouldReduceMotion ? {} : {
+                scale: [1, 1.15, 1],
+                opacity: [0.4, 0.7, 0.4],
+                rotate: [0, 5, -5, 0]
               }}
               transition={{
-                duration: 3,
+                duration: 2,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
@@ -69,209 +98,204 @@ export default function HeroSection() {
                 src="/Logo_without_background.png" 
                 alt="OrbitX Logo Glow" 
                 className="w-auto mx-auto h-60 md:h-70 lg:h-80"
+                loading="eager"
               />
             </motion.div>
             
-            {/* Main logo with hover effects */}
+            {/* Main logo with advanced hover */}
             <motion.img 
               src="/Logo_without_background.png" 
               alt="OrbitX Logo" 
-              className="w-auto mx-auto relative z-10 cursor-pointer h-60 md:h-70 lg:h-80"
-              whileHover={{ 
-                scale: 1.05,
-                rotateY: 5,
-                rotateX: 5,
-                transition: { duration: 0.3 }
+              className="w-auto mx-auto relative z-10 cursor-pointer h-60 md:h-70 lg:h-80 will-change-transform"
+              loading="eager"
+              whileHover={shouldReduceMotion ? {} : { 
+                scale: 1.08,
+                rotateY: 8,
+                rotateX: 3,
+                transition: { duration: 0.2, ease: "easeOut" }
               }}
-              whileTap={{ scale: 0.95 }}
-              animate={{
-                y: [0, -10, 0],
+              whileTap={{ scale: 0.96 }}
+              animate={shouldReduceMotion ? {} : {
+                y: [0, -8, 0],
+                rotateZ: [0, 1, -1, 0]
               }}
               transition={{
-                y: {
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
               }}
             />
             
-            {/* Floating particles around logo */}
-            {Array.from({ length: 8 }).map((_, i) => (
+            {/* Enhanced orbital particles */}
+            {!shouldReduceMotion && Array.from({ length: 6 }).map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-2 h-2 bg-blue-400 rounded-full"
+                className="absolute w-3 h-3 rounded-full will-change-transform"
                 style={{
-                  left: `${20 + (i * 10)}%`,
-                  top: `${30 + (i % 3) * 20}%`
+                  background: `linear-gradient(45deg, ${i % 2 ? '#3b82f6' : '#8b5cf6'}, ${i % 2 ? '#06b6d4' : '#ec4899'})`,
+                  left: `${30 + (i * 8)}%`,
+                  top: `${25 + (i % 3) * 25}%`
                 }}
                 animate={{
-                  y: [0, -20, 0],
-                  opacity: [0.3, 1, 0.3],
-                  scale: [0.5, 1, 0.5]
+                  y: [0, -25, 0],
+                  x: [0, Math.sin(i) * 15, 0],
+                  opacity: [0.4, 1, 0.4],
+                  scale: [0.6, 1.2, 0.6],
+                  rotate: [0, 180, 360]
                 }}
                 transition={{
-                  duration: 2 + (i * 0.2),
+                  duration: 2.5 + (i * 0.3),
                   repeat: Infinity,
-                  delay: i * 0.3,
+                  delay: i * 0.2,
                   ease: "easeInOut"
                 }}
               />
             ))}
+            
+            {/* Rocket trail effect */}
+            <motion.div
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              animate={shouldReduceMotion ? {} : {
+                rotate: [0, 360]
+              }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            >
+              <Rocket className="h-8 w-8 text-blue-400/60" />
+            </motion.div>
           </motion.div>
           
-          {/* Tagline with typewriter effect */}
+          {/* Enhanced tagline */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5, duration: 0.8 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
             className="mb-12"
           >
-            <motion.p 
-              className="text-2xl md:text-4xl lg:text-5xl font-light bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-8"
-              initial={{ width: 0 }}
-              animate={{ width: "auto" }}
-              transition={{ delay: 2, duration: 2, ease: "easeOut" }}
+            <motion.h1 
+              className="text-2xl md:text-4xl lg:text-5xl font-bold mb-8 will-change-transform"
+              animate={shouldReduceMotion ? {} : {
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              style={{
+                background: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4, #3b82f6)',
+                backgroundSize: '200% 100%',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
             >
               Where Curiosity Meets The Cosmos
-            </motion.p>
+            </motion.h1>
             
             <motion.p 
-              className="text-lg text-gray-400 max-w-2xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
+              className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed"
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 3, duration: 0.8 }}
+              transition={{ delay: 0.5, duration: 0.4 }}
             >
-              Join us in our mission to push the boundaries of space exploration, 
-              innovation, and collaborative learning. Together, we reach for the stars.
+              Join us in pushing the boundaries of space exploration, innovation, and collaborative learning. Together, we reach for the stars.
             </motion.p>
           </motion.div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
+          transition={{ duration: 0.4, delay: 0.6 }}
           className="flex flex-col sm:flex-row gap-4 justify-center items-center"
         >
           <motion.div
-            className="relative"
-            whileHover={{ scale: 1.05, y: -3 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400 }}
+            className="relative will-change-transform"
+            whileHover={shouldReduceMotion ? {} : { scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
           >
             <Link href="/contact" className="relative group overflow-hidden block">
-              {/* Animated gradient border */}
+              {/* Optimized gradient border */}
               <motion.div 
-                className="absolute inset-0 rounded-full p-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500"
-                animate={{
-                  rotate: [0, 360]
+                className="absolute inset-0 rounded-full p-0.5 will-change-transform"
+                style={{
+                  background: 'conic-gradient(from 0deg, #3b82f6, #8b5cf6, #06b6d4, #3b82f6)'
                 }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                animate={shouldReduceMotion ? {} : { rotate: [0, 360] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               >
                 <div className="h-full w-full rounded-full bg-black" />
               </motion.div>
               
-              {/* Inner gradient background */}
+              {/* Enhanced inner background */}
               <motion.div 
-                className="absolute inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 rounded-full"
-                animate={{
+                className="absolute inset-1 rounded-full will-change-transform"
+                style={{
+                  background: 'linear-gradient(45deg, #2563eb, #7c3aed, #06b6d4)'
+                }}
+                animate={shouldReduceMotion ? {} : {
                   background: [
-                    "linear-gradient(45deg, #2563eb, #7c3aed, #06b6d4)",
-                    "linear-gradient(135deg, #7c3aed, #06b6d4, #2563eb)",
-                    "linear-gradient(225deg, #06b6d4, #2563eb, #7c3aed)"
+                    'linear-gradient(45deg, #2563eb, #7c3aed, #06b6d4)',
+                    'linear-gradient(135deg, #7c3aed, #06b6d4, #2563eb)',
+                    'linear-gradient(225deg, #06b6d4, #2563eb, #7c3aed)'
                   ]
                 }}
-                transition={{ duration: 2, repeat: Infinity }}
+                transition={{ duration: 1.5, repeat: Infinity }}
               />
               
-              {/* Floating micro particles */}
-              <div className="absolute inset-0 overflow-hidden rounded-full">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-1 h-1 bg-white rounded-full opacity-70"
-                    style={{
-                      left: `${20 + (i * 12)}%`,
-                      top: `${30 + (i % 2) * 40}%`
-                    }}
-                    animate={{
-                      y: [-5, 8, -5],
-                      opacity: [0.4, 1, 0.4],
-                      scale: [0.5, 1, 0.5]
-                    }}
-                    transition={{
-                      duration: 2 + (i * 0.3),
-                      repeat: Infinity,
-                      delay: i * 0.2
-                    }}
-                  />
-                ))}
-              </div>
-              
               {/* Button content */}
-              <div className="relative z-10 flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white">
+              <div className="relative z-10 flex items-center justify-center gap-2 px-8 py-4 text-sm font-bold text-white">
                 <motion.div
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  animate={shouldReduceMotion ? {} : { rotate: [0, 360] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                 >
                   <Sparkles className="h-4 w-4" />
                 </motion.div>
                 
-                <span className="group-hover:text-yellow-300 transition-colors duration-300 font-extrabold">
+                <span className="group-hover:text-yellow-300 transition-colors duration-200 font-extrabold">
                   Join Now
                 </span>
                 
                 <motion.div
-                  animate={{ x: [0, 3, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
+                  animate={shouldReduceMotion ? {} : { x: [0, 2, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
                 >
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
                 </motion.div>
               </div>
               
-              {/* Outer glow */}
+              {/* Optimized glow */}
               <motion.div 
-                className="absolute -inset-2 bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-cyan-500/50 rounded-full blur-lg opacity-60 group-hover:opacity-100 -z-10"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute -inset-2 bg-gradient-to-r from-blue-500/40 via-purple-500/40 to-cyan-500/40 rounded-full blur-lg opacity-50 group-hover:opacity-80 -z-10 will-change-transform"
+                animate={shouldReduceMotion ? {} : { scale: [1, 1.05, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
               />
             </Link>
           </motion.div>
           
           <motion.div
-            whileHover={{ scale: 1.05, y: -3 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400 }}
-            className="relative"
+            whileHover={shouldReduceMotion ? {} : { scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            className="relative will-change-transform"
           >
             <Link href="/about" className="relative group block overflow-hidden">
-              {/* Animated border */}
-              <motion.div 
-                className="absolute inset-0 rounded-full p-0.5 bg-gradient-to-r from-gray-500 to-gray-400"
-                whileHover={{ background: "linear-gradient(45deg, #6b7280, #9ca3af, #d1d5db)" }}
-              >
+              <div className="absolute inset-0 rounded-full p-0.5 bg-gradient-to-r from-gray-500 to-gray-400">
                 <div className="h-full w-full rounded-full bg-black" />
-              </motion.div>
+              </div>
               
-              {/* Inner background */}
-              <motion.div 
-                className="absolute inset-1 bg-gradient-to-r from-gray-700 to-gray-600 rounded-full"
-                whileHover={{ background: "linear-gradient(45deg, #374151, #4b5563)" }}
-              />
+              <div className="absolute inset-1 bg-gradient-to-r from-gray-700 to-gray-600 rounded-full group-hover:from-gray-600 group-hover:to-gray-500 transition-all duration-200" />
               
-              <div className="relative z-10 px-6 py-3 text-sm font-bold text-white text-center">
-                <span className="group-hover:text-cyan-300 transition-colors duration-300">
+              <div className="relative z-10 px-8 py-4 text-sm font-bold text-white text-center">
+                <span className="group-hover:text-cyan-300 transition-colors duration-200">
                   Learn More
                 </span>
               </div>
-              
-              {/* Subtle glow */}
-              <motion.div 
-                className="absolute -inset-1 bg-gray-500/30 rounded-full blur-md opacity-40 group-hover:opacity-70 -z-10"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              />
             </Link>
           </motion.div>
         </motion.div>
@@ -279,14 +303,25 @@ export default function HeroSection() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.6 }}
+          transition={{ duration: 0.4, delay: 0.8 }}
           className="mt-16"
         >
-          <div className="animate-bounce">
-            <div className="w-6 h-10 border-2 border-white/30 rounded-full mx-auto">
-              <div className="w-1 h-3 bg-white rounded-full mx-auto mt-2 animate-pulse"></div>
+          <motion.div
+            animate={shouldReduceMotion ? {} : { y: [0, -8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="cursor-pointer"
+          >
+            <div className="w-6 h-10 border-2 border-white/40 rounded-full mx-auto relative overflow-hidden">
+              <motion.div 
+                className="w-1 h-3 bg-gradient-to-b from-blue-400 to-purple-400 rounded-full mx-auto mt-2"
+                animate={shouldReduceMotion ? {} : {
+                  y: [0, 12, 0],
+                  opacity: [1, 0.3, 1]
+                }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              />
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </section>

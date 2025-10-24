@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
-import { Rocket, Users, Calendar, FolderOpen, Mail, MapPin, Globe, Send, BookOpen } from 'lucide-react'
+import { Rocket, Users, Calendar, FolderOpen, Mail, MapPin, Globe, Send, BookOpen, Palette, Code, Settings, Megaphone, FileText, Camera } from 'lucide-react'
 import HeroSection from '@/components/HeroSection'
 import PreviewCard from '@/components/PreviewCard'
 import EnhancedLatestContent from '@/components/EnhancedLatestContent'
@@ -97,13 +97,13 @@ export default function Home() {
     }
   ]
 
-  const domains = [/*  */
-    'Design & Innovation Team',
-    'Technical Team',
-    'Management & Operations Team',
-    'Public Outreach Team',
-    'Documentation Team',
-    'Social Media & Editing Team'
+  const domains = [
+    { name: 'Design & Innovation Team', icon: Palette },
+    { name: 'Technical Team', icon: Code },
+    { name: 'Management & Operations Team', icon: Settings },
+    { name: 'Public Outreach Team', icon: Megaphone },
+    { name: 'Documentation Team', icon: FileText },
+    { name: 'Social Media & Editing Team', icon: Camera }
   ]
 
   return (
@@ -162,18 +162,21 @@ export default function Home() {
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {domains.map((domain, index) => (
-              <motion.div
-                key={domain}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="glass-card p-6 text-center hover:bg-white/10 transition-all duration-300"
-              >
-                <Globe className="h-8 w-8 text-blue-400 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-white">{domain}</h3>
-              </motion.div>
-            ))}
+            {domains.map((domain, index) => {
+              const IconComponent = domain.icon
+              return (
+                <motion.div
+                  key={domain.name}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  className="glass-card p-6 text-center hover:bg-white/10 transition-all duration-300"
+                >
+                  <IconComponent className="h-8 w-8 text-blue-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-semibold text-white">{domain.name}</h3>
+                </motion.div>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -289,7 +292,7 @@ export default function Home() {
                 >
                   <option value="">Select a team</option>
                   {domains.map(domain => (
-                    <option key={domain} value={domain}>{domain}</option>
+                    <option key={domain.name} value={domain.name}>{domain.name}</option>
                   ))}
                 </select>
                 {errors.team && <p className="mt-1 text-sm text-red-400">{errors.team.message}</p>}

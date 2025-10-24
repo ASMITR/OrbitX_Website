@@ -414,38 +414,38 @@ export default function Members() {
               </div>
 
               {/* Member Info */}
-              <div className="relative z-20 p-6 bg-gradient-to-t from-black/80 to-transparent">
-                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">
+              <div className="relative z-20 p-4 sm:p-6 bg-gradient-to-t from-black/90 to-transparent">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors line-clamp-2">
                   {member.name}
                 </h3>
-                <p className="text-blue-400 text-sm font-medium mb-1">{member.team}</p>
-                <p className="text-purple-400 text-xs font-medium mb-1">{member.position}</p>
-                <p className="text-gray-400 text-xs mb-4">{member.branch} • {member.year}-{member.division}</p>
+                <p className="text-blue-400 text-xs sm:text-sm font-medium mb-1 line-clamp-1">{member.team}</p>
+                <p className="text-purple-400 text-xs font-medium mb-1 line-clamp-1">{member.position}</p>
+                <p className="text-gray-400 text-xs mb-3 sm:mb-4 line-clamp-1">{member.branch} • {member.year}-{member.division}</p>
                 
                 {/* Contact Info */}
-                <div className="space-y-2 mb-4 text-xs">
+                <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4 text-xs">
                   <div className="flex items-center text-gray-300">
-                    <Mail className="h-3 w-3 mr-2 text-blue-400" />
-                    <span>{member.email || 'member@orbitx.com'}</span>
+                    <Mail className="h-3 w-3 mr-2 text-blue-400 flex-shrink-0" />
+                    <span className="truncate">{member.email || 'member@orbitx.com'}</span>
                   </div>
                   <div className="flex items-center text-gray-300">
-                    <Phone className="h-3 w-3 mr-2 text-green-400" />
-                    <span>{member.phone || '+91 98765 43210'}</span>
+                    <Phone className="h-3 w-3 mr-2 text-green-400 flex-shrink-0" />
+                    <span className="truncate">{member.phone || '+91 98765 43210'}</span>
                   </div>
                 </div>
 
                 {/* Social Links */}
-                <div className="flex justify-between items-center">
-                  <div className="flex space-x-2">
+                <div className="flex justify-between items-center gap-2">
+                  <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
                     {member.socialLinks?.linkedin && (
                       <a
                         href={member.socialLinks.linkedin.startsWith('http') ? member.socialLinks.linkedin : `https://${member.socialLinks.linkedin}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-8 h-8 bg-blue-600/20 border border-blue-500/30 rounded-lg flex items-center justify-center hover:bg-blue-600/40 hover:scale-110 transition-all duration-200 group/social"
+                        className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600/20 border border-blue-500/30 rounded-lg flex items-center justify-center hover:bg-blue-600/40 hover:scale-110 transition-all duration-200 group/social"
                         aria-label="LinkedIn"
                       >
-                        <Linkedin className="h-4 w-4 text-blue-400 group-hover/social:text-blue-300" />
+                        <Linkedin className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400 group-hover/social:text-blue-300" />
                       </a>
                     )}
                     {member.socialLinks?.github && (
@@ -453,10 +453,10 @@ export default function Members() {
                         href={member.socialLinks.github.startsWith('http') ? member.socialLinks.github : `https://${member.socialLinks.github}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-8 h-8 bg-gray-600/20 border border-gray-500/30 rounded-lg flex items-center justify-center hover:bg-gray-600/40 hover:scale-110 transition-all duration-200 group/social"
+                        className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-600/20 border border-gray-500/30 rounded-lg flex items-center justify-center hover:bg-gray-600/40 hover:scale-110 transition-all duration-200 group/social"
                         aria-label="GitHub"
                       >
-                        <Github className="h-4 w-4 text-gray-400 group-hover/social:text-gray-300" />
+                        <Github className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 group-hover/social:text-gray-300" />
                       </a>
                     )}
                     {member.socialLinks?.instagram && (
@@ -464,10 +464,10 @@ export default function Members() {
                         href={member.socialLinks.instagram.startsWith('http') ? member.socialLinks.instagram : `https://${member.socialLinks.instagram}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-8 h-8 bg-pink-600/20 border border-pink-500/30 rounded-lg flex items-center justify-center hover:bg-pink-600/40 hover:scale-110 transition-all duration-200 group/social"
+                        className="w-7 h-7 sm:w-8 sm:h-8 bg-pink-600/20 border border-pink-500/30 rounded-lg flex items-center justify-center hover:bg-pink-600/40 hover:scale-110 transition-all duration-200 group/social"
                         aria-label="Instagram"
                       >
-                        <Instagram className="h-4 w-4 text-pink-400 group-hover/social:text-pink-300" />
+                        <Instagram className="h-3 w-3 sm:h-4 sm:w-4 text-pink-400 group-hover/social:text-pink-300" />
                       </a>
                     )}
                   </div>
@@ -475,9 +475,9 @@ export default function Members() {
                   {/* View More Button */}
                   <button 
                     onClick={() => setSelectedMember(member)}
-                    className="px-3 py-1 bg-blue-600/20 border border-blue-500/30 rounded-lg text-blue-400 text-xs font-medium hover:bg-blue-600/40 transition-all duration-200"
+                    className="px-2 py-1 sm:px-3 sm:py-1 bg-blue-600/20 border border-blue-500/30 rounded-lg text-blue-400 text-xs font-medium hover:bg-blue-600/40 transition-all duration-200 flex-shrink-0"
                   >
-                    View More
+                    View
                   </button>
                 </div>
               </div>
@@ -691,17 +691,17 @@ export default function Members() {
                     <div className="space-y-4">
                       <motion.div 
                         whileHover={{ x: 5 }}
-                        className="flex items-center text-gray-300 bg-white/5 rounded-lg p-3"
+                        className="flex items-start text-gray-300 bg-white/5 rounded-lg p-3"
                       >
-                        <Mail className="h-5 w-5 mr-4 text-blue-400" />
-                        <span className="text-white">{selectedMember.email}</span>
+                        <Mail className="h-5 w-5 mr-3 text-blue-400 flex-shrink-0 mt-0.5" />
+                        <span className="text-white break-all text-sm sm:text-base">{selectedMember.email}</span>
                       </motion.div>
                       <motion.div 
                         whileHover={{ x: 5 }}
-                        className="flex items-center text-gray-300 bg-white/5 rounded-lg p-3"
+                        className="flex items-start text-gray-300 bg-white/5 rounded-lg p-3"
                       >
-                        <Phone className="h-5 w-5 mr-4 text-green-400" />
-                        <span className="text-white">{selectedMember.phone}</span>
+                        <Phone className="h-5 w-5 mr-3 text-green-400 flex-shrink-0 mt-0.5" />
+                        <span className="text-white break-all text-sm sm:text-base">{selectedMember.phone}</span>
                       </motion.div>
                     </div>
                   </motion.div>

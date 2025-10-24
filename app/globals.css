@@ -44,7 +44,16 @@
   .gpu-accelerated {
     transform: translateZ(0);
     backface-visibility: hidden;
-    perspective: 1000;
+    perspective: 1000px;
+    will-change: transform;
+  }
+  
+  .will-change-transform {
+    will-change: transform;
+  }
+  
+  .will-change-auto {
+    will-change: auto;
   }
 
   .line-clamp-2 {
@@ -79,10 +88,15 @@
   @apply from-blue-600 to-purple-700;
 }
 
-/* Animations */
+/* Optimized Animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+  0%, 100% { transform: translateY(0px) translateZ(0); }
+  50% { transform: translateY(-20px) translateZ(0); }
+}
+
+@keyframes fast-float {
+  0%, 100% { transform: translateY(0px) translateZ(0); }
+  50% { transform: translateY(-8px) translateZ(0); }
 }
 
 @keyframes pulse-glow {
@@ -109,6 +123,10 @@
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+.animate-fast-float {
+  animation: fast-float 3s ease-in-out infinite;
 }
 
 .animate-pulse-glow {
@@ -186,6 +204,15 @@
 
 .nebula-bg {
   background: radial-gradient(ellipse at center, rgba(147, 51, 234, 0.1) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 100%);
+}
+
+/* Performance optimizations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Dropdown styling */
