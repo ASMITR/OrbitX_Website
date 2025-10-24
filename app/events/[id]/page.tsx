@@ -190,7 +190,8 @@ This workshop is perfect for engineering students, professionals looking to tran
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                      const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (nextElement) nextElement.style.display = 'flex';
                     }}
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -239,7 +240,8 @@ This workshop is perfect for engineering students, professionals looking to tran
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling.style.display = 'flex';
+                          const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (nextElement) nextElement.style.display = 'flex';
                         }}
                       />
                       <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
