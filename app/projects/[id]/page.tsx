@@ -147,7 +147,8 @@ The satellite is scheduled for launch in Q2 2024 aboard a commercial launch vehi
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                      const next = e.currentTarget.nextElementSibling as HTMLElement | null;
+                      if (next) next.style.display = 'flex';
                     }}
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -173,7 +174,8 @@ The satellite is scheduled for launch in Q2 2024 aboard a commercial launch vehi
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling.style.display = 'flex';
+                          const next = e.currentTarget.nextElementSibling as HTMLElement | null;
+                          if (next) next.style.display = 'flex';
                         }}
                       />
                       <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
