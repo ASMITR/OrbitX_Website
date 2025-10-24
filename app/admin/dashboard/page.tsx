@@ -63,19 +63,19 @@ export default function AdminDashboard() {
 
         // Create recent activity from all data
         const activity = [
-          ...events.slice(0, 3).map(event => ({
+          ...events.slice(0, 3).map((event: any) => ({
             type: 'event',
             title: event.title,
             date: event.createdAt,
             icon: Calendar
           })),
-          ...projects.slice(0, 3).map(project => ({
+          ...projects.slice(0, 3).map((project: any) => ({
             type: 'project',
             title: project.title,
             date: project.createdAt,
             icon: FolderOpen
           })),
-          ...messages.slice(0, 3).map(message => ({
+          ...messages.slice(0, 3).map((message: any) => ({
             type: 'message',
             title: `Message from ${message.name}`,
             date: message.createdAt,

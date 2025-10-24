@@ -7,6 +7,8 @@ import Footer from '@/components/Footer'
 import SpaceBackground from '@/components/SpaceBackground'
 import AuthProvider from '@/components/admin/AuthProvider'
 import Chatbox from '@/components/Chatbox'
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 
 
 const inter = Inter({ subsets: ['latin'] })
