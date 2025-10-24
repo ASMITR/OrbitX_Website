@@ -19,8 +19,10 @@ export default function AdminDashboard() {
     events: 0,
     projects: 0,
     members: 0,
-    messages: 0
+    messages: 0,
+    blogs: 0
   })
+  const [teamStats, setTeamStats] = useState<{[key: string]: number}>({})
   const [recentActivity, setRecentActivity] = useState<any[]>([])
   const [dataLoading, setDataLoading] = useState(true)
 
@@ -55,11 +57,23 @@ export default function AdminDashboard() {
           getContactMessages()
         ])
 
+        // Get blogs from lib/db
+        const { getBlogs } = await import('@/lib/db')
+        const blogs = await getBlogs()
+
+        // Count members by team
+        const teamCounts: {[key: string]: number} = {}
+        members.forEach((member: Member) => {
+          teamCounts[member.team] = (teamCounts[member.team] || 0) + 1
+        })
+        setTeamStats(teamCounts)
+
         setStats({
           events: events.length,
           projects: projects.length,
           members: members.length,
-          messages: messages.length
+          messages: messages.length,
+          blogs: blogs.length
         })
 
         // Create recent activity from all data
@@ -295,7 +309,7 @@ export default function AdminDashboard() {
           </motion.div>
         </div>
 
-        {/* Site Analytics */}
+        {/* Detailed Analytics */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -303,25 +317,158 @@ export default function AdminDashboard() {
           className="glass-card-admin p-6"
         >
           <h3 className="text-xl font-bold text-white mb-6 flex items-center">
-            <Eye className="h-5 w-5 mr-2" />
-            Site Overview
+            <TrendingUp className="h-5 w-5 mr-2" />
+            Analytics Dashboard
           </h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400 mb-2">Active</div>
-              <p className="text-gray-400">Website Status</p>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-400 mb-2">
-                {stats.events + stats.projects}
+          
+          {/* Key Metrics */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-6 hover:bg-blue-500/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-300 text-sm font-medium">Team Members</p>
+                  <p className="text-2xl font-bold text-white">{stats.members}</p>
+                  <p className="text-blue-200 text-xs mt-1">Active team members</p>
+                </div>
+                <Users className="h-8 w-8 text-blue-400" />
               </div>
-              <p className="text-gray-400">Total Content</p>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-400 mb-2">
-                {stats.members}
+            
+            <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-6 hover:bg-green-500/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-300 text-sm font-medium">Total Events</p>
+                  <p className="text-2xl font-bold text-white">{stats.events}</p>
+                  <p className="text-green-200 text-xs mt-1">Organized activities</p>
+                </div>
+                <Calendar className="h-8 w-8 text-green-400" />
               </div>
-              <p className="text-gray-400">Team Size</p>
+            </div>
+            
+            <div className="bg-purple-500/20 border border-purple-500/30 rounded-lg p-6 hover:bg-purple-500/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-300 text-sm font-medium">Total Projects</p>
+                  <p className="text-2xl font-bold text-white">{stats.projects}</p>
+                  <p className="text-purple-200 text-xs mt-1">Innovation initiatives</p>
+                </div>
+                <FolderOpen className="h-8 w-8 text-purple-400" />
+              </div>
+            </div>
+            
+            <div className="bg-orange-500/20 border border-orange-500/30 rounded-lg p-6 hover:bg-orange-500/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-300 text-sm font-medium">Total Blogs</p>
+                  <p className="text-2xl font-bold text-white">{stats.blogs}</p>
+                  <p className="text-orange-200 text-xs mt-1">Published articles</p>
+                </div>
+                <BookOpen className="h-8 w-8 text-orange-400" />
+              </div>
+            </div>
+            
+            <div className="bg-cyan-500/20 border border-cyan-500/30 rounded-lg p-6 hover:bg-cyan-500/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-cyan-300 text-sm font-medium">Total Content</p>
+                  <p className="text-2xl font-bold text-white">{stats.events + stats.projects + stats.blogs}</p>
+                  <p className="text-cyan-200 text-xs mt-1">Combined content items</p>
+                </div>
+                <Eye className="h-8 w-8 text-cyan-400" />
+              </div>
+            </div>
+          </div>
+
+          {/* Detailed Analytics */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Content Distribution */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <h4 className="text-lg font-semibold text-white mb-4">Content Distribution</h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
+                    <span className="text-gray-300">Events</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-white font-medium mr-2">{stats.events}</span>
+                    <span className="text-gray-400 text-sm">({stats.events + stats.projects + stats.blogs > 0 ? Math.round((stats.events / (stats.events + stats.projects + stats.blogs)) * 100) : 0}%)</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-purple-400 rounded-full mr-3"></div>
+                    <span className="text-gray-300">Projects</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-white font-medium mr-2">{stats.projects}</span>
+                    <span className="text-gray-400 text-sm">({stats.events + stats.projects + stats.blogs > 0 ? Math.round((stats.projects / (stats.events + stats.projects + stats.blogs)) * 100) : 0}%)</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-orange-400 rounded-full mr-3"></div>
+                    <span className="text-gray-300">Blogs</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-white font-medium mr-2">{stats.blogs}</span>
+                    <span className="text-gray-400 text-sm">({stats.events + stats.projects + stats.blogs > 0 ? Math.round((stats.blogs / (stats.events + stats.projects + stats.blogs)) * 100) : 0}%)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Team Distribution */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <h4 className="text-lg font-semibold text-white mb-4 flex items-center justify-between">
+                Team Distribution
+                <span className="text-blue-400 text-sm font-normal">Total: {stats.members} members</span>
+              </h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 text-sm">Design & Innovation Team</span>
+                  <span className="text-white font-medium">{teamStats['Design & Innovation Team'] || 0} members</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 text-sm">Technical Team</span>
+                  <span className="text-white font-medium">{teamStats['Technical Team'] || 0} members</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 text-sm">Management & Operations Team</span>
+                  <span className="text-white font-medium">{teamStats['Management & Operations Team'] || 0} members</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 text-sm">Public Outreach Team</span>
+                  <span className="text-white font-medium">{teamStats['Public Outreach Team'] || 0} members</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 text-sm">Documentation Team</span>
+                  <span className="text-white font-medium">{teamStats['Documentation Team'] || 0} members</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 text-sm">Social Media & Editing Team</span>
+                  <span className="text-white font-medium">{teamStats['Social Media & Editing Team'] || 0} members</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Activity Summary */}
+          <div className="mt-6 bg-white/5 rounded-2xl p-6 border border-white/10">
+            <h4 className="text-lg font-semibold text-white mb-4">Activity Summary</h4>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-400 mb-2">Active</div>
+                <p className="text-gray-400 text-sm">Website Status</p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-400 mb-2">{stats.events + stats.projects + stats.blogs}</div>
+                <p className="text-gray-400 text-sm">Total Content Items</p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-400 mb-2">6</div>
+                <p className="text-gray-400 text-sm">Active Teams</p>
+              </div>
             </div>
           </div>
         </motion.div>

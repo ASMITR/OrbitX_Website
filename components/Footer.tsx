@@ -14,7 +14,7 @@ export default function Footer() {
   ]
 
   const socialLinks = [
-    { name: 'Instagram', href: '#', icon: Instagram },
+    { name: 'Instagram', href: 'https://instagram.com/orbitx_zcoer', icon: Instagram },
     { name: 'LinkedIn', href: '#', icon: Linkedin },
     { name: 'YouTube', href: '#', icon: Youtube }
   ]
@@ -66,6 +66,8 @@ export default function Footer() {
                 <a
                   key={social.name}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors duration-200 group"
                   aria-label={social.name}
                 >

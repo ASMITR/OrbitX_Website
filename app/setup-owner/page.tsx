@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { initializeOwner } from '@/lib/roles'
+import { initializeOwner, getOwnerFromDB } from '@/lib/roles'
 import { Crown, Mail, Lock, User, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -41,17 +42,46 @@ export default function SetupOwner() {
 
     setIsLoading(true)
 
+    // Check if owner already exists
+    try {
+      const existingOwner = await getOwnerFromDB()
+      if (existingOwner) {
+        toast.error('Owner account already exists. Please sign in instead.')
+        setIsLoading(false)
+        router.push('/auth/login')
+        return
+      }
+    } catch (error) {
+      console.log('No existing owner found, proceeding with setup')
+    }
+
     try {
       // Create owner account
-      await createUserWithEmailAndPassword(auth, formData.email, formData.password)
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password)
       
       // Initialize owner in Firestore
       await initializeOwner(formData.email)
       
+      // Update user profile with name
+      if (userCredential.user) {
+        await userCredential.user.updateProfile({
+          displayName: formData.name
+        })
+      }
+      
       toast.success('Owner account created successfully!')
-      router.push('/admin/dashboard')
+      
+      // Wait a moment for auth state to update
+      setTimeout(() => {
+        router.push('/admin/dashboard')
+      }, 1000)
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create owner account')
+      console.error('Owner setup error:', error)
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error('Email already in use. Try signing in instead.')
+      } else {
+        toast.error(error.message || 'Failed to create owner account')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -177,6 +207,15 @@ export default function SetupOwner() {
             <p className="text-yellow-300 text-sm">
               <strong>Important:</strong> This creates the main owner account with full control over the website. 
               Only create this once.
+            </p>
+          </div>
+
+          <div className="mt-4 text-center">
+            <p className="text-gray-400 text-sm">
+              Already have an owner account?{' '}
+              <Link href="/auth/login" className="text-yellow-400 hover:text-yellow-300 transition-colors">
+                Sign in here
+              </Link>
             </p>
           </div>
         </motion.div>
