@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { Search, Filter, Linkedin, Github, Instagram, Mail, Phone, X } from 'lucide-react'
+import { Search, Filter, Linkedin, Github, Instagram, X } from 'lucide-react'
 import { getMembers } from '@/lib/db'
 import { Member } from '@/lib/types'
 
@@ -422,17 +422,7 @@ export default function Members() {
                 <p className="text-purple-400 text-xs font-medium mb-1 line-clamp-1">{member.position}</p>
                 <p className="text-gray-400 text-xs mb-3 sm:mb-4 line-clamp-1">{member.branch} • {member.year}-{member.division}</p>
                 
-                {/* Contact Info */}
-                <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4 text-xs">
-                  <div className="flex items-center text-gray-300">
-                    <Mail className="h-3 w-3 mr-2 text-blue-400 flex-shrink-0" />
-                    <span className="truncate">{member.email || 'member@orbitx.com'}</span>
-                  </div>
-                  <div className="flex items-center text-gray-300">
-                    <Phone className="h-3 w-3 mr-2 text-green-400 flex-shrink-0" />
-                    <span className="truncate">{member.phone || '+91 98765 43210'}</span>
-                  </div>
-                </div>
+
 
                 {/* Social Links */}
                 <div className="flex justify-between items-center gap-2">
@@ -677,34 +667,7 @@ export default function Members() {
                     </div>
                   </motion.div>
 
-                  {/* Contact Info */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="bg-white/5 rounded-2xl p-6 border border-white/10"
-                  >
-                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-                      <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                      Contact Information
-                    </h4>
-                    <div className="space-y-4">
-                      <motion.div 
-                        whileHover={{ x: 5 }}
-                        className="flex items-start text-gray-300 bg-white/5 rounded-lg p-3"
-                      >
-                        <Mail className="h-5 w-5 mr-3 text-blue-400 flex-shrink-0 mt-0.5" />
-                        <span className="text-white break-all text-sm sm:text-base">{selectedMember.email}</span>
-                      </motion.div>
-                      <motion.div 
-                        whileHover={{ x: 5 }}
-                        className="flex items-start text-gray-300 bg-white/5 rounded-lg p-3"
-                      >
-                        <Phone className="h-5 w-5 mr-3 text-green-400 flex-shrink-0 mt-0.5" />
-                        <span className="text-white break-all text-sm sm:text-base">{selectedMember.phone}</span>
-                      </motion.div>
-                    </div>
-                  </motion.div>
+
 
                   {/* Social Links */}
                   {(selectedMember.socialLinks?.linkedin || selectedMember.socialLinks?.github || selectedMember.socialLinks?.instagram) && (

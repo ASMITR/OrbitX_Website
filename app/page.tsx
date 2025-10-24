@@ -1,16 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
-import { Rocket, Users, Calendar, FolderOpen, Mail, MapPin, Globe, Send, BookOpen, Palette, Code, Settings, Megaphone, FileText, Camera } from 'lucide-react'
+import { Rocket, Users, Calendar, FolderOpen, Mail, MapPin, Send, BookOpen, Palette, Code, Settings, Megaphone, FileText, Camera } from 'lucide-react'
 import HeroSection from '@/components/HeroSection'
 import PreviewCard from '@/components/PreviewCard'
-import EnhancedLatestContent from '@/components/EnhancedLatestContent'
 import { getEvents, getProjects, getMembers, getBlogs, addContactMessage } from '@/lib/db'
 import { Event, Project, Member, Blog } from '@/lib/types'
+import { debounce } from '@/lib/performance'
+
+// Lazy load heavy components
+const EnhancedLatestContent = lazy(() => import('@/components/EnhancedLatestContent'))
 
 interface JoinForm {
   name: string
@@ -66,36 +69,36 @@ export default function Home() {
     }
   }
 
-  const previews = [
+  const previews = useMemo(() => [
     {
       title: 'Events',
       description: 'Join our exciting space exploration events and workshops',
       icon: Calendar,
       href: '/events',
-      color: 'from-blue-500 to-purple-500'
+      color: 'from-cyan-500 via-blue-500 to-purple-600'
     },
     {
       title: 'Projects',
       description: 'Explore our innovative space technology projects',
       icon: FolderOpen,
       href: '/projects',
-      color: 'from-purple-500 to-pink-500'
+      color: 'from-purple-500 via-pink-500 to-rose-600'
     },
     {
       title: 'Blogs',
       description: 'Read our latest insights and space exploration stories',
       icon: BookOpen,
       href: '/blogs',
-      color: 'from-green-500 to-blue-500'
+      color: 'from-emerald-500 via-teal-500 to-cyan-600'
     },
     {
       title: 'Teams',
       description: 'Meet our dedicated teams working on various domains',
       icon: Users,
       href: '/teams',
-      color: 'from-pink-500 to-red-500'
+      color: 'from-orange-500 via-red-500 to-pink-600'
     }
-  ]
+  ], [])
 
   const domains = [
     { name: 'Design & Innovation Team', icon: Palette },
@@ -129,16 +132,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10">
             {previews.map((preview, index) => (
-              <motion.div
-                key={preview.title}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                whileHover={{ y: -10, scale: 1.02 }}
-                className="gpu-accelerated"
-              >
-                <PreviewCard {...preview} index={index} />
-              </motion.div>
+              <PreviewCard key={preview.title} {...preview} index={index} />
             ))}
           </div>
         </div>
@@ -227,7 +221,13 @@ export default function Home() {
       </section>
 
       {/* Enhanced Latest Content */}
-      <EnhancedLatestContent events={events} projects={projects} blogs={blogs} />
+      <Suspense fallback={
+        <div className="py-20 flex justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
+        </div>
+      }>
+        <EnhancedLatestContent events={events} projects={projects} blogs={blogs} />
+      </Suspense>
 
       {/* Join Us Form */}
       <section className="py-16 sm:py-20 lg:py-24 container-fluid">

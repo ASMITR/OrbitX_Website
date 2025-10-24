@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { MessageSquare, Trash2, Mail, Eye, Reply } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { MessageSquare, Trash2, Mail, Eye, Reply, X, Send } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { getContactMessages, deleteContactMessage } from '@/lib/db'
 import { ContactMessage } from '@/lib/types'
@@ -12,6 +12,7 @@ export default function AdminMessages() {
   const [messages, setMessages] = useState<ContactMessage[]>([])
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null)
   const [loading, setLoading] = useState(true)
+
 
   useEffect(() => {
     fetchMessages()
@@ -44,9 +45,18 @@ export default function AdminMessages() {
     }
   }
 
-  const handleReply = (email: string) => {
-    window.open(`mailto:${email}`, '_blank')
+  const handleReply = (message: ContactMessage) => {
+    const emailText = `Email: ${message.email}`
+    const textArea = document.createElement('textarea')
+    textArea.value = message.email
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textArea)
+    toast.success(`Copied: ${message.email}`)
   }
+
+
 
   if (loading) {
     return (
@@ -124,7 +134,7 @@ export default function AdminMessages() {
                   </div>
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => handleReply(selectedMessage.email)}
+                      onClick={() => handleReply(selectedMessage)}
                       className="p-2 text-gray-400 hover:text-blue-400 transition-colors"
                       title="Reply via email"
                     >
@@ -147,13 +157,24 @@ export default function AdminMessages() {
                   </p>
                 </div>
 
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mt-4">
+                  <h4 className="text-blue-300 font-medium mb-2">Reply Instructions:</h4>
+                  <p className="text-gray-300 text-sm mb-2">1. Click "Copy Email" to copy the sender's email address</p>
+                  <p className="text-gray-300 text-sm mb-2">2. Open your email client (Gmail, Outlook, etc.)</p>
+                  <p className="text-gray-300 text-sm">3. Paste the email address and compose your reply</p>
+                  <div className="mt-3 p-2 bg-white/5 rounded border border-gray-600">
+                    <span className="text-xs text-gray-400">Email: </span>
+                    <span className="text-white font-mono text-sm">{selectedMessage.email}</span>
+                  </div>
+                </div>
+
                 <div className="mt-6 flex space-x-4">
                   <button
-                    onClick={() => handleReply(selectedMessage.email)}
+                    onClick={() => handleReply(selectedMessage)}
                     className="btn-primary flex items-center"
                   >
                     <Mail className="h-4 w-4 mr-2" />
-                    Reply via Email
+                    Copy Email
                   </button>
                   <button
                     onClick={() => handleDelete(selectedMessage.id)}
@@ -181,6 +202,8 @@ export default function AdminMessages() {
             <p className="text-gray-400">Contact form submissions will appear here.</p>
           </div>
         )}
+
+
       </div>
     </AdminLayout>
   )

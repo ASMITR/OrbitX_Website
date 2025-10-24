@@ -163,23 +163,27 @@ export default function Chatbox() {
 
   return (
     <>
-      {/* Enhanced Chat Toggle Button */}
+      {/* Advanced Chat Toggle Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-[9999] bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white p-4 rounded-full shadow-2xl transition-all duration-300 ring-2 ring-cyan-400/30 hover:ring-cyan-400/60 relative overflow-hidden"
+        className="fixed bottom-6 right-6 z-[9999] bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white p-4 rounded-full shadow-2xl transition-all duration-150 ring-2 ring-cyan-400/30 hover:ring-cyan-400/80 relative overflow-hidden"
         style={{ position: 'fixed', bottom: '24px', right: '24px' }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.3, rotate: 15, y: -5 }}
+        whileTap={{ scale: 0.8, rotate: -5 }}
         animate={{
           boxShadow: [
-            '0 0 20px rgba(6, 182, 212, 0.3)',
             '0 0 40px rgba(6, 182, 212, 0.6)',
-            '0 0 20px rgba(6, 182, 212, 0.3)'
-          ]
+            '0 0 80px rgba(6, 182, 212, 1)',
+            '0 0 40px rgba(6, 182, 212, 0.6)'
+          ],
+          y: [0, -5, 0],
+          rotate: isOpen ? 180 : [0, 5, -5, 0]
         }}
         transition={{
-          boxShadow: { duration: 2, repeat: Infinity },
-          scale: { type: 'spring', stiffness: 400, damping: 17 }
+          boxShadow: { duration: 1.5, repeat: Infinity },
+          y: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+          rotate: { duration: 0.8, repeat: isOpen ? 0 : Infinity },
+          scale: { type: 'spring', stiffness: 600, damping: 15 }
         }}
       >
         {/* Animated background particles */}
@@ -212,23 +216,40 @@ export default function Chatbox() {
         </motion.div>
       </motion.button>
 
-      {/* Enhanced Chatbox */}
+      {/* Enhanced Chatbox with Backdrop */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed bottom-24 right-6 z-[9998] w-80 h-[28rem] max-w-[calc(100vw-3rem)] max-h-[calc(100vh-8rem)] glass-card border border-slate-600/40 rounded-xl shadow-2xl flex flex-col backdrop-blur-xl"
-            style={{ position: 'fixed', bottom: '96px', right: '24px' }}
-          >
-          {/* Enhanced Header */}
+          <>
+            {/* Fast Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
+              className="fixed inset-0 bg-gradient-to-br from-black/60 via-cyan-900/20 to-blue-900/30 backdrop-blur-lg z-[9997]"
+              onClick={() => setIsOpen(false)}
+            />
+            
+            {/* Fast Straight Chatbox */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="fixed bottom-24 right-6 z-[9998] w-80 h-[28rem] max-w-[calc(100vw-3rem)] max-h-[calc(100vh-8rem)] glass-card border-2 border-cyan-400/50 rounded-2xl shadow-2xl flex flex-col backdrop-blur-xl transform-gpu"
+              style={{ 
+                position: 'fixed', 
+                bottom: '96px', 
+                right: '24px',
+                filter: 'drop-shadow(0 40px 80px rgb(6 182 212 / 0.4))'
+              }}
+            >
+          {/* Advanced Header */}
           <motion.div 
-            className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-3 rounded-t-xl flex items-center gap-2 relative overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-3 rounded-t-2xl flex items-center gap-2 relative overflow-hidden"
+            initial={{ opacity: 0, y: -50, scaleY: 0 }}
+            animate={{ opacity: 1, y: 0, scaleY: 1 }}
+            transition={{ delay: 0.1, duration: 0.2, ease: 'easeOut' }}
           >
             {/* Header particles */}
             <div className="absolute inset-0">
@@ -276,8 +297,13 @@ export default function Chatbox() {
             </motion.div>
           </motion.div>
 
-          {/* Enhanced Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-hide bg-gradient-to-b from-slate-800/20 to-slate-900/30">
+          {/* Advanced Messages */}
+          <motion.div 
+            className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-hide bg-gradient-to-b from-slate-800/20 to-slate-900/30"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.15, duration: 0.2 }}
+          >
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -324,10 +350,15 @@ export default function Chatbox() {
             )}
             
             <div ref={messagesEndRef} />
-          </div>
+          </motion.div>
 
-          {/* Enhanced Input */}
-          <div className="p-3 border-t border-slate-600/30 bg-slate-800/20">
+          {/* Advanced Input */}
+          <motion.div 
+            className="p-3 border-t border-slate-600/30 bg-slate-800/20 rounded-b-2xl"
+            initial={{ opacity: 0, y: 50, scaleY: 0 }}
+            animate={{ opacity: 1, y: 0, scaleY: 1 }}
+            transition={{ delay: 0.2, duration: 0.2, ease: 'easeOut' }}
+          >
             {error && (
               <div className="mb-2 p-2 bg-red-500/20 border border-red-500/40 rounded text-xs text-red-300">
                 {error}
@@ -373,8 +404,9 @@ export default function Chatbox() {
             <div className="mt-1 text-xs text-gray-500 text-right">
               {inputText.length}/{MAX_MESSAGE_LENGTH}
             </div>
-          </div>
           </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>
