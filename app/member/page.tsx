@@ -32,10 +32,10 @@ export default function MemberDashboard() {
       if (currentMember) {
         setMember(currentMember)
         
-        const participatedEvents = events.filter(e => 
+        const participatedEvents = events.filter((e: Event) => 
           currentMember.eventsParticipated?.includes(e.id)
         )
-        const participatedProjects = projects.filter(p => 
+        const participatedProjects = projects.filter((p: Project) => 
           currentMember.projectsParticipated?.includes(p.id)
         )
         
