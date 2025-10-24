@@ -252,7 +252,7 @@ export default function Teams() {
                         <div className="flex flex-wrap gap-1">
                           {member.badges.slice(0, 3).map((badge, idx) => (
                             <span key={idx} className="px-2 py-1 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 text-yellow-300 text-xs rounded-full border border-yellow-400/30">
-                              {badge}
+                              {badge.name}
                             </span>
                           ))}
                           {member.badges.length > 3 && (
