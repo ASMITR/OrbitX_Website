@@ -80,7 +80,7 @@ OrbitX Info:
     console.error('Chat API error:', error)
     
     // Always return a helpful fallback response
-    const fallbackResponse = generateFallbackResponse(message.trim(), conversationHistory)
+    const fallbackResponse = generateFallbackResponse('help')
     return NextResponse.json({ response: fallbackResponse })
   }
 }
