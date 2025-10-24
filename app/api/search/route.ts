@@ -6,8 +6,11 @@ const openai = new OpenAI({
 })
 
 export async function POST(request: NextRequest) {
+  let query = ''
+  
   try {
-    const { query } = await request.json()
+    const body = await request.json()
+    query = body.query
     
     if (!query) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 })
