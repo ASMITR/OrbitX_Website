@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { initializeOwner, getOwnerFromDB } from '@/lib/roles'
 import { Crown, Mail, Lock, User, ArrowRight } from 'lucide-react'
@@ -64,7 +64,7 @@ export default function SetupOwner() {
       
       // Update user profile with name
       if (userCredential.user) {
-        await userCredential.user.updateProfile({
+        await updateProfile(userCredential.user, {
           displayName: formData.name
         })
       }
