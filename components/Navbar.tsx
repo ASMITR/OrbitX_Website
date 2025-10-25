@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, LogOut, ChevronDown, User, Settings } from 'lucide-react'
+import { Menu, X, LogOut, ChevronDown, User, Settings, ChevronLeft, ChevronRight } from 'lucide-react'
 import Logo from './Logo'
 import { useAuth } from './admin/AuthProvider'
 import { signOut } from 'firebase/auth'
@@ -21,6 +21,7 @@ export default function Navbar() {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [userRole, setUserRole] = useState<'owner' | 'admin' | 'member'>('member')
   const [scrolled, setScrolled] = useState(false)
+  const [sidebarMinimized, setSidebarMinimized] = useState(false)
   const { user } = useAuth()
   const pathname = usePathname()
 
@@ -227,16 +228,18 @@ export default function Navbar() {
   ]
 
   return (
-    <motion.nav 
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-        scrolled 
-          ? 'bg-black/80 backdrop-blur-2xl border-b border-white/20 shadow-2xl shadow-cyan-500/10' 
-          : 'bg-black/20 backdrop-blur-xl border-b border-white/10'
-      }`}
-    >
+    <>
+      {/* Desktop Top Navbar */}
+      <motion.nav 
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className={`fixed top-0 w-full z-50 transition-all duration-500 hidden lg:block ${
+          scrolled 
+            ? 'bg-black/80 backdrop-blur-2xl border-b border-white/20 shadow-2xl shadow-cyan-500/10' 
+            : 'bg-black/20 backdrop-blur-xl border-b border-white/10'
+        }`}
+      >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={`flex justify-between items-center transition-all duration-500 ${
           scrolled ? 'h-12 sm:h-14 lg:h-16' : 'h-14 sm:h-16 lg:h-18'
@@ -261,7 +264,7 @@ export default function Navbar() {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
+          <div className="hidden lg:flex items-center space-x-2 lg:space-x-4">
             {navItems.map((item, index) => (
               <motion.div
                 key={item.name}
@@ -448,7 +451,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <motion.button
               onClick={() => setIsOpen(!isOpen)}
               whileHover={{ scale: 1.1 }}
@@ -487,120 +490,433 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation Backdrop */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0, y: -20 }}
-              animate={{ opacity: 1, height: "auto", y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="md:hidden py-6 border-t border-white/20 bg-black/20 backdrop-blur-xl rounded-b-2xl mx-4 mt-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+              onClick={() => setIsOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Mobile Side Navigation */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ x: '-100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '-100%', opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="fixed inset-0 h-full w-full bg-black/95 backdrop-blur-2xl z-50 lg:hidden overflow-y-auto"
             >
-            {navItems.map((item, index) => (
-              <motion.div
-                key={item.name}
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.08 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link
-                  href={item.href}
-                  className="block py-4 px-6 mx-4 rounded-xl font-medium transition-all duration-300 text-gray-300 hover:text-cyan-300 hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10"
+              {/* Mobile Header */}
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <div className="flex items-center space-x-3">
+                  <img 
+                    src="/Logo_without_background.png" 
+                    alt="OrbitX Logo" 
+                    className="h-8 w-auto"
+                  />
+                  <div>
+                    <span className="text-lg font-bold text-white">OrbitX</span>
+                    <p className="text-xs text-gray-400">Space Exploration</p>
+                  </div>
+                </div>
+                <button
                   onClick={() => setIsOpen(false)}
+                  className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                 >
-                  {item.name}
-                </Link>
-              </motion.div>
-            ))}
-            
-            {/* Mobile Auth Section */}
-            {user ? (
-              <div className="px-2 pt-2 space-y-2">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: navItems.length * 0.05 }}
-                >
-                  {/* Member Dashboard - Mobile (Show for members and admins, not owners) */}
-                  {userRole !== 'owner' && (
-                    <Link
-                      href="/member"
-                      className="block py-3 px-4 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 rounded-lg font-medium"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=ffffff&size=200`}
-                          alt={adminName || user?.displayName || 'Profile'}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">Member Dashboard</span>
-                          <span className="text-xs text-gray-400">{adminName || user?.displayName || 'User'}</span>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
-                  
-                  {/* Admin Dashboard - Mobile (Only for admins/owners) */}
-                  {(userRole === 'admin' || userRole === 'owner') && (
-                    <Link
-                      href="/admin/dashboard"
-                      className="block py-3 px-4 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 rounded-lg font-medium mt-2"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                          <Settings className="h-3 w-3 text-white" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">{userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}</span>
-                          <span className="text-xs text-gray-400">Administrative controls</span>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: (navItems.length + 1) * 0.05 }}
-                >
-                  <button
-                    onClick={() => {
-                      handleLogout()
-                      setIsOpen(false)
-                    }}
-                    className="w-full text-left py-3 px-4 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 rounded-lg font-medium flex items-center"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                  </button>
-                </motion.div>
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-            ) : (
-              <div className="px-2 pt-2 space-y-2">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: navItems.length * 0.05 }}
-                >
+
+              {/* Navigation Items */}
+              <div className="px-4 py-6 space-y-2">
+                {navItems.map((item, index) => (
+                  <motion.div
+                    key={item.name}
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Link
+                      href={item.href}
+                      className="flex items-center py-3 px-4 rounded-xl font-medium transition-all duration-300 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 group"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <span className="text-base">{item.name}</span>
+                      <motion.div
+                        className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                        animate={{ x: [0, 5, 0] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      >
+                        →
+                      </motion.div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* User Profile Section */}
+              <div className="border-t border-white/10 p-4">
+                {user ? (
+                  <div className="space-y-3">
+                    {/* User Info */}
+                    <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-xl">
+                      <motion.img
+                        src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || 'User')}&background=3b82f6&color=ffffff&size=200`}
+                        alt={adminName || user?.displayName || 'Profile'}
+                        className="w-12 h-12 rounded-full object-cover"
+                        animate={{ rotate: [0, 5, -5, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                      <div className="flex-1">
+                        <p className="text-white font-semibold">{adminName || user?.displayName || 'User'}</p>
+                        <p className="text-xs text-blue-400">{userRole === 'owner' ? 'Owner' : userRole === 'admin' ? 'Administrator' : 'Member'}</p>
+                      </div>
+                    </div>
+
+                    {/* Dashboard Links */}
+                    <div className="space-y-2">
+                      {/* Member Dashboard */}
+                      {userRole !== 'owner' && (
+                        <Link
+                          href="/member"
+                          className="flex items-center py-3 px-4 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 transition-all duration-300 rounded-xl group"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <User className="h-5 w-5 mr-3" />
+                          <span className="font-medium">Member Dashboard</span>
+                          <motion.div
+                            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                            animate={{ x: [0, 5, 0] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          >
+                            →
+                          </motion.div>
+                        </Link>
+                      )}
+
+                      {/* Admin/Owner Dashboard */}
+                      {(userRole === 'admin' || userRole === 'owner') && (
+                        <Link
+                          href="/admin/dashboard"
+                          className="flex items-center py-3 px-4 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 transition-all duration-300 rounded-xl group"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Settings className="h-5 w-5 mr-3" />
+                          <span className="font-medium">{userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}</span>
+                          <motion.div
+                            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                            animate={{ x: [0, 5, 0] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          >
+                            →
+                          </motion.div>
+                        </Link>
+                      )}
+
+                      {/* Logout */}
+                      <button
+                        onClick={() => {
+                          handleLogout()
+                          setIsOpen(false)
+                        }}
+                        className="w-full flex items-center py-3 px-4 text-gray-300 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 rounded-xl"
+                      >
+                        <LogOut className="h-5 w-5 mr-3" />
+                        <span className="font-medium">Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
                   <Link
                     href="/auth"
-                    className="block py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-cyan-100 hover:from-blue-600 hover:to-purple-600 transition-all duration-200 rounded-lg font-medium"
+                    className="block py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-all duration-300 rounded-xl font-medium text-center"
                     onClick={() => setIsOpen(false)}
                   >
                     Get Started
                   </Link>
-                </motion.div>
+                )}
               </div>
-            )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    </motion.nav>
+      </motion.nav>
+
+      {/* Mobile/Tablet Side Menu Bar */}
+      <motion.nav
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ 
+          x: sidebarMinimized ? -60 : 0, 
+          opacity: 1 
+        }}
+        transition={{ duration: 0.15, ease: "easeOut" }}
+        className={`fixed left-0 top-0 h-full bg-black/90 backdrop-blur-2xl border-r border-white/20 z-50 lg:hidden flex flex-col py-4 transition-all duration-150 group ${
+          sidebarMinimized ? 'w-16 items-center' : 'w-64 items-start px-4'
+        }`}
+      >
+        {/* Minimize/Expand Toggle */}
+        <motion.button
+          onClick={() => setSidebarMinimized(!sidebarMinimized)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className={`absolute top-4 left-4 w-10 h-10 bg-black/90 border border-white/20 rounded-xl flex items-center justify-center transition-all duration-150 group ${
+            sidebarMinimized ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`}
+          title={sidebarMinimized ? 'Expand Menu' : 'Minimize Menu'}
+        >
+          <motion.div
+            animate={{ rotate: sidebarMinimized ? 180 : 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <ChevronLeft className="h-5 w-5 text-white" />
+          </motion.div>
+        </motion.button>
+        {/* Logo */}
+        {!sidebarMinimized && (
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="mb-8 flex items-center space-x-3"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.15 }}
+          >
+            <Link href="/" className="flex items-center space-x-3">
+              <img 
+                src="/Logo_without_background.png" 
+                alt="OrbitX Logo" 
+                className="h-10 w-auto"
+              />
+              <div>
+                <span className="text-lg font-bold text-white">OrbitX</span>
+                <p className="text-xs text-gray-400">Space Exploration</p>
+              </div>
+            </Link>
+          </motion.div>
+        )}
+
+        {/* Navigation Items */}
+        <div className={`flex flex-col space-y-2 flex-1 ${sidebarMinimized ? 'mt-8 items-center' : 'w-full'}`}>
+          {navItems.map((item, index) => (
+            <motion.div
+              key={item.name}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2, delay: index * 0.02 }}
+              whileHover={{ scale: sidebarMinimized ? 1.1 : 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              className={sidebarMinimized ? '' : 'w-full'}
+            >
+              <Link
+                href={item.href}
+                className={`rounded-xl bg-white/10 hover:bg-white/20 flex items-center transition-all duration-150 group relative ${
+                  sidebarMinimized 
+                    ? 'w-8 h-8 justify-center' 
+                    : 'w-full px-4 py-3 space-x-3'
+                }`}
+                title={sidebarMinimized ? item.name : ''}
+              >
+                {sidebarMinimized ? (
+                  <span className="text-gray-300 group-hover:text-white font-bold text-sm">
+                    {item.name.charAt(0)}
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-gray-300 group-hover:text-white font-bold text-lg">
+                      {item.name.charAt(0)}
+                    </span>
+                    <span className="text-gray-300 group-hover:text-white font-medium">
+                      {item.name}
+                    </span>
+                    <motion.div
+                      className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      →
+                    </motion.div>
+                  </>
+                )}
+                {sidebarMinimized && (
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    {item.name}
+                  </div>
+                )}
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* User Profile */}
+        {user && (
+          <div className={`mt-auto space-y-3 ${sidebarMinimized ? '' : 'w-full'}`}>
+            {/* Profile Photo */}
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="relative group"
+            >
+              <img
+                src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || 'User')}&background=3b82f6&color=ffffff&size=200`}
+                alt={adminName || user?.displayName || 'Profile'}
+                className={`rounded-full object-cover border-2 border-white/20 transition-all duration-300 ${
+                  sidebarMinimized ? 'w-8 h-8' : 'w-12 h-12'
+                }`}
+              />
+              <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                {adminName || user?.displayName || 'User'}
+              </div>
+            </motion.div>
+
+            {/* Dashboard Links */}
+            {userRole !== 'owner' && (
+              <motion.div
+                whileHover={{ scale: sidebarMinimized ? 1.1 : 1.02 }}
+                whileTap={{ scale: 0.95 }}
+                className={sidebarMinimized ? '' : 'w-full'}
+              >
+                <Link
+                  href="/member"
+                  className={`rounded-xl bg-blue-500/20 hover:bg-blue-500/30 flex items-center transition-all duration-300 group relative ${
+                    sidebarMinimized 
+                      ? 'w-8 h-8 justify-center' 
+                      : 'w-full px-4 py-3 space-x-3'
+                  }`}
+                  title={sidebarMinimized ? 'Member Dashboard' : ''}
+                >
+                  <User className={`text-blue-300 ${
+                    sidebarMinimized ? 'h-3 w-3' : 'h-5 w-5'
+                  }`} />
+                  {!sidebarMinimized && (
+                    <span className="text-blue-300 font-medium">Member Dashboard</span>
+                  )}
+                  {sidebarMinimized && (
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Member Dashboard
+                    </div>
+                  )}
+                </Link>
+              </motion.div>
+            )}
+
+            {(userRole === 'admin' || userRole === 'owner') && (
+              <motion.div
+                whileHover={{ scale: sidebarMinimized ? 1.1 : 1.02 }}
+                whileTap={{ scale: 0.95 }}
+                className={sidebarMinimized ? '' : 'w-full'}
+              >
+                <Link
+                  href="/admin/dashboard"
+                  className={`rounded-xl bg-purple-500/20 hover:bg-purple-500/30 flex items-center transition-all duration-300 group relative ${
+                    sidebarMinimized 
+                      ? 'w-8 h-8 justify-center' 
+                      : 'w-full px-4 py-3 space-x-3'
+                  }`}
+                  title={sidebarMinimized ? (userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard') : ''}
+                >
+                  <Settings className={`text-purple-300 ${
+                    sidebarMinimized ? 'h-3 w-3' : 'h-5 w-5'
+                  }`} />
+                  {!sidebarMinimized && (
+                    <span className="text-purple-300 font-medium">
+                      {userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}
+                    </span>
+                  )}
+                  {sidebarMinimized && (
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      {userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}
+                    </div>
+                  )}
+                </Link>
+              </motion.div>
+            )}
+
+            {/* Logout */}
+            <motion.div
+              whileHover={{ scale: sidebarMinimized ? 1.1 : 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              className={sidebarMinimized ? '' : 'w-full'}
+            >
+              <button
+                onClick={handleLogout}
+                className={`rounded-xl bg-red-500/20 hover:bg-red-500/30 flex items-center transition-all duration-300 group relative ${
+                  sidebarMinimized 
+                    ? 'w-8 h-8 justify-center' 
+                    : 'w-full px-4 py-3 space-x-3'
+                }`}
+                title={sidebarMinimized ? 'Logout' : ''}
+              >
+                <LogOut className={`text-red-300 ${
+                  sidebarMinimized ? 'h-3 w-3' : 'h-5 w-5'
+                }`} />
+                {!sidebarMinimized && (
+                  <span className="text-red-300 font-medium">Logout</span>
+                )}
+                {sidebarMinimized && (
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Logout
+                  </div>
+                )}
+              </button>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Auth Button for non-logged users */}
+        {!user && (
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="mt-auto"
+          >
+            <Link
+              href="/auth"
+              className={`rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 flex items-center transition-all duration-300 group relative ${
+                sidebarMinimized 
+                  ? 'w-8 h-8 justify-center' 
+                  : 'w-full px-4 py-3 space-x-3'
+              }`}
+              title="Get Started"
+            >
+              <span className={`text-white font-bold ${
+                sidebarMinimized ? 'text-sm' : 'text-lg'
+              }`}>+</span>
+              {!sidebarMinimized && (
+                <span className="text-white font-medium">Get Started</span>
+              )}
+              <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                Get Started
+              </div>
+            </Link>
+          </motion.div>
+        )}
+      </motion.nav>
+
+      {/* Floating Toggle Button for Home Screen */}
+      {sidebarMinimized && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          onClick={() => setSidebarMinimized(false)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="fixed top-4 left-4 w-12 h-12 bg-black/90 backdrop-blur-2xl border border-white/20 rounded-xl flex items-center justify-center z-40 lg:hidden shadow-lg shadow-cyan-500/20"
+          title="Expand Menu"
+        >
+          <ChevronRight className="h-6 w-6 text-white" />
+        </motion.button>
+      )}
+    </>
   )
 }
