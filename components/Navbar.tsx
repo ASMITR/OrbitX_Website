@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, LogOut, ChevronDown, User } from 'lucide-react'
+import { Menu, X, LogOut, ChevronDown, User, Settings } from 'lucide-react'
 import Logo from './Logo'
 import { useAuth } from './admin/AuthProvider'
 import { signOut } from 'firebase/auth'
@@ -73,29 +73,47 @@ export default function Navbar() {
     const fetchUserProfile = async () => {
       if (user) {
         try {
-          // Try to fetch admin profile first
-          const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
-          if (adminResponse.ok) {
-            const profile = await adminResponse.json()
-            setAdminName(profile?.name || '')
-            setAdminPhoto(profile?.photo || '')
+          const role = await getUserRoleFromDB(user)
+          
+          if (role === 'owner') {
+            // For owners, prioritize admin profile
+            const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
+            if (adminResponse.ok) {
+              const profile = await adminResponse.json()
+              setAdminName(profile?.name || user?.displayName || user?.email?.split('@')[0] || '')
+              setAdminPhoto(profile?.photo || '')
+            } else {
+              setAdminName(user?.displayName || user?.email?.split('@')[0] || '')
+              setAdminPhoto('')
+            }
           } else {
-            // If not admin, try to fetch member data
-            const { getMembers } = await import('@/lib/db')
-            const members = await getMembers()
-            const member = members.find((m: any) => m.email === user.email)
+            // For members and admins, prioritize member data
+            const { getMember, getMemberByEmail } = await import('@/lib/db')
+            let member = await getMember(user.uid)
+            if (!member) {
+              member = await getMemberByEmail(user.email!)
+            }
+            
             if (member) {
               setMemberData(member)
-              setAdminName(member.name)
-              setAdminPhoto(member.photo)
+              setAdminName(member.name || user?.displayName || user?.email?.split('@')[0] || '')
+              setAdminPhoto(member.photo || '')
             } else {
-              setAdminName('')
-              setAdminPhoto('')
+              // Fallback to admin profile
+              const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
+              if (adminResponse.ok) {
+                const profile = await adminResponse.json()
+                setAdminName(profile?.name || user?.displayName || user?.email?.split('@')[0] || '')
+                setAdminPhoto(profile?.photo || '')
+              } else {
+                setAdminName(user?.displayName || user?.email?.split('@')[0] || '')
+                setAdminPhoto('')
+              }
             }
           }
         } catch (error) {
           console.error('Error fetching user profile:', error)
-          setAdminName('')
+          setAdminName(user?.displayName || user?.email?.split('@')[0] || '')
           setAdminPhoto('')
         }
       } else {
@@ -112,26 +130,47 @@ export default function Navbar() {
     if (user) {
       const interval = setInterval(async () => {
         try {
-          const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
-          if (adminResponse.ok) {
-            const profile = await adminResponse.json()
-            if (profile?.name && profile.name !== adminName) {
-              setAdminName(profile.name)
-            }
-            if (profile?.photo && profile.photo !== adminPhoto) {
-              setAdminPhoto(profile.photo)
+          if (userRole === 'owner') {
+            // For owners, check admin profile
+            const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
+            if (adminResponse.ok) {
+              const profile = await adminResponse.json()
+              const newName = profile?.name || user?.displayName || user?.email?.split('@')[0] || ''
+              if (newName !== adminName) {
+                setAdminName(newName)
+              }
+              if (profile?.photo && profile.photo !== adminPhoto) {
+                setAdminPhoto(profile.photo)
+              }
             }
           } else {
-            // Check member data by UID first, then by email
+            // For members and admins, check member data first
             const { getMember, getMemberByEmail } = await import('@/lib/db')
             let member = await getMember(user.uid)
             if (!member) {
               member = await getMemberByEmail(user.email!)
             }
-            if (member && member.name !== adminName) {
-              setMemberData(member)
-              setAdminName(member.name)
-              setAdminPhoto(member.photo)
+            
+            if (member) {
+              const newName = member.name || user?.displayName || user?.email?.split('@')[0] || ''
+              if (newName !== adminName) {
+                setMemberData(member)
+                setAdminName(newName)
+                setAdminPhoto(member.photo || '')
+              }
+            } else {
+              // Fallback to admin profile
+              const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
+              if (adminResponse.ok) {
+                const profile = await adminResponse.json()
+                const newName = profile?.name || user?.displayName || user?.email?.split('@')[0] || ''
+                if (newName !== adminName) {
+                  setAdminName(newName)
+                }
+                if (profile?.photo && profile.photo !== adminPhoto) {
+                  setAdminPhoto(profile.photo)
+                }
+              }
             }
           }
         } catch (error) {
@@ -141,7 +180,7 @@ export default function Navbar() {
 
       return () => clearInterval(interval)
     }
-  }, [user, adminName, adminPhoto])
+  }, [user, adminName, adminPhoto, userRole])
 
   // Listen for storage events to refresh immediately when profile is updated
   useEffect(() => {
@@ -157,8 +196,8 @@ export default function Navbar() {
             }
             if (member) {
               setMemberData(member)
-              setAdminName(member.name)
-              setAdminPhoto(member.photo)
+              setAdminName(member.name || user?.displayName || user?.email?.split('@')[0] || '')
+              setAdminPhoto(member.photo || '')
             }
           } catch (error) {
             console.error('Error refreshing profile:', error)
@@ -284,37 +323,37 @@ export default function Navbar() {
               >
                 <motion.button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center space-x-3 px-4 py-2 rounded-xl hover:bg-white/10 transition-all duration-300 group border border-white/10 hover:border-white/20"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 group"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <div className="relative">
-                    <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-full ring-2 ring-cyan-400/30 group-hover:ring-cyan-400/60 transition-all duration-300 bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center overflow-hidden">
-                      {adminPhoto ? (
-                        <img 
-                          src={adminPhoto} 
-                          alt={adminName || 'Profile'}
-                          className="w-full h-full object-cover rounded-full"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            target.nextElementSibling?.classList.remove('hidden');
-                          }}
-                        />
-                      ) : null}
-                      <User className={`h-4 w-4 lg:h-5 lg:w-5 text-white ${adminPhoto ? 'hidden' : ''}`} />
-                    </div>
+                  <motion.div 
+                    className="relative flex-shrink-0"
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <motion.img
+                      src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=ffffff&size=200`}
+                      alt={adminName || user?.displayName || 'Profile'}
+                      className="w-10 h-10 lg:w-12 lg:h-12 rounded-full object-cover"
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    />
                     <motion.div
                       className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/20 to-blue-500/20"
                       animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     />
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-gray-300 group-hover:text-white text-sm lg:text-base font-medium transition-colors duration-300">
-                      {adminName || user.email?.split('@')[0] || 'User'}
-                    </span>
-                    <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
+                  </motion.div>
+                  <div className="flex flex-col text-left flex-1">
+                    <motion.span 
+                      className="text-white text-sm lg:text-base font-semibold"
+                      animate={{ opacity: [0.8, 1, 0.8] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      {adminName || user?.displayName || 'User'}
+                    </motion.span>
+                    <span className="text-xs text-blue-400">
                       {userRole === 'owner' ? 'Owner' : userRole === 'admin' ? 'Administrator' : 'Member'}
                     </span>
                   </div>
@@ -322,7 +361,7 @@ export default function Navbar() {
                     animate={{ rotate: showProfileMenu ? 180 : 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
+                    <ChevronDown className="h-4 w-4 text-gray-400 transition-colors" />
                   </motion.div>
                 </motion.button>
                 
@@ -337,29 +376,57 @@ export default function Navbar() {
                       className="absolute right-0 top-full mt-3 w-56 bg-black/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl shadow-cyan-500/10 z-50 overflow-hidden"
                     >
                       <div className="p-2">
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Link
-                            href={userRole === 'owner' || userRole === 'admin' ? '/admin/dashboard' : '/member'}
-                            className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 transition-all duration-300 rounded-xl border-b border-white/10 mb-1 group"
-                            onClick={() => setShowProfileMenu(false)}
+                        {/* Member Dashboard - Show for members and admins, not owners */}
+                        {userRole !== 'owner' && (
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                           >
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium">
-                                {userRole === 'owner' ? 'Owner Dashboard' : userRole === 'admin' ? 'Admin Dashboard' : 'Member Portal'}
-                              </span>
-                              <motion.div
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                animate={{ x: [0, 5, 0] }}
-                                transition={{ duration: 1, repeat: Infinity }}
-                              >
-                                →
-                              </motion.div>
-                            </div>
-                          </Link>
-                        </motion.div>
+                            <Link
+                              href="/member"
+                              className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 transition-all duration-300 rounded-xl border-b border-white/10 mb-1 group"
+                              onClick={() => setShowProfileMenu(false)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">Member Dashboard</span>
+                                <motion.div
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  animate={{ x: [0, 5, 0] }}
+                                  transition={{ duration: 1, repeat: Infinity }}
+                                >
+                                  →
+                                </motion.div>
+                              </div>
+                            </Link>
+                          </motion.div>
+                        )}
+                        
+                        {/* Admin Dashboard - Only show for admins and owners */}
+                        {(userRole === 'admin' || userRole === 'owner') && (
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Link
+                              href="/admin/dashboard"
+                              className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 transition-all duration-300 rounded-xl border-b border-white/10 mb-1 group"
+                              onClick={() => setShowProfileMenu(false)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">
+                                  {userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}
+                                </span>
+                                <motion.div
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  animate={{ x: [0, 5, 0] }}
+                                  transition={{ duration: 1, repeat: Infinity }}
+                                >
+                                  →
+                                </motion.div>
+                              </div>
+                            </Link>
+                          </motion.div>
+                        )}
                         <motion.div
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
@@ -456,33 +523,45 @@ export default function Navbar() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: navItems.length * 0.05 }}
                 >
-                  <Link
-                    href={userRole === 'owner' || userRole === 'admin' ? '/admin/dashboard' : '/member'}
-                    className="block py-3 px-4 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 rounded-lg font-medium"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center overflow-hidden">
-                        {adminPhoto ? (
-                          <img 
-                            src={adminPhoto} 
-                            alt={adminName || 'Profile'}
-                            className="w-full h-full object-cover rounded-full"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              target.nextElementSibling?.classList.remove('hidden');
-                            }}
-                          />
-                        ) : null}
-                        <User className={`h-3 w-3 text-white ${adminPhoto ? 'hidden' : ''}`} />
+                  {/* Member Dashboard - Mobile (Show for members and admins, not owners) */}
+                  {userRole !== 'owner' && (
+                    <Link
+                      href="/member"
+                      className="block py-3 px-4 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 rounded-lg font-medium"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=ffffff&size=200`}
+                          alt={adminName || user?.displayName || 'Profile'}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Member Dashboard</span>
+                          <span className="text-xs text-gray-400">{adminName || user?.displayName || 'User'}</span>
+                        </div>
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">{adminName || user.email?.split('@')[0] || 'User'}</span>
-                        <span className="text-xs text-gray-400">{userRole === 'owner' ? 'Owner' : userRole === 'admin' ? 'Administrator' : 'Member'}</span>
+                    </Link>
+                  )}
+                  
+                  {/* Admin Dashboard - Mobile (Only for admins/owners) */}
+                  {(userRole === 'admin' || userRole === 'owner') && (
+                    <Link
+                      href="/admin/dashboard"
+                      className="block py-3 px-4 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 rounded-lg font-medium mt-2"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                          <Settings className="h-3 w-3 text-white" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">{userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}</span>
+                          <span className="text-xs text-gray-400">Administrative controls</span>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  )}
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}

@@ -12,7 +12,7 @@ const nextConfig = {
     minimumCacheTTL: 31536000,
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    domains: ['res.cloudinary.com'],
+    domains: ['res.cloudinary.com', 'ui-avatars.com'],
   },
   compress: true,
   poweredByHeader: false,

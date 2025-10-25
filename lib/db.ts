@@ -166,6 +166,26 @@ export const deleteMember = async (id: string) => {
   return await deleteDoc(docRef)
 }
 
+// Delete member and their Firebase Auth account
+export const deleteMemberCompletely = async (memberId: string, email: string) => {
+  // Delete member document
+  await deleteMember(memberId)
+  
+  // Note: Firebase Auth user deletion requires Admin SDK on server side
+  // This will be handled by an API route
+  const response = await fetch('/api/admin/delete-user', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  })
+  
+  if (!response.ok) {
+    throw new Error('Failed to delete user authentication')
+  }
+  
+  return response.json()
+}
+
 // Contact Messages
 export const getContactMessages = async () => {
   const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'))
@@ -237,6 +257,21 @@ export const getAdminProfile = async (uid: string) => {
     return profile
   }
   return null
+}
+
+// Create admin profile from member data
+export const createAdminFromMember = async (uid: string, memberData: Member) => {
+  const adminProfileData = {
+    name: memberData.name,
+    email: memberData.email,
+    photo: memberData.photo,
+    socialLinks: memberData.socialLinks || {},
+    createdAt: new Date().toISOString(),
+    promotedAt: new Date().toISOString()
+  }
+  const docRef = doc(db, 'adminProfiles', uid)
+  await setDoc(docRef, adminProfileData)
+  return adminProfileData
 }
 
 export const updateAdminProfile = async (uid: string, profile: { name?: string, photo?: string, socialLinks?: any, email?: string }) => {

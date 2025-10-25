@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Award, Plus, Users, Calendar, FolderOpen } from 'lucide-react'
+import { Award, Plus, Users, Calendar, FolderOpen, Trash2 } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
-import { getMembers, getEvents, getProjects, awardBadge, addMemberToEvent, addMemberToProject } from '@/lib/db'
+import { getMembers, getEvents, getProjects, awardBadge, addMemberToEvent, addMemberToProject, deleteMemberCompletely } from '@/lib/db'
 import { Member, Event, Project, Badge } from '@/lib/types'
 import toast from 'react-hot-toast'
 
@@ -78,6 +78,21 @@ export default function ManageMembers() {
     }
   }
 
+  const handleDeleteMember = async (member: Member) => {
+    if (!confirm(`Are you sure you want to permanently delete ${member.name}? This will remove their account and all data.`)) {
+      return
+    }
+    
+    try {
+      await deleteMemberCompletely(member.id, member.email)
+      await fetchData()
+      toast.success('Member deleted successfully')
+    } catch (error) {
+      console.error('Error deleting member:', error)
+      toast.error('Failed to delete member')
+    }
+  }
+
   if (loading) {
     return (
       <AdminLayout title="Manage Members">
@@ -124,36 +139,45 @@ export default function ManageMembers() {
                 <p className="text-sm text-gray-300">Projects: {member.projectsParticipated?.length || 0}</p>
               </div>
 
-              <div className="flex space-x-2">
+              <div className="space-y-2">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => {
+                      setSelectedMember(member)
+                      setShowBadgeModal(true)
+                    }}
+                    className="flex-1 px-3 py-2 bg-yellow-500/20 text-yellow-300 rounded hover:bg-yellow-500/30 transition-colors text-sm"
+                  >
+                    <Award className="h-4 w-4 inline mr-1" />
+                    Badge
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedMember(member)
+                      setShowEventModal(true)
+                    }}
+                    className="flex-1 px-3 py-2 bg-blue-500/20 text-blue-300 rounded hover:bg-blue-500/30 transition-colors text-sm"
+                  >
+                    <Calendar className="h-4 w-4 inline mr-1" />
+                    Event
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedMember(member)
+                      setShowProjectModal(true)
+                    }}
+                    className="flex-1 px-3 py-2 bg-purple-500/20 text-purple-300 rounded hover:bg-purple-500/30 transition-colors text-sm"
+                  >
+                    <FolderOpen className="h-4 w-4 inline mr-1" />
+                    Project
+                  </button>
+                </div>
                 <button
-                  onClick={() => {
-                    setSelectedMember(member)
-                    setShowBadgeModal(true)
-                  }}
-                  className="flex-1 px-3 py-2 bg-yellow-500/20 text-yellow-300 rounded hover:bg-yellow-500/30 transition-colors text-sm"
+                  onClick={() => handleDeleteMember(member)}
+                  className="w-full px-3 py-2 bg-red-500/20 text-red-300 rounded hover:bg-red-500/30 transition-colors text-sm"
                 >
-                  <Award className="h-4 w-4 inline mr-1" />
-                  Badge
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedMember(member)
-                    setShowEventModal(true)
-                  }}
-                  className="flex-1 px-3 py-2 bg-blue-500/20 text-blue-300 rounded hover:bg-blue-500/30 transition-colors text-sm"
-                >
-                  <Calendar className="h-4 w-4 inline mr-1" />
-                  Event
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedMember(member)
-                    setShowProjectModal(true)
-                  }}
-                  className="flex-1 px-3 py-2 bg-purple-500/20 text-purple-300 rounded hover:bg-purple-500/30 transition-colors text-sm"
-                >
-                  <FolderOpen className="h-4 w-4 inline mr-1" />
-                  Project
+                  <Trash2 className="h-4 w-4 inline mr-1" />
+                  Delete Member
                 </button>
               </div>
             </motion.div>

@@ -38,20 +38,38 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const router = useRouter()
 
   useEffect(() => {
-    const fetchAdminProfile = async () => {
+    const fetchUserProfile = async () => {
       if (user) {
         try {
-          const profile = await getAdminProfile(user.uid)
-          if (profile) {
-            setAdminName(profile.name || '')
-            setAdminPhoto(profile.photo || '')
+          // Try to fetch member data first
+          const { getMember, getMemberByEmail } = await import('@/lib/db')
+          let member = await getMember(user.uid)
+          if (!member) {
+            member = await getMemberByEmail(user.email!)
+          }
+          
+          if (member) {
+            setAdminName(member.name || user?.displayName || user?.email?.split('@')[0] || '')
+            setAdminPhoto(member.photo || '')
+          } else {
+            // Fallback to admin profile
+            const profile = await getAdminProfile(user.uid)
+            if (profile) {
+              setAdminName(profile.name || user?.displayName || user?.email?.split('@')[0] || '')
+              setAdminPhoto(profile.photo || '')
+            } else {
+              setAdminName(user?.displayName || user?.email?.split('@')[0] || '')
+              setAdminPhoto('')
+            }
           }
         } catch (error) {
-          console.error('Error fetching admin profile:', error)
+          console.error('Error fetching user profile:', error)
+          setAdminName(user?.displayName || user?.email?.split('@')[0] || '')
+          setAdminPhoto('')
         }
       }
     }
-    fetchAdminProfile()
+    fetchUserProfile()
   }, [user])
 
   if (loading) {
@@ -177,15 +195,17 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                     whileHover={{ scale: 1.1 }}
                     className="mr-3"
                   >
-                    <img 
-                      src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user.email?.split('@')[0] || 'Admin')}&background=6366f1&color=ffffff&size=40&rounded=true`}
+                    <motion.img 
+                      src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || user?.email?.split('@')[0] || 'Admin')}&background=6366f1&color=ffffff&size=40&rounded=true`}
                       alt="Profile"
-                      className="w-10 h-10 rounded-full ring-2 ring-white/20 object-cover"
+                      className="w-10 h-10 rounded-full object-cover"
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     />
                   </motion.div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate">
-                      {adminName || user.email?.split('@')[0] || 'Admin'}
+                      {adminName || user?.displayName || user?.email?.split('@')[0] || 'Admin'}
                     </p>
                     <p className="text-xs text-gray-400">Administrator</p>
                   </div>
@@ -258,14 +278,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
               
               {/* Profile in top navbar */}
               <div className="flex items-center space-x-2 ml-2">
-                <img 
-                  src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user.email?.split('@')[0] || 'Admin')}&background=6366f1&color=ffffff&size=32&rounded=true`}
+                <motion.img 
+                  src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || user?.email?.split('@')[0] || 'Admin')}&background=6366f1&color=ffffff&size=32&rounded=true`}
                   alt="Profile"
-                  className="w-8 h-8 rounded-full ring-2 ring-white/20 object-cover"
+                  className="w-8 h-8 rounded-full object-cover"
+                  animate={{ rotate: [0, 3, -3, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <div className="hidden sm:block">
                   <p className="text-sm font-medium text-white truncate">
-                    {adminName || user.email?.split('@')[0] || 'Admin'}
+                    {adminName || user?.displayName || user?.email?.split('@')[0] || 'Admin'}
                   </p>
                 </div>
               </div>

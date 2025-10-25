@@ -76,6 +76,33 @@ export const addAdminToDB = async (email: string): Promise<boolean> => {
   }
 }
 
+// Promote member to admin with profile data transfer
+export const promoteMemberToAdmin = async (email: string, uid: string): Promise<boolean> => {
+  try {
+    // First, get member data
+    const { getMemberByEmail, createAdminFromMember } = await import('./db')
+    const memberData = await getMemberByEmail(email)
+    
+    if (!memberData) {
+      throw new Error('Member not found')
+    }
+    
+    // Create admin profile from member data
+    await createAdminFromMember(uid, memberData)
+    
+    // Add to admin roles
+    const rolesRef = doc(db, 'settings', 'roles')
+    await updateDoc(rolesRef, {
+      admins: arrayUnion(email.toLowerCase())
+    })
+    
+    return true
+  } catch (error) {
+    console.error('Error promoting member to admin:', error)
+    return false
+  }
+}
+
 // Remove admin from Firestore
 export const removeAdminFromDB = async (email: string): Promise<boolean> => {
   try {

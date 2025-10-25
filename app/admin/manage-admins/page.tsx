@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/admin/AuthProvider'
-import { isOwnerDB, isAdminDB, getAdminsFromDB, addAdminToDB, removeAdminFromDB } from '@/lib/roles'
+import { isOwnerDB, isAdminDB, getAdminsFromDB, addAdminToDB, removeAdminFromDB, promoteMemberToAdmin } from '@/lib/roles'
+import { getAuth } from 'firebase/auth'
 import { UserPlus, Trash2, Shield, Crown } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import toast from 'react-hot-toast'
@@ -86,14 +87,30 @@ export default function ManageAdmins() {
       return
     }
 
-    const success = await addAdminToDB(newAdminEmail)
-    if (success) {
-      const updatedAdmins = await getAdminsFromDB()
-      setAdminEmails(updatedAdmins)
-      setNewAdminEmail('')
-      toast.success('Admin added successfully')
-    } else {
-      toast.error('Failed to add admin')
+    try {
+      // Check if user exists and get their UID
+      const { getMemberByEmail } = await import('@/lib/db')
+      const memberData = await getMemberByEmail(newAdminEmail)
+      
+      if (!memberData) {
+        toast.error('Member not found. User must be registered first.')
+        return
+      }
+
+      // Promote member to admin with profile data transfer
+      const success = await promoteMemberToAdmin(newAdminEmail, memberData.id)
+      
+      if (success) {
+        const updatedAdmins = await getAdminsFromDB()
+        setAdminEmails(updatedAdmins)
+        setNewAdminEmail('')
+        toast.success('Member promoted to admin successfully with profile data transferred')
+      } else {
+        toast.error('Failed to promote member to admin')
+      }
+    } catch (error) {
+      console.error('Error promoting member:', error)
+      toast.error('Failed to promote member to admin')
     }
   }
 

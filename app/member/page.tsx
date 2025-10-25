@@ -167,8 +167,8 @@ export default function MemberPanel() {
             {/* Profile Photo */}
             <div className="flex-shrink-0 text-center">
               <img
-                src={member?.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || user?.displayName || 'User')}&background=3b82f6&color=ffffff&size=200`}
-                alt={member?.name || 'User'}
+                src={member?.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || user?.displayName || user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=ffffff&size=200`}
+                alt={member?.name || user?.displayName || 'User'}
                 className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-blue-400/30"
               />
             </div>
@@ -197,7 +197,7 @@ export default function MemberPanel() {
                 </div>
               ) : (
                 <>
-                  <h2 className="text-2xl font-bold text-white mb-2">{member?.name || user?.displayName || 'Loading...'}</h2>
+                  <h2 className="text-2xl font-bold text-white mb-2">{member?.name || user?.displayName || user?.email?.split('@')[0] || 'Loading...'}</h2>
                   <p className="text-blue-400 mb-2">{member?.position || 'Member'}</p>
                   <p className="text-purple-400 mb-4">{member?.team || 'General'}</p>
                   

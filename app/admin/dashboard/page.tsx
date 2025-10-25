@@ -378,7 +378,7 @@ export default function AdminDashboard() {
                 <div className="flex-shrink-0">
                   <div className="relative">
                     <img
-                      src={photoPreview || profileData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || user?.email?.split('@')[0] || 'Admin')}&background=3b82f6&color=ffffff&size=200`}
+                      src={photoPreview || profileData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || user?.displayName || user?.email?.split('@')[0] || 'Admin')}&background=3b82f6&color=ffffff&size=200`}
                       alt="Profile"
                       className="w-24 h-24 rounded-full object-cover border-4 border-blue-400/30"
                     />
@@ -468,12 +468,12 @@ export default function AdminDashboard() {
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <img
-                  src={adminProfile?.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminProfile?.name || user?.email?.split('@')[0] || 'Admin')}&background=3b82f6&color=ffffff&size=200`}
+                  src={adminProfile?.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminProfile?.name || user?.displayName || user?.email?.split('@')[0] || 'Admin')}&background=3b82f6&color=ffffff&size=200`}
                   alt="Profile"
                   className="w-16 h-16 rounded-full object-cover border-4 border-blue-400/30"
                 />
                 <div>
-                  <h4 className="text-lg font-semibold text-white">{adminProfile?.name || user?.email?.split('@')[0] || 'Admin'}</h4>
+                  <h4 className="text-lg font-semibold text-white">{adminProfile?.name || user?.displayName || user?.email?.split('@')[0] || 'Admin'}</h4>
                   <p className="text-gray-400">{isOwnerUser ? 'Owner' : 'Administrator'}</p>
                 </div>
               </div>
