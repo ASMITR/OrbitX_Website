@@ -125,12 +125,15 @@ export const createMemberFromAuth = async (uid: string, email: string, name: str
     year: 'Not specified',
     division: 'Not specified',
     rollNo: 'Not specified',
+    zprnNo: 'Not specified',
+    phone: 'Not specified',
     photo: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=ffffff&size=200`,
     skills: [],
     badges: [],
     eventsParticipated: [],
     projectsParticipated: [],
-    joinedAt: new Date().toISOString()
+    joinedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString()
   }
   const docRef = doc(db, 'members', uid)
   await setDoc(docRef, memberData)
