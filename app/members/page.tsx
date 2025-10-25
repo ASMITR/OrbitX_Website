@@ -65,6 +65,7 @@ export default function Members() {
         linkedin: '#',
         github: '#'
       },
+      skills: ['Leadership', 'Project Management', 'Space Technology'],
       createdAt: '2024-01-01'
     },
     {
@@ -86,6 +87,7 @@ export default function Members() {
         github: '#',
         instagram: '#'
       },
+      skills: ['CAD Design', 'Mechanical Engineering', 'Innovation', 'Prototyping'],
       createdAt: '2024-01-01'
     },
     {
@@ -424,6 +426,24 @@ export default function Members() {
                 
 
 
+                {/* Skills */}
+                {member.skills && member.skills.length > 0 && (
+                  <div className="mb-3">
+                    <div className="flex flex-wrap gap-1">
+                      {member.skills.slice(0, 3).map((skill, idx) => (
+                        <span key={idx} className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30">
+                          {skill}
+                        </span>
+                      ))}
+                      {member.skills.length > 3 && (
+                        <span className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded-full">
+                          +{member.skills.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Social Links */}
                 <div className="flex justify-between items-center gap-2">
                   <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
@@ -668,6 +688,28 @@ export default function Members() {
                   </motion.div>
 
 
+
+                  {/* Skills */}
+                  {selectedMember.skills && selectedMember.skills.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.8 }}
+                      className="bg-white/5 rounded-2xl p-6 border border-white/10"
+                    >
+                      <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+                        <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
+                        Skills & Expertise
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedMember.skills.map((skill, index) => (
+                          <span key={index} className="px-3 py-2 bg-blue-500/20 text-blue-300 text-sm rounded-full border border-blue-500/30 hover:bg-blue-500/30 transition-colors">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
 
                   {/* Social Links */}
                   {(selectedMember.socialLinks?.linkedin || selectedMember.socialLinks?.github || selectedMember.socialLinks?.instagram) && (

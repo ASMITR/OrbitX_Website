@@ -48,6 +48,7 @@ export interface Member {
     instagram?: string
   }
   badges?: Badge[]
+  skills?: string[]
   eventsParticipated?: string[]
   projectsParticipated?: string[]
   createdAt: string

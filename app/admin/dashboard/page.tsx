@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Calendar, FolderOpen, Users, MessageSquare, Plus, TrendingUp, Eye, BookOpen, Crown } from 'lucide-react'
+import { Calendar, FolderOpen, Users, MessageSquare, Plus, TrendingUp, Eye, BookOpen, Crown, Edit3, Save, X, Github, Linkedin, Instagram, Camera, Upload } from 'lucide-react'
+import toast from 'react-hot-toast'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { getEvents, getProjects, getMembers, getContactMessages } from '@/lib/db'
 import { useAuth } from '@/components/admin/AuthProvider'
@@ -25,6 +26,18 @@ export default function AdminDashboard() {
   const [teamStats, setTeamStats] = useState<{[key: string]: number}>({})
   const [recentActivity, setRecentActivity] = useState<any[]>([])
   const [dataLoading, setDataLoading] = useState(true)
+  const [editingProfile, setEditingProfile] = useState(false)
+  const [adminProfile, setAdminProfile] = useState<any>(null)
+  const [profileData, setProfileData] = useState({
+    name: '',
+    photo: '',
+    linkedin: '',
+    github: '',
+    instagram: ''
+  })
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string>('')
+  const [savingProfile, setSavingProfile] = useState(false)
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -46,6 +59,141 @@ export default function AdminDashboard() {
       checkUserRole()
     }
   }, [user, loading, router])
+
+  // Fetch admin profile
+  useEffect(() => {
+    const fetchAdminProfile = async () => {
+      if (user) {
+        try {
+          const response = await fetch(`/api/admin/profile/${user.uid}`)
+          if (response.ok) {
+            const profile = await response.json()
+            setAdminProfile(profile)
+            setProfileData({
+              name: profile?.name || '',
+              photo: profile?.photo || '',
+              linkedin: profile?.socialLinks?.linkedin || '',
+              github: profile?.socialLinks?.github || '',
+              instagram: profile?.socialLinks?.instagram || ''
+            })
+          } else {
+            // Try to get member data as fallback
+            const { getMember, getMemberByEmail } = await import('@/lib/db')
+            let member = await getMember(user.uid)
+            if (!member) {
+              member = await getMemberByEmail(user.email!)
+            }
+            if (member) {
+              setAdminProfile(member)
+              setProfileData({
+                name: member.name || '',
+                photo: member.photo || '',
+                linkedin: member.socialLinks?.linkedin || '',
+                github: member.socialLinks?.github || '',
+                instagram: member.socialLinks?.instagram || ''
+              })
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching admin profile:', error)
+        }
+      }
+    }
+    fetchAdminProfile()
+  }, [user])
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error('Photo size must be less than 5MB')
+        return
+      }
+      setPhotoFile(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        setPhotoPreview(result)
+        setProfileData({ ...profileData, photo: result })
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const saveProfile = async () => {
+    if (!user) {
+      toast.error('User not authenticated')
+      return
+    }
+    
+    if (!profileData.name.trim()) {
+      toast.error('Name is required')
+      return
+    }
+    
+    setSavingProfile(true)
+    
+    try {
+      const updateData = {
+        name: profileData.name.trim(),
+        photo: profileData.photo,
+        email: user.email,
+        socialLinks: {
+          linkedin: profileData.linkedin.trim(),
+          github: profileData.github.trim(),
+          instagram: profileData.instagram.trim()
+        }
+      }
+      
+      console.log('Saving profile data:', updateData)
+      
+      // Try to update admin profile first
+      const response = await fetch(`/api/admin/profile/${user.uid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      })
+      
+      console.log('API response status:', response.status)
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('API response:', result)
+        setAdminProfile({ ...adminProfile, ...updateData })
+        setEditingProfile(false)
+        setPhotoPreview('')
+        toast.success('Profile updated successfully!')
+        window.dispatchEvent(new CustomEvent('profile-updated'))
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('API error:', errorData)
+        
+        // Fallback to member profile update
+        console.log('Trying member profile fallback...')
+        const { updateMemberProfile, getMember, getMemberByEmail } = await import('@/lib/db')
+        let member = await getMember(user.uid)
+        if (!member && user.email) {
+          member = await getMemberByEmail(user.email)
+        }
+        if (member) {
+          console.log('Updating member profile:', member.id)
+          await updateMemberProfile(member.id, updateData)
+          setAdminProfile({ ...adminProfile, ...updateData })
+          setEditingProfile(false)
+          setPhotoPreview('')
+          toast.success('Profile updated successfully!')
+          window.dispatchEvent(new CustomEvent('profile-updated'))
+        } else {
+          toast.error('Profile not found. Please contact administrator.')
+        }
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      toast.error('Failed to update profile. Please try again.')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -205,11 +353,177 @@ export default function AdminDashboard() {
   return (
     <AdminLayout title="Dashboard">
       <div className="space-y-8">
-        {/* Welcome Message */}
+        {/* Profile Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
+          className="glass-card-admin p-6 mb-6"
+        >
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-xl font-bold text-white">Admin Profile</h3>
+            <button
+              onClick={() => setEditingProfile(!editingProfile)}
+              className="btn-primary flex items-center"
+            >
+              <Edit3 className="h-4 w-4 mr-2" />
+              {editingProfile ? 'Cancel' : 'Edit Profile'}
+            </button>
+          </div>
+
+          {editingProfile ? (
+            <div className="space-y-6">
+              {/* Profile Photo Section */}
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                <div className="flex-shrink-0">
+                  <div className="relative">
+                    <img
+                      src={photoPreview || profileData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || user?.email?.split('@')[0] || 'Admin')}&background=3b82f6&color=ffffff&size=200`}
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-blue-400/30"
+                    />
+                    <label className="absolute bottom-0 right-0 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full cursor-pointer transition-colors">
+                      <Camera className="h-4 w-4" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2 text-center">Click camera to upload</p>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
+                  <input
+                    type="text"
+                    value={profileData.name}
+                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                    placeholder="Enter your name"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">LinkedIn</label>
+                  <div className="relative">
+                    <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 h-4 w-4" />
+                    <input
+                      type="url"
+                      value={profileData.linkedin}
+                      onChange={(e) => setProfileData({ ...profileData, linkedin: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                      placeholder="LinkedIn URL"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">GitHub</label>
+                  <div className="relative">
+                    <Github className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <input
+                      type="url"
+                      value={profileData.github}
+                      onChange={(e) => setProfileData({ ...profileData, github: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                      placeholder="GitHub URL"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Instagram</label>
+                  <div className="relative">
+                    <Instagram className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pink-400 h-4 w-4" />
+                    <input
+                      type="url"
+                      value={profileData.instagram}
+                      onChange={(e) => setProfileData({ ...profileData, instagram: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                      placeholder="Instagram URL"
+                    />
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={saveProfile}
+                disabled={savingProfile}
+                className="btn-primary flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingProfile ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Profile
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <img
+                  src={adminProfile?.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminProfile?.name || user?.email?.split('@')[0] || 'Admin')}&background=3b82f6&color=ffffff&size=200`}
+                  alt="Profile"
+                  className="w-16 h-16 rounded-full object-cover border-4 border-blue-400/30"
+                />
+                <div>
+                  <h4 className="text-lg font-semibold text-white">{adminProfile?.name || user?.email?.split('@')[0] || 'Admin'}</h4>
+                  <p className="text-gray-400">{isOwnerUser ? 'Owner' : 'Administrator'}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {adminProfile?.socialLinks?.linkedin && (
+                  <a
+                    href={adminProfile.socialLinks.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-500/20 text-blue-300 rounded-lg border border-blue-500/30 hover:bg-blue-500/30 transition-colors"
+                  >
+                    <Linkedin className="h-4 w-4" />
+                    LinkedIn
+                  </a>
+                )}
+                {adminProfile?.socialLinks?.github && (
+                  <a
+                    href={adminProfile.socialLinks.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 bg-gray-500/20 text-gray-300 rounded-lg border border-gray-500/30 hover:bg-gray-500/30 transition-colors"
+                  >
+                    <Github className="h-4 w-4" />
+                    GitHub
+                  </a>
+                )}
+                {adminProfile?.socialLinks?.instagram && (
+                  <a
+                    href={adminProfile.socialLinks.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 bg-pink-500/20 text-pink-300 rounded-lg border border-pink-500/30 hover:bg-pink-500/30 transition-colors"
+                  >
+                    <Instagram className="h-4 w-4" />
+                    Instagram
+                  </a>
+                )}
+                {(!adminProfile?.socialLinks?.linkedin && !adminProfile?.socialLinks?.github && !adminProfile?.socialLinks?.instagram) && (
+                  <p className="text-gray-400">No social media links added yet.</p>
+                )}
+              </div>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Welcome Message */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
           className="glass-card-admin p-6 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-blue-400/30"
         >
           <h2 className="text-2xl font-bold text-white mb-2">Welcome to OrbitX Admin</h2>

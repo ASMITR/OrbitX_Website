@@ -107,7 +107,7 @@ export default function Navbar() {
     fetchUserProfile()
   }, [user])
 
-  // Refresh user profile periodically to catch updates
+  // Refresh user profile more frequently to catch updates
   useEffect(() => {
     if (user) {
       const interval = setInterval(async () => {
@@ -122,10 +122,12 @@ export default function Navbar() {
               setAdminPhoto(profile.photo)
             }
           } else {
-            // Check member data
-            const { getMembers } = await import('@/lib/db')
-            const members = await getMembers()
-            const member = members.find((m: any) => m.email === user.email)
+            // Check member data by UID first, then by email
+            const { getMember, getMemberByEmail } = await import('@/lib/db')
+            let member = await getMember(user.uid)
+            if (!member) {
+              member = await getMemberByEmail(user.email!)
+            }
             if (member && member.name !== adminName) {
               setMemberData(member)
               setAdminName(member.name)
@@ -135,11 +137,44 @@ export default function Navbar() {
         } catch (error) {
           console.error('Error refreshing user profile:', error)
         }
-      }, 30000) // Check every 30 seconds
+      }, 5000) // Check every 5 seconds for faster updates
 
       return () => clearInterval(interval)
     }
   }, [user, adminName, adminPhoto])
+
+  // Listen for storage events to refresh immediately when profile is updated
+  useEffect(() => {
+    const handleStorageChange = () => {
+      if (user) {
+        // Trigger immediate refresh
+        const refreshProfile = async () => {
+          try {
+            const { getMember, getMemberByEmail } = await import('@/lib/db')
+            let member = await getMember(user.uid)
+            if (!member) {
+              member = await getMemberByEmail(user.email!)
+            }
+            if (member) {
+              setMemberData(member)
+              setAdminName(member.name)
+              setAdminPhoto(member.photo)
+            }
+          } catch (error) {
+            console.error('Error refreshing profile:', error)
+          }
+        }
+        refreshProfile()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('profile-updated', handleStorageChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('profile-updated', handleStorageChange)
+    }
+  }, [user])
 
   const navItems = [
     { name: 'Home', href: '/' },

@@ -109,6 +109,34 @@ export const getMember = async (id: string) => {
   return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Member : null
 }
 
+export const getMemberByEmail = async (email: string) => {
+  const q = query(collection(db, 'members'), where('email', '==', email))
+  const snapshot = await getDocs(q)
+  return snapshot.empty ? null : { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Member
+}
+
+export const createMemberFromAuth = async (uid: string, email: string, name: string) => {
+  const memberData = {
+    name,
+    email,
+    position: 'Member',
+    team: 'General',
+    branch: 'Not specified',
+    year: 'Not specified',
+    division: 'Not specified',
+    rollNo: 'Not specified',
+    photo: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=ffffff&size=200`,
+    skills: [],
+    badges: [],
+    eventsParticipated: [],
+    projectsParticipated: [],
+    joinedAt: new Date().toISOString()
+  }
+  const docRef = doc(db, 'members', uid)
+  await setDoc(docRef, memberData)
+  return { id: uid, ...memberData } as Member
+}
+
 export const addMember = async (member: Omit<Member, 'id'>) => {
   return await addDoc(collection(db, 'members'), member)
 }
@@ -116,6 +144,18 @@ export const addMember = async (member: Omit<Member, 'id'>) => {
 export const updateMember = async (id: string, member: Partial<Member>) => {
   const docRef = doc(db, 'members', id)
   return await updateDoc(docRef, member)
+}
+
+// Update member skills
+export const updateMemberSkills = async (memberId: string, skills: string[]) => {
+  const memberRef = doc(db, 'members', memberId)
+  await updateDoc(memberRef, { skills })
+}
+
+// Update member profile
+export const updateMemberProfile = async (memberId: string, profileData: { name?: string, photo?: string, socialLinks?: { linkedin?: string, github?: string, instagram?: string } }) => {
+  const memberRef = doc(db, 'members', memberId)
+  await updateDoc(memberRef, profileData)
 }
 
 export const deleteMember = async (id: string) => {
@@ -196,12 +236,12 @@ export const getAdminProfile = async (uid: string) => {
   return null
 }
 
-export const updateAdminProfile = async (uid: string, profile: { name: string }) => {
+export const updateAdminProfile = async (uid: string, profile: { name?: string, photo?: string, socialLinks?: any, email?: string }) => {
   const docRef = doc(db, 'adminProfiles', uid)
   return await updateDoc(docRef, profile)
 }
 
-export const createAdminProfile = async (uid: string, profile: { name: string }) => {
+export const createAdminProfile = async (uid: string, profile: { name?: string, photo?: string, socialLinks?: any, email?: string }) => {
   const docRef = doc(db, 'adminProfiles', uid)
   return await setDoc(docRef, profile)
 }

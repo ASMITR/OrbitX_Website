@@ -142,7 +142,25 @@ export default function AdminMembers() {
               </div>
 
               <h3 className="text-lg font-semibold text-white mb-1">{member.name}</h3>
-              <p className="text-gray-400 text-sm mb-4">{member.team}</p>
+              <p className="text-gray-400 text-sm mb-2">{member.team}</p>
+              
+              {/* Skills Preview */}
+              {member.skills && member.skills.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {member.skills.slice(0, 2).map((skill, idx) => (
+                      <span key={idx} className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30">
+                        {skill}
+                      </span>
+                    ))}
+                    {member.skills.length > 2 && (
+                      <span className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded-full">
+                        +{member.skills.length - 2}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-center space-x-2">
                 <button className="p-2 text-gray-400 hover:text-blue-400 transition-colors">

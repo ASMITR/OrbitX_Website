@@ -81,7 +81,7 @@ body {
   padding-right: clamp(1rem, 5vw, 2rem);
 }
 
-/* Scrollbar styling */
+/* Enhanced Scrollbar Styling */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -89,6 +89,60 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Custom Scrollbar for whole website */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  border-radius: 10px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
+  border-radius: 10px;
+  border: 2px solid #0f172a;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #0891b2 0%, #2563eb 50%, #7c3aed 100%);
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
+  transform: scale(1.1);
+  animation: scrollGlow 2s infinite;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #0e7490 0%, #1d4ed8 50%, #6d28d9 100%);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.7);
+}
+
+::-webkit-scrollbar-corner {
+  background: #0f172a;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #06b6d4 #0f172a;
+}
+
+/* Animated scrollbar track */
+::-webkit-scrollbar-track:hover {
+  background: linear-gradient(180deg, #1e293b 0%, #334155 50%, #475569 100%);
+}
+
+/* Glowing effect on scroll */
+@keyframes scrollGlow {
+  0% { box-shadow: 0 0 5px rgba(6, 182, 212, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.6); }
+  100% { box-shadow: 0 0 5px rgba(6, 182, 212, 0.3); }
 }
 
 /* Loading animations */

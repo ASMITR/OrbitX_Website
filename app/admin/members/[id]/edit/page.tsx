@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter, useParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { ArrowLeft, Save, Upload, X, User } from 'lucide-react'
+import { ArrowLeft, Save, Upload, X, User, Plus } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
-import { getMember, updateMember } from '@/lib/db'
+import { getMember, updateMember, updateMemberSkills } from '@/lib/db'
 import { Member } from '@/lib/types'
 import toast from 'react-hot-toast'
 
@@ -33,6 +33,8 @@ export default function EditMember() {
   const [loading, setLoading] = useState(true)
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string>('')
+  const [skills, setSkills] = useState<string[]>([])
+  const [newSkill, setNewSkill] = useState('')
   const router = useRouter()
   const params = useParams()
   const { register, handleSubmit, reset, formState: { errors } } = useForm<MemberForm>()
@@ -81,6 +83,7 @@ export default function EditMember() {
         if (memberData) {
           setMember(memberData)
           setPhotoPreview(memberData.photo)
+          setSkills(memberData.skills || [])
           reset({
             name: memberData.name,
             branch: memberData.branch,
@@ -138,6 +141,17 @@ export default function EditMember() {
     setPhotoPreview(member?.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(member?.name || '')}&size=200&background=1e293b&color=ffffff`)
   }
 
+  const addSkill = () => {
+    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
+      setSkills([...skills, newSkill.trim()])
+      setNewSkill('')
+    }
+  }
+
+  const removeSkill = (skillToRemove: string) => {
+    setSkills(skills.filter(skill => skill !== skillToRemove))
+  }
+
   const onSubmit = async (data: MemberForm) => {
     setIsSubmitting(true)
     try {
@@ -160,6 +174,7 @@ export default function EditMember() {
         phone: data.phone,
         email: data.email,
         photo: photoUrl,
+        skills: skills,
         ...(data.dateOfBirth && { dateOfBirth: data.dateOfBirth }),
         ...(Object.keys(socialLinks).length > 0 && { socialLinks })
       }
@@ -444,6 +459,53 @@ export default function EditMember() {
                 {errors.phone && (
                   <p className="mt-1 text-sm text-red-400">{errors.phone.message}</p>
                 )}
+              </div>
+            </div>
+
+            {/* Skills Section */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-4">
+                Skills & Expertise
+              </label>
+              
+              <div className="space-y-4">
+                {/* Add New Skill */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    placeholder="Add a new skill..."
+                    className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                  />
+                  <button
+                    type="button"
+                    onClick={addSkill}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Skills List */}
+                <div className="flex flex-wrap gap-2">
+                  {skills.map((skill, index) => (
+                    <div key={index} className="flex items-center gap-1 px-3 py-2 bg-blue-500/20 text-blue-300 rounded-full border border-blue-500/30">
+                      <span>{skill}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeSkill(skill)}
+                        className="text-red-400 hover:text-red-300 ml-1"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {skills.length === 0 && (
+                    <p className="text-gray-400 text-sm">No skills added yet.</p>
+                  )}
+                </div>
               </div>
             </div>
 

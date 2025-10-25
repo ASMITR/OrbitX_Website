@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
+import { getMember, getMemberByEmail, createMemberFromAuth } from '@/lib/db'
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -21,7 +22,20 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      const user = userCredential.user
+      
+      // Check if member record exists, create if not
+      if (user.email && user.displayName) {
+        let memberData = await getMember(user.uid)
+        if (!memberData) {
+          memberData = await getMemberByEmail(user.email)
+        }
+        if (!memberData) {
+          await createMemberFromAuth(user.uid, user.email, user.displayName)
+        }
+      }
+      
       toast.success('Login successful!')
       router.push('/admin/dashboard')
     } catch (error: any) {

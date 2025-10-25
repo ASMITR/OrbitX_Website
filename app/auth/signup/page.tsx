@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
+import { createMemberFromAuth } from '@/lib/db'
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -44,7 +45,15 @@ export default function Signup() {
     setIsLoading(true)
 
     try {
-      await createUserWithEmailAndPassword(auth, formData.email, formData.password)
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password)
+      const user = userCredential.user
+      
+      // Update user profile with display name
+      await updateProfile(user, { displayName: formData.name })
+      
+      // Create member record
+      await createMemberFromAuth(user.uid, formData.email, formData.name)
+      
       toast.success('Account created successfully!')
       router.push('/admin/dashboard')
     } catch (error: any) {
