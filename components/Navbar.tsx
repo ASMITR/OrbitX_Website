@@ -253,7 +253,7 @@ export default function Navbar() {
           >
             <Link href="/" className="flex items-center space-x-2 group">
               <div className="relative">
-                <Logo className={`transition-all duration-500 ${scrolled ? 'h-6 sm:h-8 md:h-10 lg:h-12' : 'h-8 sm:h-10 md:h-12 lg:h-14'} w-auto`} />
+                <Logo className={`transition-all duration-500 ${scrolled ? 'h-8 lg:h-10' : 'h-10 lg:h-12'} w-auto`} />
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full blur-xl"
                   animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
@@ -659,8 +659,8 @@ export default function Navbar() {
           opacity: 1 
         }}
         transition={{ duration: 0.15, ease: "easeOut" }}
-        className={`fixed left-0 top-0 h-full bg-black/90 backdrop-blur-2xl border-r border-white/20 z-50 lg:hidden flex flex-col py-4 transition-all duration-150 group ${
-          sidebarMinimized ? 'w-16 items-center' : 'w-64 items-start px-4'
+        className={`fixed left-0 top-0 h-full bg-black/95 backdrop-blur-2xl border-r border-white/20 z-40 lg:hidden flex flex-col py-4 transition-all duration-150 group mobile-nav-safe ${
+          sidebarMinimized ? 'w-16 items-center' : 'w-72 sm:w-80 items-start px-4'
         }`}
       >
         {/* Minimize/Expand Toggle */}
@@ -668,8 +668,8 @@ export default function Navbar() {
           onClick={() => setSidebarMinimized(!sidebarMinimized)}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className={`absolute top-4 left-4 w-10 h-10 bg-black/90 border border-white/20 rounded-xl flex items-center justify-center transition-all duration-150 group ${
-            sidebarMinimized ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          className={`absolute top-4 right-4 w-10 h-10 bg-black/90 border border-white/20 rounded-xl flex items-center justify-center transition-all duration-150 group touch-target ${
+            sidebarMinimized ? 'opacity-100' : 'opacity-100'
           }`}
           title={sidebarMinimized ? 'Expand Menu' : 'Minimize Menu'}
         >
@@ -685,21 +685,21 @@ export default function Navbar() {
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="mb-8 flex items-center space-x-3"
+            className="mb-6 sm:mb-8 flex items-center space-x-3 mt-2"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.15 }}
           >
-            <Link href="/" className="flex items-center space-x-3">
+            <Link href="/" className="flex items-center space-x-3 touch-target">
               <img 
                 src="/Logo_without_background.png" 
                 alt="OrbitX Logo" 
-                className="h-10 w-auto"
+                className="h-10 sm:h-12 w-auto"
               />
               <div>
-                <span className="text-lg font-bold text-white">OrbitX</span>
-                <p className="text-xs text-gray-400">Space Exploration</p>
+                <span className="text-lg sm:text-xl font-bold text-white">OrbitX</span>
+                <p className="text-xs sm:text-sm text-gray-400">Space Exploration</p>
               </div>
             </Link>
           </motion.div>
@@ -719,9 +719,9 @@ export default function Navbar() {
             >
               <Link
                 href={item.href}
-                className={`rounded-xl bg-white/10 hover:bg-white/20 flex items-center transition-all duration-150 group relative ${
+                className={`rounded-xl bg-white/10 hover:bg-white/20 flex items-center transition-all duration-150 group relative touch-target ${
                   sidebarMinimized 
-                    ? 'w-8 h-8 justify-center' 
+                    ? 'w-10 h-10 justify-center' 
                     : 'w-full px-4 py-3 space-x-3'
                 }`}
                 title={sidebarMinimized ? item.name : ''}
@@ -732,25 +732,20 @@ export default function Navbar() {
                   </span>
                 ) : (
                   <>
-                    <span className="text-gray-300 group-hover:text-white font-bold text-lg">
+                    <span className="text-gray-300 group-hover:text-white font-bold text-base sm:text-lg">
                       {item.name.charAt(0)}
                     </span>
-                    <span className="text-gray-300 group-hover:text-white font-medium">
+                    <span className="text-gray-300 group-hover:text-white font-medium text-sm sm:text-base">
                       {item.name}
                     </span>
                     <motion.div
-                      className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="ml-auto opacity-100 transition-opacity"
                       animate={{ x: [0, 5, 0] }}
                       transition={{ duration: 1, repeat: Infinity }}
                     >
                       →
                     </motion.div>
                   </>
-                )}
-                {sidebarMinimized && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                    {item.name}
-                  </div>
                 )}
               </Link>
             </motion.div>
@@ -759,7 +754,7 @@ export default function Navbar() {
 
         {/* User Profile */}
         {user && (
-          <div className={`mt-auto space-y-3 ${sidebarMinimized ? '' : 'w-full'}`}>
+          <div className={`mt-auto space-y-3 pb-4 ${sidebarMinimized ? '' : 'w-full'}`}>
             {/* Profile Photo */}
             <motion.div
               whileHover={{ scale: 1.1 }}
@@ -769,13 +764,11 @@ export default function Navbar() {
               <img
                 src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || 'User')}&background=3b82f6&color=ffffff&size=200`}
                 alt={adminName || user?.displayName || 'Profile'}
-                className={`rounded-full object-cover border-2 border-white/20 transition-all duration-300 ${
-                  sidebarMinimized ? 'w-8 h-8' : 'w-12 h-12'
+                className={`rounded-full object-cover border-2 border-white/20 transition-all duration-300 touch-target ${
+                  sidebarMinimized ? 'w-10 h-10' : 'w-12 h-12 sm:w-14 sm:h-14'
                 }`}
               />
-              <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                {adminName || user?.displayName || 'User'}
-              </div>
+
             </motion.div>
 
             {/* Dashboard Links */}
@@ -787,23 +780,18 @@ export default function Navbar() {
               >
                 <Link
                   href="/member"
-                  className={`rounded-xl bg-blue-500/20 hover:bg-blue-500/30 flex items-center transition-all duration-300 group relative ${
+                  className={`rounded-xl bg-blue-500/20 hover:bg-blue-500/30 flex items-center transition-all duration-300 group relative touch-target ${
                     sidebarMinimized 
-                      ? 'w-8 h-8 justify-center' 
+                      ? 'w-10 h-10 justify-center' 
                       : 'w-full px-4 py-3 space-x-3'
                   }`}
                   title={sidebarMinimized ? 'Member Dashboard' : ''}
                 >
                   <User className={`text-blue-300 ${
-                    sidebarMinimized ? 'h-3 w-3' : 'h-5 w-5'
+                    sidebarMinimized ? 'h-4 w-4' : 'h-5 w-5'
                   }`} />
                   {!sidebarMinimized && (
-                    <span className="text-blue-300 font-medium">Member Dashboard</span>
-                  )}
-                  {sidebarMinimized && (
-                    <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                      Member Dashboard
-                    </div>
+                    <span className="text-blue-300 font-medium text-sm sm:text-base">Member Dashboard</span>
                   )}
                 </Link>
               </motion.div>
@@ -817,25 +805,20 @@ export default function Navbar() {
               >
                 <Link
                   href="/admin/dashboard"
-                  className={`rounded-xl bg-purple-500/20 hover:bg-purple-500/30 flex items-center transition-all duration-300 group relative ${
+                  className={`rounded-xl bg-purple-500/20 hover:bg-purple-500/30 flex items-center transition-all duration-300 group relative touch-target ${
                     sidebarMinimized 
-                      ? 'w-8 h-8 justify-center' 
+                      ? 'w-10 h-10 justify-center' 
                       : 'w-full px-4 py-3 space-x-3'
                   }`}
                   title={sidebarMinimized ? (userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard') : ''}
                 >
                   <Settings className={`text-purple-300 ${
-                    sidebarMinimized ? 'h-3 w-3' : 'h-5 w-5'
+                    sidebarMinimized ? 'h-4 w-4' : 'h-5 w-5'
                   }`} />
                   {!sidebarMinimized && (
-                    <span className="text-purple-300 font-medium">
+                    <span className="text-purple-300 font-medium text-sm sm:text-base">
                       {userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}
                     </span>
-                  )}
-                  {sidebarMinimized && (
-                    <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                      {userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}
-                    </div>
                   )}
                 </Link>
               </motion.div>
@@ -849,23 +832,18 @@ export default function Navbar() {
             >
               <button
                 onClick={handleLogout}
-                className={`rounded-xl bg-red-500/20 hover:bg-red-500/30 flex items-center transition-all duration-300 group relative ${
+                className={`rounded-xl bg-red-500/20 hover:bg-red-500/30 flex items-center transition-all duration-300 group relative touch-target ${
                   sidebarMinimized 
-                    ? 'w-8 h-8 justify-center' 
+                    ? 'w-10 h-10 justify-center' 
                     : 'w-full px-4 py-3 space-x-3'
                 }`}
                 title={sidebarMinimized ? 'Logout' : ''}
               >
                 <LogOut className={`text-red-300 ${
-                  sidebarMinimized ? 'h-3 w-3' : 'h-5 w-5'
+                  sidebarMinimized ? 'h-4 w-4' : 'h-5 w-5'
                 }`} />
                 {!sidebarMinimized && (
-                  <span className="text-red-300 font-medium">Logout</span>
-                )}
-                {sidebarMinimized && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                    Logout
-                  </div>
+                  <span className="text-red-300 font-medium text-sm sm:text-base">Logout</span>
                 )}
               </button>
             </motion.div>
@@ -877,26 +855,23 @@ export default function Navbar() {
           <motion.div
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className="mt-auto"
+            className="mt-auto pb-4"
           >
             <Link
               href="/auth"
-              className={`rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 flex items-center transition-all duration-300 group relative ${
+              className={`rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 flex items-center transition-all duration-300 group relative touch-target ${
                 sidebarMinimized 
-                  ? 'w-8 h-8 justify-center' 
+                  ? 'w-10 h-10 justify-center' 
                   : 'w-full px-4 py-3 space-x-3'
               }`}
               title="Get Started"
             >
               <span className={`text-white font-bold ${
-                sidebarMinimized ? 'text-sm' : 'text-lg'
+                sidebarMinimized ? 'text-base' : 'text-lg'
               }`}>+</span>
               {!sidebarMinimized && (
-                <span className="text-white font-medium">Get Started</span>
+                <span className="text-white font-medium text-sm sm:text-base">Get Started</span>
               )}
-              <div className="absolute left-full ml-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                Get Started
-              </div>
             </Link>
           </motion.div>
         )}
@@ -911,7 +886,7 @@ export default function Navbar() {
           onClick={() => setSidebarMinimized(false)}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="fixed top-4 left-4 w-12 h-12 bg-black/90 backdrop-blur-2xl border border-white/20 rounded-xl flex items-center justify-center z-40 lg:hidden shadow-lg shadow-cyan-500/20"
+          className="fixed top-4 left-4 w-12 h-12 bg-black/90 backdrop-blur-2xl border border-white/20 rounded-xl flex items-center justify-center z-30 lg:hidden shadow-lg shadow-cyan-500/20 touch-target"
           title="Expand Menu"
         >
           <ChevronRight className="h-6 w-6 text-white" />

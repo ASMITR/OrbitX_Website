@@ -19,7 +19,7 @@ export default function HeroSection() {
   }), [])
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-4 pt-16 gpu-accelerated">
+    <section className="relative min-h-screen flex items-center justify-center container-tight pt-20 pb-8 gpu-accelerated overflow-x-hidden">
       {/* Optimized background elements */}
       <div className="absolute inset-0 overflow-hidden will-change-transform">
         <motion.div
@@ -29,7 +29,7 @@ export default function HeroSection() {
             repeat: Infinity,
             ease: "linear"
           }}
-          className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-gradient-to-r from-blue-500/15 to-purple-500/15 blur-3xl will-change-transform"
+          className="absolute top-1/4 left-1/4 w-32 h-32 sm:w-48 sm:h-48 lg:w-64 lg:h-64 rounded-full bg-gradient-to-r from-blue-500/15 to-purple-500/15 blur-3xl will-change-transform"
         />
         <motion.div
           animate={shouldReduceMotion ? {} : { rotate: -360 }}
@@ -38,11 +38,11 @@ export default function HeroSection() {
             repeat: Infinity,
             ease: "linear"
           }}
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-gradient-to-r from-purple-500/15 to-pink-500/15 blur-3xl will-change-transform"
+          className="absolute bottom-1/4 right-1/4 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 rounded-full bg-gradient-to-r from-purple-500/15 to-pink-500/15 blur-3xl will-change-transform"
         />
         
-        {/* Advanced floating particles */}
-        {!shouldReduceMotion && Array.from({ length: 12 }).map((_, i) => (
+        {/* Advanced floating particles - reduced for mobile */}
+        {!shouldReduceMotion && Array.from({ length: 8 }).map((_, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-blue-400/60 rounded-full"
@@ -66,16 +66,16 @@ export default function HeroSection() {
         ))}
       </div>
 
-      <div className="relative z-10 text-center max-w-4xl mx-auto">
+      <div className="relative z-10 text-center max-w-4xl mx-auto w-full">
         <motion.div
           variants={fastVariants}
           initial="hidden"
           animate="visible"
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         >
           {/* Advanced Logo Section */}
           <motion.div 
-            className="mb-12 relative will-change-transform"
+            className="mb-8 sm:mb-12 relative will-change-transform"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
@@ -97,7 +97,7 @@ export default function HeroSection() {
               <img 
                 src="/Logo_without_background.png" 
                 alt="OrbitX Logo Glow" 
-                className="w-auto mx-auto h-60 md:h-70 lg:h-80"
+                className="w-auto mx-auto h-40 sm:h-52 md:h-64 lg:h-80 max-w-full"
                 loading="eager"
               />
             </motion.div>
@@ -106,18 +106,18 @@ export default function HeroSection() {
             <motion.img 
               src="/Logo_without_background.png" 
               alt="OrbitX Logo" 
-              className="w-auto mx-auto relative z-10 cursor-pointer h-60 md:h-70 lg:h-80 will-change-transform"
+              className="w-auto mx-auto relative z-10 cursor-pointer h-40 sm:h-52 md:h-64 lg:h-80 max-w-full will-change-transform"
               loading="eager"
               whileHover={shouldReduceMotion ? {} : { 
-                scale: 1.08,
-                rotateY: 8,
-                rotateX: 3,
+                scale: 1.05,
+                rotateY: 4,
+                rotateX: 2,
                 transition: { duration: 0.2, ease: "easeOut" }
               }}
               whileTap={{ scale: 0.96 }}
               animate={shouldReduceMotion ? {} : {
-                y: [0, -8, 0],
-                rotateZ: [0, 1, -1, 0]
+                y: [0, -4, 0],
+                rotateZ: [0, 0.5, -0.5, 0]
               }}
               transition={{
                 duration: 3,
@@ -126,19 +126,19 @@ export default function HeroSection() {
               }}
             />
             
-            {/* Enhanced orbital particles */}
-            {!shouldReduceMotion && Array.from({ length: 6 }).map((_, i) => (
+            {/* Enhanced orbital particles - mobile optimized */}
+            {!shouldReduceMotion && Array.from({ length: 4 }).map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-3 h-3 rounded-full will-change-transform"
+                className="absolute w-2 h-2 sm:w-3 sm:h-3 rounded-full will-change-transform hidden sm:block"
                 style={{
                   background: `linear-gradient(45deg, ${i % 2 ? '#3b82f6' : '#8b5cf6'}, ${i % 2 ? '#06b6d4' : '#ec4899'})`,
-                  left: `${30 + (i * 8)}%`,
-                  top: `${25 + (i % 3) * 25}%`
+                  left: `${35 + (i * 8)}%`,
+                  top: `${30 + (i % 2) * 20}%`
                 }}
                 animate={{
-                  y: [0, -25, 0],
-                  x: [0, Math.sin(i) * 15, 0],
+                  y: [0, -15, 0],
+                  x: [0, Math.sin(i) * 10, 0],
                   opacity: [0.4, 1, 0.4],
                   scale: [0.6, 1.2, 0.6],
                   rotate: [0, 180, 360]
@@ -152,9 +152,9 @@ export default function HeroSection() {
               />
             ))}
             
-            {/* Rocket trail effect */}
+            {/* Rocket trail effect - mobile optimized */}
             <motion.div
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 hidden sm:block"
               animate={shouldReduceMotion ? {} : {
                 rotate: [0, 360]
               }}
@@ -164,7 +164,7 @@ export default function HeroSection() {
                 ease: "linear"
               }}
             >
-              <Rocket className="h-8 w-8 text-blue-400/60" />
+              <Rocket className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400/60" />
             </motion.div>
           </motion.div>
           
@@ -173,10 +173,10 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="mb-12"
+            className="mb-8 sm:mb-12 px-2"
           >
             <motion.h1 
-              className="text-2xl md:text-4xl lg:text-5xl font-bold mb-8 will-change-transform"
+              className="heading-lg font-bold mb-6 sm:mb-8 will-change-transform"
               animate={shouldReduceMotion ? {} : {
                 backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
               }}
@@ -197,7 +197,7 @@ export default function HeroSection() {
             </motion.h1>
             
             <motion.p 
-              className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed"
+              className="text-lg-responsive text-gray-300 max-w-2xl mx-auto leading-relaxed px-2"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.4 }}
@@ -211,7 +211,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.6 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4"
         >
           <motion.div
             className="relative will-change-transform"
@@ -249,12 +249,12 @@ export default function HeroSection() {
               />
               
               {/* Button content */}
-              <div className="relative z-10 flex items-center justify-center gap-2 px-8 py-4 text-sm font-bold text-white">
+              <div className="relative z-10 flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-bold text-white">
                 <motion.div
                   animate={shouldReduceMotion ? {} : { rotate: [0, 360] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                 >
-                  <Sparkles className="h-4 w-4" />
+                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
                 </motion.div>
                 
                 <span className="group-hover:text-yellow-300 transition-colors duration-200 font-extrabold">
@@ -265,7 +265,7 @@ export default function HeroSection() {
                   animate={shouldReduceMotion ? {} : { x: [0, 2, 0] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform duration-200" />
                 </motion.div>
               </div>
               
@@ -291,7 +291,7 @@ export default function HeroSection() {
               
               <div className="absolute inset-1 bg-gradient-to-r from-gray-700 to-gray-600 rounded-full group-hover:from-gray-600 group-hover:to-gray-500 transition-all duration-200" />
               
-              <div className="relative z-10 px-8 py-4 text-sm font-bold text-white text-center">
+              <div className="relative z-10 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-bold text-white text-center">
                 <span className="group-hover:text-cyan-300 transition-colors duration-200">
                   Learn More
                 </span>
@@ -304,7 +304,7 @@ export default function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.8 }}
-          className="mt-16"
+          className="mt-12 sm:mt-16 hidden sm:block"
         >
           <motion.div
             animate={shouldReduceMotion ? {} : { y: [0, -8, 0] }}
