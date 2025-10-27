@@ -340,6 +340,101 @@ body {
   flex-shrink: 0;
 }
 
+/* Dropdown styling for all devices - Dark theme */
+select {
+  background: #1e293b !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  transition: all 0.3s ease !important;
+  color-scheme: dark !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+}
+
+select:focus {
+  border-color: #06b6d4 !important;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2) !important;
+  outline: none !important;
+}
+
+select:hover {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  background: #334155 !important;
+}
+
+/* Dropdown options - Dark background */
+select option {
+  background: #1e293b !important;
+  background-color: #1e293b !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 500 !important;
+}
+
+select option:hover,
+select option:focus,
+select option:checked,
+select option[selected] {
+  background: #06b6d4 !important;
+  background-color: #06b6d4 !important;
+  color: white !important;
+}
+
+select option:disabled {
+  background: #374151 !important;
+  background-color: #374151 !important;
+  color: #9ca3af !important;
+}
+
+/* Custom dropdown arrow */
+select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 16px !important;
+}
+
+/* Responsive dropdown - Dark background only */
+@media (max-width: 768px) {
+  select option {
+    background: #1e293b !important;
+    background-color: #1e293b !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  select option {
+    background: #1e293b !important;
+    background-color: #1e293b !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  select option {
+    background: #1e293b !important;
+    background-color: #1e293b !important;
+  }
+}
+
+/* Firefox specific styling */
+@-moz-document url-prefix() {
+  select {
+    background: #1e293b !important;
+    color: white !important;
+  }
+  
+  select option {
+    background: #1e293b !important;
+    color: white !important;
+  }
+  
+  select option:checked {
+    background: #06b6d4 !important;
+    color: white !important;
+  }
+}
+
 /* Print styles */
 @media print {
   .no-print {

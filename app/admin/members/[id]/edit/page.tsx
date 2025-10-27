@@ -40,7 +40,6 @@ export default function EditMember() {
   const { register, handleSubmit, reset, formState: { errors } } = useForm<MemberForm>()
 
   const teams = [
-    'Core Team',
     'Design & Innovation Team',
     'Technical Team',
     'Management & Operations Team',
@@ -50,14 +49,12 @@ export default function EditMember() {
   ]
 
   const positions = [
-    'Faculty Coordinator',
     'President',
-    'Vice President',
+    'Chairman',
     'Secretary',
     'Treasurer',
     'Co-Treasurer',
-    'Team Lead',
-    'Core Member',
+    'Team Leader',
     'Member'
   ]
 
@@ -67,14 +64,15 @@ export default function EditMember() {
     'AIDS',
     'AIML',
     'ENTC',
-    'ECE',
-    'CIVIL',
     'MECHANICAL',
+    'CIVIL',
+    'ECE',
+    'ROBOTICS & AUTOMATION',
     'ELECTRICAL',
   ]
 
   const years = ['FE', 'SE', 'TE', 'BE']
-  const divisions = ['A', 'B', 'C', 'D']
+  const divisions = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
   useEffect(() => {
     const fetchMember = async () => {

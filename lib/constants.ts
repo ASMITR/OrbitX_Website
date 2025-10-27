@@ -1,16 +1,16 @@
 // Centralized dropdown options for the application
 
 export const BRANCHES = [
-  'Computer Engineering',
-  'Information Technology', 
-  'Electronics Engineering',
-  'Mechanical Engineering',
-  'Civil Engineering',
-  'Electrical Engineering',
-  'Instrumentation Engineering',
-  'Chemical Engineering',
-  'Biotechnology Engineering',
-  'Aerospace Engineering'
+  'CS',
+  'IT',
+  'AIDS',
+  'AIML',
+  'ENTC',
+  'MECHANICAL',
+  'CIVIL',
+  'ECE',
+  'ROBOTICS & AUTOMATION',
+  'ELECTRICAL'
 ]
 
 export const YEARS = [
@@ -24,25 +24,28 @@ export const DIVISIONS = [
   'A',
   'B',
   'C',
-  'D'
+  'D',
+  'E',
+  'F',
+  'G',
+  'H'
 ]
 
 export const TEAMS = [
-  'Development',
-  'Design',
-  'Marketing',
-  'Research',
-  'Operations',
-  'Content',
-  'Social Media',
-  'Events',
-  'General'
+  'Design & Innovation Team',
+  'Technical Team',
+  'Management & Operations Team',
+  'Public Outreach Team',
+  'Documentation Team',
+  'Social Media & Editing Team'
 ]
 
 export const POSITIONS = [
+  'President',
+  'Chairman',
+  'Secretary',
+  'Treasurer',
+  'Co-Treasurer',
+  'Team Leader',
   'Member',
-  'Team Lead',
-  'Coordinator',
-  'Vice President',
-  'President'
 ]
