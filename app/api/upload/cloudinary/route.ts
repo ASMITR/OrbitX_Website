@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ 
       url: (result as any).secure_url,
+      secure_url: (result as any).secure_url,
       public_id: (result as any).public_id 
     });
   } catch (error) {

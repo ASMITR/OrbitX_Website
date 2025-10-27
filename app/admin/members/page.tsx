@@ -5,34 +5,41 @@ import { motion } from 'framer-motion'
 import { Plus, Edit, Trash2, Users, Eye, Filter } from 'lucide-react'
 import Link from 'next/link'
 import AdminLayout from '@/components/admin/AdminLayout'
-import { getMembers, deleteMember } from '@/lib/db'
+import { getMembers, deleteMember, updateMember } from '@/lib/db'
 import { Member } from '@/lib/types'
+import { TEAMS } from '@/lib/constants'
 import toast from 'react-hot-toast'
 
 export default function AdminMembers() {
   const [members, setMembers] = useState<Member[]>([])
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
+  const [pendingMembers, setPendingMembers] = useState<Member[]>([])
   const [filterTeam, setFilterTeam] = useState('all')
+  const [activeTab, setActiveTab] = useState<'approved' | 'pending'>('approved')
   const [loading, setLoading] = useState(true)
 
-  const teams = ['Design & Innovation Team', 'Technical Team', 'Management & Operations Team', 'Public Outreach Team', 'Documentation Team', 'Social Media & Editing Team']
+  const teams = TEAMS
 
   useEffect(() => {
     fetchMembers()
   }, [])
 
   useEffect(() => {
+    const currentMembers = activeTab === 'approved' ? members : pendingMembers
     if (filterTeam === 'all') {
-      setFilteredMembers(members)
+      setFilteredMembers(currentMembers)
     } else {
-      setFilteredMembers(members.filter(member => member.team === filterTeam))
+      setFilteredMembers(currentMembers.filter(member => member.team === filterTeam))
     }
-  }, [members, filterTeam])
+  }, [members, pendingMembers, filterTeam, activeTab])
 
   const fetchMembers = async () => {
     try {
       const membersData = await getMembers()
-      setMembers(membersData)
+      const approved = membersData.filter(member => member.approved !== false)
+      const pending = membersData.filter(member => member.approved === false)
+      setMembers(approved)
+      setPendingMembers(pending)
     } catch (error) {
       console.error('Error fetching members:', error)
       toast.error('Failed to fetch members')
@@ -46,9 +53,40 @@ export default function AdminMembers() {
       try {
         await deleteMember(id)
         setMembers(members.filter(member => member.id !== id))
+        setPendingMembers(pendingMembers.filter(member => member.id !== id))
         toast.success('Member deleted successfully')
       } catch (error) {
         toast.error('Failed to delete member')
+      }
+    }
+  }
+
+  const handleApprove = async (id: string) => {
+    try {
+      await updateMember(id, { 
+        approved: true, 
+        approvedBy: 'owner',
+        approvedAt: new Date().toISOString()
+      })
+      const approvedMember = pendingMembers.find(member => member.id === id)
+      if (approvedMember) {
+        setMembers([...members, { ...approvedMember, approved: true, approvedBy: 'owner' }])
+        setPendingMembers(pendingMembers.filter(member => member.id !== id))
+        toast.success('Member approved by owner successfully')
+      }
+    } catch (error) {
+      toast.error('Failed to approve member')
+    }
+  }
+
+  const handleReject = async (id: string) => {
+    if (confirm('Are you sure you want to reject this member application?')) {
+      try {
+        await deleteMember(id)
+        setPendingMembers(pendingMembers.filter(member => member.id !== id))
+        toast.success('Member application rejected')
+      } catch (error) {
+        toast.error('Failed to reject member')
       }
     }
   }
@@ -89,6 +127,35 @@ export default function AdminMembers() {
             <Plus className="h-5 w-5 mr-2" />
             Add Member
           </Link>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex space-x-1 bg-white/5 p-1 rounded-lg">
+          <button
+            onClick={() => setActiveTab('approved')}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'approved'
+                ? 'bg-blue-500 text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Approved Members ({members.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors relative ${
+              activeTab === 'pending'
+                ? 'bg-yellow-500 text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Pending Owner Approval ({pendingMembers.length})
+            {pendingMembers.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {pendingMembers.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Filter */}
@@ -144,6 +211,16 @@ export default function AdminMembers() {
               <h3 className="text-lg font-semibold text-white mb-1">{member.name}</h3>
               <p className="text-gray-400 text-sm mb-2">{member.team}</p>
               
+              {/* Additional info for pending members */}
+              {activeTab === 'pending' && (
+                <div className="text-xs text-gray-400 mb-2 space-y-1">
+                  <p>{member.branch} - {member.year} {member.division}</p>
+                  <p>Roll: {member.rollNo}</p>
+                  <p>{member.email}</p>
+                  {member.phone && member.phone !== 'Not specified' && <p>{member.phone}</p>}
+                </div>
+              )}
+              
               {/* Skills Preview */}
               {member.skills && member.skills.length > 0 && (
                 <div className="mb-4">
@@ -161,22 +238,62 @@ export default function AdminMembers() {
                   </div>
                 </div>
               )}
+              
+              {/* Social Links for pending members */}
+              {activeTab === 'pending' && member.socialLinks && (
+                <div className="flex justify-center space-x-2 mb-3">
+                  {member.socialLinks.linkedin && (
+                    <a href={member.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                      <span className="text-xs">LinkedIn</span>
+                    </a>
+                  )}
+                  {member.socialLinks.github && (
+                    <a href={member.socialLinks.github} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-300">
+                      <span className="text-xs">GitHub</span>
+                    </a>
+                  )}
+                  {member.socialLinks.instagram && (
+                    <a href={member.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300">
+                      <span className="text-xs">Instagram</span>
+                    </a>
+                  )}
+                </div>
+              )}
 
               <div className="flex justify-center space-x-2">
-                <button className="p-2 text-gray-400 hover:text-blue-400 transition-colors">
-                  <Eye className="h-4 w-4" />
-                </button>
-                <Link href={`/admin/members/${member.id}/edit`}>
-                  <button className="p-2 text-gray-400 hover:text-yellow-400 transition-colors">
-                    <Edit className="h-4 w-4" />
-                  </button>
-                </Link>
-                <button 
-                  onClick={() => handleDelete(member.id)}
-                  className="p-2 text-gray-400 hover:text-red-400 transition-colors"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {activeTab === 'pending' ? (
+                  <>
+                    <button 
+                      onClick={() => handleApprove(member.id)}
+                      className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-full transition-colors"
+                    >
+                      Owner Approve
+                    </button>
+                    <button 
+                      onClick={() => handleReject(member.id)}
+                      className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-full transition-colors"
+                    >
+                      Owner Reject
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="p-2 text-gray-400 hover:text-blue-400 transition-colors">
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <Link href={`/admin/members/${member.id}/edit`}>
+                      <button className="p-2 text-gray-400 hover:text-yellow-400 transition-colors">
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    </Link>
+                    <button 
+                      onClick={() => handleDelete(member.id)}
+                      className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
           ))}
@@ -186,10 +303,20 @@ export default function AdminMembers() {
           <div className="text-center py-12">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-white mb-2">
-              {filterTeam === 'all' ? 'No members found' : `No members in ${filterTeam}`}
+              {activeTab === 'pending' 
+                ? 'No pending owner approvals' 
+                : filterTeam === 'all' 
+                  ? 'No members found' 
+                  : `No members in ${filterTeam}`
+              }
             </h3>
             <p className="text-gray-400">
-              {filterTeam === 'all' ? 'Add your first team member to get started.' : 'Try selecting a different team.'}
+              {activeTab === 'pending'
+                ? 'All member applications have been processed by the owner.'
+                : filterTeam === 'all' 
+                  ? 'Add your first team member to get started.' 
+                  : 'Try selecting a different team.'
+              }
             </p>
           </div>
         )}

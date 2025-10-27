@@ -22,6 +22,7 @@ export default function Navbar() {
   const [userRole, setUserRole] = useState<'owner' | 'admin' | 'member'>('member')
   const [scrolled, setScrolled] = useState(false)
   const [sidebarMinimized, setSidebarMinimized] = useState(false)
+  const [sidebarVisible, setSidebarVisible] = useState(false)
   const { user } = useAuth()
   const pathname = usePathname()
 
@@ -652,32 +653,44 @@ export default function Navbar() {
       </motion.nav>
 
       {/* Mobile/Tablet Side Menu Bar */}
-      <motion.nav
-        initial={{ x: -100, opacity: 0 }}
-        animate={{ 
-          x: sidebarMinimized ? -60 : 0, 
-          opacity: 1 
-        }}
-        transition={{ duration: 0.15, ease: "easeOut" }}
-        className={`fixed left-0 top-0 h-full bg-black/95 backdrop-blur-2xl border-r border-white/20 z-40 lg:hidden flex flex-col py-4 transition-all duration-150 group mobile-nav-safe ${
-          sidebarMinimized ? 'w-16 items-center' : 'w-72 sm:w-80 items-start px-4'
-        }`}
+      <AnimatePresence>
+        {sidebarVisible && (
+          <motion.nav
+            initial={{ x: '-100%', opacity: 0 }}
+            animate={{ 
+              x: sidebarMinimized ? -60 : 0, 
+              opacity: 1 
+            }}
+            exit={{ x: '-100%', opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className={`fixed left-0 top-0 h-full bg-black/95 backdrop-blur-2xl border-r border-white/20 z-40 lg:hidden flex flex-col py-4 transition-all duration-150 group mobile-nav-safe ${
+              sidebarMinimized ? 'w-16 items-center' : 'w-72 sm:w-80 items-start px-4'
+            }`}
       >
-        {/* Minimize/Expand Toggle */}
+        {/* Close/Minimize Toggle */}
         <motion.button
-          onClick={() => setSidebarMinimized(!sidebarMinimized)}
+          onClick={() => {
+            if (sidebarMinimized) {
+              setSidebarMinimized(false)
+            } else {
+              setSidebarVisible(false)
+              setSidebarMinimized(false)
+            }
+          }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className={`absolute top-4 right-4 w-10 h-10 bg-black/90 border border-white/20 rounded-xl flex items-center justify-center transition-all duration-150 group touch-target ${
-            sidebarMinimized ? 'opacity-100' : 'opacity-100'
-          }`}
-          title={sidebarMinimized ? 'Expand Menu' : 'Minimize Menu'}
+          className="absolute top-4 right-4 w-10 h-10 bg-black/90 border border-white/20 rounded-xl flex items-center justify-center transition-all duration-150 group touch-target"
+          title={sidebarMinimized ? 'Expand Menu' : 'Close Menu'}
         >
           <motion.div
             animate={{ rotate: sidebarMinimized ? 180 : 0 }}
             transition={{ duration: 0.15 }}
           >
-            <ChevronLeft className="h-5 w-5 text-white" />
+            {sidebarMinimized ? (
+              <ChevronRight className="h-5 w-5 text-white" />
+            ) : (
+              <X className="h-5 w-5 text-white" />
+            )}
           </motion.div>
         </motion.button>
         {/* Logo */}
@@ -719,6 +732,10 @@ export default function Navbar() {
             >
               <Link
                 href={item.href}
+                onClick={() => {
+                  setSidebarVisible(false)
+                  setSidebarMinimized(false)
+                }}
                 className={`rounded-xl bg-white/10 hover:bg-white/20 flex items-center transition-all duration-150 group relative touch-target ${
                   sidebarMinimized 
                     ? 'w-10 h-10 justify-center' 
@@ -780,6 +797,10 @@ export default function Navbar() {
               >
                 <Link
                   href="/member"
+                  onClick={() => {
+                    setSidebarVisible(false)
+                    setSidebarMinimized(false)
+                  }}
                   className={`rounded-xl bg-blue-500/20 hover:bg-blue-500/30 flex items-center transition-all duration-300 group relative touch-target ${
                     sidebarMinimized 
                       ? 'w-10 h-10 justify-center' 
@@ -805,6 +826,10 @@ export default function Navbar() {
               >
                 <Link
                   href="/admin/dashboard"
+                  onClick={() => {
+                    setSidebarVisible(false)
+                    setSidebarMinimized(false)
+                  }}
                   className={`rounded-xl bg-purple-500/20 hover:bg-purple-500/30 flex items-center transition-all duration-300 group relative touch-target ${
                     sidebarMinimized 
                       ? 'w-10 h-10 justify-center' 
@@ -859,6 +884,10 @@ export default function Navbar() {
           >
             <Link
               href="/auth"
+              onClick={() => {
+                setSidebarVisible(false)
+                setSidebarMinimized(false)
+              }}
               className={`rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 flex items-center transition-all duration-300 group relative touch-target ${
                 sidebarMinimized 
                   ? 'w-10 h-10 justify-center' 
@@ -875,21 +904,39 @@ export default function Navbar() {
             </Link>
           </motion.div>
         )}
-      </motion.nav>
+          </motion.nav>
+        )}
+      </AnimatePresence>
 
-      {/* Floating Toggle Button for Home Screen */}
-      {sidebarMinimized && (
+      {/* Floating Toggle Button for Opening Menu */}
+      {!sidebarVisible && (
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
-          onClick={() => setSidebarMinimized(false)}
+          onClick={() => setSidebarVisible(true)}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           className="fixed top-4 left-4 w-12 h-12 bg-black/90 backdrop-blur-2xl border border-white/20 rounded-xl flex items-center justify-center z-30 lg:hidden shadow-lg shadow-cyan-500/20 touch-target"
-          title="Expand Menu"
+          title="Open Menu"
         >
-          <ChevronRight className="h-6 w-6 text-white" />
+          <Menu className="h-6 w-6 text-white" />
+        </motion.button>
+      )}
+
+      {/* Minimize Button when sidebar is open but not minimized */}
+      {sidebarVisible && !sidebarMinimized && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          onClick={() => setSidebarMinimized(true)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="fixed top-20 left-4 w-10 h-10 bg-black/90 backdrop-blur-2xl border border-white/20 rounded-xl flex items-center justify-center z-30 lg:hidden shadow-lg shadow-cyan-500/20 touch-target"
+          title="Minimize Menu"
+        >
+          <ChevronLeft className="h-5 w-5 text-white" />
         </motion.button>
       )}
     </>

@@ -19,8 +19,10 @@ export default function Members() {
     const fetchMembers = async () => {
       try {
         const membersData = await getMembers()
-        setMembers(membersData)
-        setFilteredMembers(membersData)
+        // Only show approved members to the public
+        const approvedMembers = membersData.filter(member => member.approved !== false)
+        setMembers(approvedMembers)
+        setFilteredMembers(approvedMembers)
       } catch (error) {
         console.error('Error fetching members:', error)
       } finally {

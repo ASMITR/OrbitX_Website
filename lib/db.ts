@@ -132,6 +132,7 @@ export const createMemberFromAuth = async (uid: string, email: string, name: str
     badges: [],
     eventsParticipated: [],
     projectsParticipated: [],
+    approved: false, // Requires admin approval
     joinedAt: new Date().toISOString(),
     createdAt: new Date().toISOString()
   }

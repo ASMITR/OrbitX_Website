@@ -51,6 +51,12 @@ export interface Member {
   skills?: string[]
   eventsParticipated?: string[]
   projectsParticipated?: string[]
+  approved?: boolean
+  profileCompleted?: boolean
+  submittedForApproval?: boolean
+  submittedAt?: string
+  approvedBy?: 'owner' | 'admin'
+  approvedAt?: string
   createdAt: string
 }
 
