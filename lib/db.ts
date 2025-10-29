@@ -1,4 +1,4 @@
-import { Event, Project, Member, ContactMessage, Blog, Badge } from './types'
+import { Event, Project, Member, ContactMessage, Blog, Badge, Merchandise } from './types'
 import { db } from './firebase'
 import { getCache, setCache } from './cache'
 import {
@@ -362,4 +362,41 @@ export const addComment = async (collection: string, id: string, comment: { auth
     return newComment
   }
   return null
+}
+
+// Merchandise
+export const getMerchandise = async (limitCount?: number) => {
+  const cacheKey = `merchandise_${limitCount || 'all'}`
+  const cached = getCache(cacheKey)
+  if (cached) return cached
+  
+  const q = limitCount 
+    ? query(collection(db, 'merchandise'), orderBy('createdAt', 'desc'), limit(limitCount))
+    : query(collection(db, 'merchandise'), orderBy('createdAt', 'desc'))
+  
+  const snapshot = await getDocs(q)
+  const merchandise = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Merchandise))
+  
+  setCache(cacheKey, merchandise, 2)
+  return merchandise
+}
+
+export const getMerchandiseItem = async (id: string) => {
+  const docRef = doc(db, 'merchandise', id)
+  const docSnap = await getDoc(docRef)
+  return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Merchandise : null
+}
+
+export const addMerchandise = async (merchandise: Omit<Merchandise, 'id'>) => {
+  return await addDoc(collection(db, 'merchandise'), merchandise)
+}
+
+export const updateMerchandise = async (id: string, merchandise: Partial<Merchandise>) => {
+  const docRef = doc(db, 'merchandise', id)
+  return await updateDoc(docRef, merchandise)
+}
+
+export const deleteMerchandise = async (id: string) => {
+  const docRef = doc(db, 'merchandise', id)
+  return await deleteDoc(docRef)
 }

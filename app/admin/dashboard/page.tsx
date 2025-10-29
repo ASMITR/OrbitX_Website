@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Calendar, FolderOpen, Users, MessageSquare, Plus, TrendingUp, Eye, BookOpen, Crown, Edit3, Save, X, Github, Linkedin, Instagram, Camera, Upload } from 'lucide-react'
+import { Calendar, FolderOpen, Users, MessageSquare, Plus, TrendingUp, Eye, BookOpen, Crown, Edit3, Save, X, Github, Linkedin, Instagram, Camera, Upload, Package } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { getEvents, getProjects, getMembers, getContactMessages } from '@/lib/db'
@@ -21,7 +21,8 @@ export default function AdminDashboard() {
     projects: 0,
     members: 0,
     messages: 0,
-    blogs: 0
+    blogs: 0,
+    merchandise: 0
   })
   const [teamStats, setTeamStats] = useState<{[key: string]: number}>({})
   const [recentActivity, setRecentActivity] = useState<any[]>([])
@@ -209,6 +210,10 @@ export default function AdminDashboard() {
         const { getBlogs } = await import('@/lib/db')
         const blogs = await getBlogs()
 
+        // Get merchandise
+        const merchandiseResponse = await fetch('/api/merchandise')
+        const merchandise = merchandiseResponse.ok ? await merchandiseResponse.json() : []
+
         // Count members by team
         const teamCounts: {[key: string]: number} = {}
         members.forEach((member: Member) => {
@@ -221,7 +226,8 @@ export default function AdminDashboard() {
           projects: projects.length,
           members: members.length,
           messages: messages.length,
-          blogs: blogs.length
+          blogs: blogs.length,
+          merchandise: merchandise.length
         })
 
         // Create recent activity from all data
@@ -286,6 +292,13 @@ export default function AdminDashboard() {
       href: '/admin/projects'
     },
     {
+      title: 'Merchandise',
+      value: stats.merchandise,
+      icon: Package,
+      color: 'from-orange-500 to-orange-600',
+      href: '/admin/merchandise'
+    },
+    {
       title: 'Team Members',
       value: stats.members,
       icon: Users,
@@ -296,7 +309,7 @@ export default function AdminDashboard() {
       title: 'Messages',
       value: stats.messages,
       icon: MessageSquare,
-      color: 'from-orange-500 to-orange-600',
+      color: 'from-red-500 to-red-600',
       href: '/admin/messages'
     }
   ]
@@ -322,6 +335,13 @@ export default function AdminDashboard() {
       icon: BookOpen,
       href: '/admin/blogs',
       color: 'from-cyan-500 to-cyan-600'
+    },
+    {
+      title: 'Add Merchandise',
+      description: 'Add new merchandise item',
+      icon: Package,
+      href: '/admin/merchandise/new',
+      color: 'from-orange-500 to-orange-600'
     },
     {
       title: 'Add Team Member',
@@ -706,7 +726,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex items-center">
                     <span className="text-white font-medium mr-2">{stats.events}</span>
-                    <span className="text-gray-400 text-sm">({stats.events + stats.projects + stats.blogs > 0 ? Math.round((stats.events / (stats.events + stats.projects + stats.blogs)) * 100) : 0}%)</span>
+                    <span className="text-gray-400 text-sm">({stats.events + stats.projects + stats.blogs + stats.merchandise > 0 ? Math.round((stats.events / (stats.events + stats.projects + stats.blogs + stats.merchandise)) * 100) : 0}%)</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
@@ -716,7 +736,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex items-center">
                     <span className="text-white font-medium mr-2">{stats.projects}</span>
-                    <span className="text-gray-400 text-sm">({stats.events + stats.projects + stats.blogs > 0 ? Math.round((stats.projects / (stats.events + stats.projects + stats.blogs)) * 100) : 0}%)</span>
+                    <span className="text-gray-400 text-sm">({stats.events + stats.projects + stats.blogs + stats.merchandise > 0 ? Math.round((stats.projects / (stats.events + stats.projects + stats.blogs + stats.merchandise)) * 100) : 0}%)</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
@@ -726,7 +746,17 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex items-center">
                     <span className="text-white font-medium mr-2">{stats.blogs}</span>
-                    <span className="text-gray-400 text-sm">({stats.events + stats.projects + stats.blogs > 0 ? Math.round((stats.blogs / (stats.events + stats.projects + stats.blogs)) * 100) : 0}%)</span>
+                    <span className="text-gray-400 text-sm">({stats.events + stats.projects + stats.blogs + stats.merchandise > 0 ? Math.round((stats.blogs / (stats.events + stats.projects + stats.blogs + stats.merchandise)) * 100) : 0}%)</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full mr-3"></div>
+                    <span className="text-gray-300">Merchandise</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-white font-medium mr-2">{stats.merchandise}</span>
+                    <span className="text-gray-400 text-sm">({stats.events + stats.projects + stats.blogs + stats.merchandise > 0 ? Math.round((stats.merchandise / (stats.events + stats.projects + stats.blogs + stats.merchandise)) * 100) : 0}%)</span>
                   </div>
                 </div>
               </div>
@@ -776,7 +806,7 @@ export default function AdminDashboard() {
                 <p className="text-gray-400 text-sm">Website Status</p>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-400 mb-2">{stats.events + stats.projects + stats.blogs}</div>
+                <div className="text-2xl font-bold text-green-400 mb-2">{stats.events + stats.projects + stats.blogs + stats.merchandise}</div>
                 <p className="text-gray-400 text-sm">Total Content Items</p>
               </div>
               <div className="text-center">

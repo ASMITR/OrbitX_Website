@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   BookOpen,
-  ChevronRight
+  ChevronRight,
+  Package
 } from 'lucide-react'
 import { auth } from '@/lib/firebase'
 import { useAuth } from './AuthProvider'
@@ -101,6 +102,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     { name: 'Events', href: '/admin/events', icon: Calendar },
     { name: 'Projects', href: '/admin/projects', icon: FolderOpen },
     { name: 'Blogs', href: '/admin/blogs', icon: BookOpen },
+    { name: 'Merchandise', href: '/admin/merchandise', icon: Package },
     { name: 'Members', href: '/admin/members', icon: Users },
     { name: 'Messages', href: '/admin/messages', icon: MessageSquare },
     { name: 'Settings', href: '/admin/settings', icon: Settings },

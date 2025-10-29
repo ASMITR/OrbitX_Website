@@ -224,6 +224,7 @@ export default function Navbar() {
     { name: 'Projects', href: '/projects' },
     { name: 'Events', href: '/events' },
     { name: 'Blogs', href: '/blogs' },
+    { name: 'Merchandise', href: '/merchandise' },
     { name: 'Members', href: '/members' },
     { name: 'Contact', href: '/contact' }
   ]
@@ -242,8 +243,8 @@ export default function Navbar() {
         }`}
       >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`flex justify-between items-center transition-all duration-500 ${
-          scrolled ? 'h-12 sm:h-14 lg:h-16' : 'h-14 sm:h-16 lg:h-18'
+        <div className={`flex items-center transition-all duration-500 ${
+          scrolled ? 'h-14' : 'h-16'
         }`}>
           {/* Logo */}
           <motion.div
@@ -265,56 +266,59 @@ export default function Navbar() {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-2 lg:space-x-4">
+          <div className="hidden lg:flex items-center flex-1 justify-center ml-8">
+            <div className="flex items-center space-x-4">
             {navItems.map((item, index) => (
               <motion.div
                 key={item.name}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.08 }}
-                whileHover={{ scale: 1.08, y: -3 }}
-                whileTap={{ scale: 0.92 }}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <Link
                   href={item.href}
-                  className="relative group px-4 py-2.5 rounded-2xl font-medium text-sm lg:text-base text-gray-300 hover:text-cyan-300 transition-all duration-500 overflow-hidden"
+                  className="relative group px-3 py-2 rounded-xl font-medium text-base text-gray-300 hover:text-cyan-300 transition-all duration-300 overflow-hidden"
                 >
                   <span className="relative z-20">{item.name}</span>
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-blue-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:via-blue-500/15 group-hover:to-purple-500/10 rounded-2xl transition-all duration-500"
+                    className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-blue-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:via-blue-500/15 group-hover:to-purple-500/10 rounded-xl transition-all duration-300"
                   />
                   <motion.div
-                    className="absolute inset-0 rounded-2xl border border-transparent group-hover:border-cyan-400/30 transition-all duration-500"
+                    className="absolute inset-0 rounded-xl border border-transparent group-hover:border-cyan-400/30 transition-all duration-300"
                   />
                   <motion.div
-                    className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 w-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent group-hover:w-full transition-all duration-500"
+                    className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 w-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent group-hover:w-full transition-all duration-300"
                   />
                 </Link>
               </motion.div>
             ))}
-            
+            </div>
+          </div>
+
+          {/* Right Section - Auth/Profile */}
+          <div className="hidden lg:flex items-center">
             {/* Auth Buttons - Show only when not logged in */}
             {!user && (
-              <div className="flex items-center space-x-3 ml-4">
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Link
+                  href="/auth"
+                  className="relative group bg-gradient-to-r from-blue-500 to-purple-500 text-cyan-100 px-4 py-2 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 text-sm font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 overflow-hidden"
                 >
-                  <Link
-                    href="/auth"
-                    className="relative group bg-gradient-to-r from-blue-500 to-purple-500 text-cyan-100 px-6 py-2 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 text-sm font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 overflow-hidden"
-                  >
-                    <span className="relative z-10">Get Started</span>
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-600 opacity-0 group-hover:opacity-100"
-                      transition={{ duration: 0.3 }}
-                    />
-                  </Link>
-                </motion.div>
-              </div>
+                  <span className="relative z-10">Get Started</span>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-600 opacity-0 group-hover:opacity-100"
+                    transition={{ duration: 0.3 }}
+                  />
+                </Link>
+              </motion.div>
             )}
             
             {/* Profile Section - Show only when logged in */}
@@ -323,13 +327,13 @@ export default function Navbar() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.6 }}
-                className="relative ml-4 lg:ml-6 profile-menu"
+                className="relative profile-menu"
               >
                 <motion.button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 group"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 group"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <motion.div 
                     className="relative flex-shrink-0"
@@ -339,7 +343,7 @@ export default function Navbar() {
                     <motion.img
                       src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=ffffff&size=200`}
                       alt={adminName || user?.displayName || 'Profile'}
-                      className="w-10 h-10 lg:w-12 lg:h-12 rounded-full object-cover"
+                      className="w-8 h-8 rounded-full object-cover"
                       animate={{ rotate: [0, 5, -5, 0] }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     />
@@ -351,7 +355,7 @@ export default function Navbar() {
                   </motion.div>
                   <div className="flex flex-col text-left flex-1">
                     <motion.span 
-                      className="text-white text-sm lg:text-base font-semibold"
+                      className="text-white text-base font-semibold"
                       animate={{ opacity: [0.8, 1, 0.8] }}
                       transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >

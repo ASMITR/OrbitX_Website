@@ -113,6 +113,23 @@ export interface Comment {
   createdAt: string
 }
 
+export interface Merchandise {
+  id: string
+  name: string
+  description: string
+  price: number
+  images: string[]
+  coverImage?: string
+  category: string
+  sizes?: string[]
+  colors?: string[]
+  inStock: boolean
+  stockQuantity?: number
+  featured?: boolean
+  createdAt: string
+  updatedAt?: string
+}
+
 export interface AdminUser {
   id: string
   email: string
