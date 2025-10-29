@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 
@@ -13,7 +14,7 @@ interface SpaceObject {
   speed: number
 }
 
-export default function SpaceBackground() {
+function SpaceBackgroundComponent() {
   const [spaceObjects, setSpaceObjects] = useState<SpaceObject[]>([])
 
   useEffect(() => {
@@ -291,3 +292,14 @@ export default function SpaceBackground() {
     </div>
   )
 }
+
+const SpaceBackground = dynamic(() => Promise.resolve(SpaceBackgroundComponent), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed inset-0 z-0 overflow-hidden">
+      <div className="absolute inset-0 bg-black" />
+    </div>
+  )
+})
+
+export default SpaceBackground

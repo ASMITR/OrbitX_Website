@@ -587,6 +587,7 @@ export default function MemberPanel() {
                       style={{ colorScheme: 'dark' }}
                     >
                       <option value="" className="bg-gray-800 text-gray-400">Select team</option>
+                      <option value="NA" className="bg-gray-800 text-white">NA</option>
                       <option value="Design & Innovation Team" className="bg-gray-800 text-white">Design & Innovation Team</option>
                       <option value="Technical Team" className="bg-gray-800 text-white">Technical Team</option>
                       <option value="Management & Operations Team" className="bg-gray-800 text-white">Management & Operations Team</option>
@@ -723,7 +724,9 @@ export default function MemberPanel() {
                     Organization
                   </h4>
                   <div className="space-y-3 text-sm">
-                    <div><span className="text-gray-400">Team:</span> <span className="text-white ml-2">{member?.team || 'Not assigned'}</span></div>
+                    {member?.team && member.team !== 'NA' && (
+                      <div><span className="text-gray-400">Team:</span> <span className="text-white ml-2">{member.team}</span></div>
+                    )}
                     <div><span className="text-gray-400">Position:</span> <span className="text-white ml-2">{member?.position || 'Member'}</span></div>
                     <div><span className="text-gray-400">Status:</span> 
                       <span className={`ml-2 px-2 py-1 rounded-full text-xs ${

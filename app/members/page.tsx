@@ -181,7 +181,9 @@ export default function Members() {
                 <h3 className="text-lg sm:text-xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors line-clamp-2">
                   {member.name}
                 </h3>
-                <p className="text-blue-400 text-xs sm:text-sm font-medium mb-1 line-clamp-1">{member.team}</p>
+                {member.team && member.team !== 'NA' && (
+                  <p className="text-blue-400 text-xs sm:text-sm font-medium mb-1 line-clamp-1">{member.team}</p>
+                )}
                 <p className="text-purple-400 text-xs font-medium mb-1 line-clamp-1">{member.position}</p>
                 <p className="text-gray-400 text-xs mb-3 sm:mb-4 line-clamp-1">{member.branch} • {member.year}-{member.division}</p>
                 
@@ -372,12 +374,14 @@ export default function Members() {
                       >
                         {selectedMember.position}
                       </motion.span>
-                      <motion.span 
-                        whileHover={{ scale: 1.05 }}
-                        className="px-4 py-2 rounded-full text-sm bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                      >
-                        {selectedMember.team}
-                      </motion.span>
+                      {selectedMember.team && selectedMember.team !== 'NA' && (
+                        <motion.span 
+                          whileHover={{ scale: 1.05 }}
+                          className="px-4 py-2 rounded-full text-sm bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                        >
+                          {selectedMember.team}
+                        </motion.span>
+                      )}
                     </div>
                   </motion.div>
 

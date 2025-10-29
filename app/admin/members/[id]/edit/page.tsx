@@ -40,6 +40,7 @@ export default function EditMember() {
   const { register, handleSubmit, reset, formState: { errors } } = useForm<MemberForm>()
 
   const teams = [
+    'NA',
     'Design & Innovation Team',
     'Technical Team',
     'Management & Operations Team',

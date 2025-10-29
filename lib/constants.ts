@@ -32,6 +32,7 @@ export const DIVISIONS = [
 ]
 
 export const TEAMS = [
+  'NA',
   'Design & Innovation Team',
   'Technical Team',
   'Management & Operations Team',
