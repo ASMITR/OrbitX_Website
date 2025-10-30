@@ -1,14 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Search, ShoppingCart, Heart } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Search, ShoppingCart, Heart, Package } from 'lucide-react'
 import { Merchandise } from '@/lib/types'
 import toast from 'react-hot-toast'
+import CartIcon from '@/components/CartIcon'
 
 export default function MerchandisePage() {
+  const router = useRouter()
   const [merchandise, setMerchandise] = useState<Merchandise[]>([])
-  const [filteredMerchandise, setFilteredMerchandise] = useState<Merchandise[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -24,7 +27,6 @@ export default function MerchandisePage() {
       if (response.ok) {
         const data = await response.json()
         setMerchandise(data)
-        setFilteredMerchandise(data)
       }
     } catch (error) {
       console.error('Error fetching merchandise:', error)
@@ -34,7 +36,7 @@ export default function MerchandisePage() {
     }
   }
 
-  useEffect(() => {
+  const filteredMerchandise = useMemo(() => {
     let filtered = merchandise.filter(item => 
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -44,7 +46,7 @@ export default function MerchandisePage() {
       filtered = filtered.filter(item => item.category === selectedCategory)
     }
 
-    filtered.sort((a, b) => {
+    return filtered.sort((a, b) => {
       switch (sortBy) {
         case 'price-low':
           return a.price - b.price
@@ -56,8 +58,6 @@ export default function MerchandisePage() {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       }
     })
-
-    setFilteredMerchandise(filtered)
   }, [merchandise, searchTerm, selectedCategory, sortBy])
 
   const categories = ['all', ...Array.from(new Set(merchandise.map(item => item.category)))]
@@ -76,21 +76,31 @@ export default function MerchandisePage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="py-12 px-4 text-center"
+        className="section-spacing-sm text-center"
       >
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+        <div className="container-responsive max-w-4xl mx-auto">
+          <h1 className="text-responsive-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             OrbitX Merchandise
           </h1>
-          <p className="text-lg text-gray-300 mb-6">
+          <p className="text-responsive-lg text-gray-300 mb-8">
             Show your space exploration spirit with our exclusive merchandise collection
           </p>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
+            <CartIcon />
+            <button
+              onClick={() => router.push('/my-orders')}
+              className="btn-primary bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 border border-green-400/30 text-green-400 hover:text-green-300 flex items-center gap-2"
+            >
+              <Package className="h-4 w-4" />
+              <span>Track Orders</span>
+            </button>
+          </div>
         </div>
       </motion.section>
 
-      <div className="max-w-6xl mx-auto px-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-          <div className="relative flex-1 max-w-sm">
+      <div className="container-responsive max-w-6xl mx-auto mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+          <div className="relative flex-1 max-w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
@@ -126,77 +136,86 @@ export default function MerchandisePage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 pb-16">
+      <div className="container-responsive max-w-7xl mx-auto pb-16">
         {filteredMerchandise.length === 0 ? (
           <div className="text-center py-12">
-            <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+            <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-400 mb-2">No merchandise found</h3>
-            <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
+            <p className="text-gray-500">Try adjusting your search or filters</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
             {filteredMerchandise.map((item, index) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white/5 backdrop-blur-md rounded-xl overflow-hidden border border-white/10 hover:border-blue-400/30 transition-all duration-300 group"
+                className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-blue-400/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 w-full max-w-md mx-auto"
               >
-                <div className="relative aspect-square overflow-hidden">
+                <div className="relative aspect-square overflow-hidden bg-white/5">
                   <img
-                    src={item.coverImage || item.images[0] || '/placeholder-merchandise.jpg'}
+                    src={item.coverImage || (item.images && item.images[0]) || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1f2937&color=ffffff&size=400`}
                     alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-2"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1f2937&color=ffffff&size=400`
+                    }}
                   />
-                  {item.featured && (
-                    <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-2 py-1 rounded-full text-xs font-bold">
-                      Featured
-                    </div>
-                  )}
-                  {!item.inStock && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">Out of Stock</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-base font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-1">
-                      {item.name}
-                    </h3>
-                    <button className="text-gray-400 hover:text-red-400 transition-colors flex-shrink-0 ml-2">
+                  
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <div className="absolute top-2 left-2 flex gap-2">
+                    {item.featured && (
+                      <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-2 py-1 rounded-full text-xs font-bold shadow-lg">
+                        ⭐ Featured
+                      </div>
+                    )}
+                    {!item.inStock && (
+                      <div className="bg-red-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                        Out of Stock
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <button className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-colors">
                       <Heart className="h-4 w-4" />
                     </button>
                   </div>
+                </div>
+
+                <div className="p-4">
+                  <div className="mb-2">
+                    <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-blue-400 transition-colors">
+                      {item.name}
+                    </h3>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-lg font-bold text-blue-400">₹{item.price}</span>
+                      <span className="text-xs text-gray-400 bg-white/10 px-2 py-1 rounded-full">
+                        {item.category}
+                      </span>
+                    </div>
+                  </div>
                   
-                  <p className="text-gray-300 text-xs mb-3 line-clamp-2">
+                  <p className="text-xs text-gray-300 mb-3 line-clamp-2 leading-relaxed">
                     {item.description}
                   </p>
-
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-lg font-bold text-blue-400">
-                      ₹{item.price}
-                    </span>
-                    <span className="text-xs text-gray-400 bg-white/10 px-2 py-1 rounded-full">
-                      {item.category}
-                    </span>
-                  </div>
 
                   {(item.sizes || item.colors) && (
                     <div className="mb-3 space-y-1">
                       {item.sizes && (
                         <div className="flex items-center gap-1">
                           <span className="text-xs text-gray-400">Sizes:</span>
-                          <div className="flex gap-1 flex-wrap">
-                            {item.sizes.slice(0, 4).map(size => (
-                              <span key={size} className="text-xs bg-white/10 px-1.5 py-0.5 rounded">
+                          <div className="flex gap-1">
+                            {item.sizes.slice(0, 3).map(size => (
+                              <span key={size} className="text-xs bg-white/10 px-1.5 py-0.5 rounded text-gray-300">
                                 {size}
                               </span>
                             ))}
-                            {item.sizes.length > 4 && (
-                              <span className="text-xs text-gray-400">+{item.sizes.length - 4}</span>
+                            {item.sizes.length > 3 && (
+                              <span className="text-xs text-gray-400">+{item.sizes.length - 3}</span>
                             )}
                           </div>
                         </div>
@@ -205,16 +224,16 @@ export default function MerchandisePage() {
                         <div className="flex items-center gap-1">
                           <span className="text-xs text-gray-400">Colors:</span>
                           <div className="flex gap-1">
-                            {item.colors.slice(0, 5).map(color => (
+                            {item.colors.slice(0, 4).map(color => (
                               <div
                                 key={color}
-                                className="w-3 h-3 rounded-full border border-white/20"
+                                className="w-3 h-3 rounded-full border border-white/30 shadow-sm"
                                 style={{ backgroundColor: color.toLowerCase() }}
                                 title={color}
                               />
                             ))}
-                            {item.colors.length > 5 && (
-                              <span className="text-xs text-gray-400">+{item.colors.length - 5}</span>
+                            {item.colors.length > 4 && (
+                              <span className="text-xs text-gray-400">+{item.colors.length - 4}</span>
                             )}
                           </div>
                         </div>
@@ -222,22 +241,11 @@ export default function MerchandisePage() {
                     </div>
                   )}
 
-                  <button
-                    disabled={!item.inStock}
-                    className={`w-full py-2.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
-                      item.inStock
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white'
-                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    }`}
-                    onClick={() => {
-                      if (item.inStock) {
-                        toast.success('Added to cart!')
-                      }
-                    }}
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    {item.inStock ? 'Add to Cart' : 'Out of Stock'}
-                  </button>
+                  <Link href={`/merchandise/${item.id}`} className="block">
+                    <button className="w-full py-2 px-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg text-sm font-medium transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 transform hover:-translate-y-0.5">
+                      View Details
+                    </button>
+                  </Link>
                 </div>
               </motion.div>
             ))}

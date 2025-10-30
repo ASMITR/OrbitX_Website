@@ -1,24 +1,24 @@
-// Simple in-memory cache for better performance
+// Simple in-memory cache for API responses
 const cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
 
-export const setCache = (key: string, data: any, ttlMinutes = 5) => {
-  cache.set(key, {
-    data,
-    timestamp: Date.now(),
-    ttl: ttlMinutes * 60 * 1000
-  })
-}
-
-export const getCache = (key: string) => {
-  const item = cache.get(key)
-  if (!item) return null
+export const getCachedData = (key: string) => {
+  const cached = cache.get(key)
+  if (!cached) return null
   
-  if (Date.now() - item.timestamp > item.ttl) {
+  if (Date.now() - cached.timestamp > cached.ttl) {
     cache.delete(key)
     return null
   }
   
-  return item.data
+  return cached.data
+}
+
+export const setCachedData = (key: string, data: any, ttl: number = 300000) => { // 5 minutes default
+  cache.set(key, {
+    data,
+    timestamp: Date.now(),
+    ttl
+  })
 }
 
 export const clearCache = (key?: string) => {

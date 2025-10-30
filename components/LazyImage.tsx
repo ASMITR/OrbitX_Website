@@ -2,41 +2,46 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { motion } from 'framer-motion'
 
 interface LazyImageProps {
   src: string
   alt: string
-  width: number
-  height: number
   className?: string
-  priority?: boolean
+  fallback?: string
+  width?: number
+  height?: number
 }
 
-export default function LazyImage({ src, alt, width, height, className = '', priority = false }: LazyImageProps) {
-  const [isLoaded, setIsLoaded] = useState(false)
+export default function LazyImage({ src, alt, className, fallback, width = 400, height = 400 }: LazyImageProps) {
+  const [imgSrc, setImgSrc] = useState(src)
+  const [loading, setLoading] = useState(true)
+
+  const handleError = () => {
+    if (fallback) {
+      setImgSrc(fallback)
+    } else {
+      setImgSrc(`https://ui-avatars.com/api/?name=${encodeURIComponent(alt)}&background=1f2937&color=ffffff&size=${width}`)
+    }
+  }
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
+      {loading && (
+        <div className="absolute inset-0 bg-gray-800 animate-pulse rounded" />
+      )}
       <Image
-        src={src}
+        src={imgSrc}
         alt={alt}
         width={width}
         height={height}
-        priority={priority}
-        className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-        onLoad={() => setIsLoaded(true)}
+        className={`transition-opacity duration-300 ${loading ? 'opacity-0' : 'opacity-100'} ${className}`}
+        onLoad={() => setLoading(false)}
+        onError={handleError}
+        priority={false}
+        loading="lazy"
         placeholder="blur"
-        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
       />
-      {!isLoaded && (
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-gray-800 to-gray-700 animate-pulse"
-          initial={{ opacity: 1 }}
-          animate={{ opacity: 0 }}
-          transition={{ duration: 0.3, delay: 0.5 }}
-        />
-      )}
     </div>
   )
 }

@@ -114,48 +114,50 @@ export default function Home() {
       <HeroSection />
       
       {/* Preview Section */}
-      <section className="section-padding container-fluid overflow-x-hidden">
-        <div className="max-w-7xl mx-auto">
+      <section className="section-spacing py-16 sm:py-20 lg:py-24">
+        <div className="container-responsive max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-center mb-12 sm:mb-16 lg:mb-20"
           >
-            <h2 className="heading-lg font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent px-2">
+            <h2 className="text-responsive-4xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
               Explore OrbitX
             </h2>
-            <p className="text-lg-responsive text-gray-300 max-w-3xl mx-auto px-4">
+            <p className="text-responsive-lg text-gray-300 max-w-3xl mx-auto">
               Discover our events, projects, and teams as we push the boundaries of space exploration
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-responsive-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10">
             {previews.map((preview, index) => (
-              <PreviewCard key={preview.title} {...preview} index={index} />
+              <div key={preview.title} className="card-spacing">
+                <PreviewCard {...preview} index={index} />
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Domains Section */}
-      <section className="section-padding container-fluid bg-gray-800/30">
-        <div className="max-w-6xl mx-auto">
+      <section className="section-spacing py-16 sm:py-20 lg:py-24 bg-gray-800/30">
+        <div className="container-responsive max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-center mb-12 sm:mb-16 lg:mb-20"
           >
-            <h2 className="heading-lg font-bold mb-4 sm:mb-6 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent px-2">
+            <h2 className="text-responsive-4xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
               Our Domains
             </h2>
-            <p className="text-lg-responsive text-gray-300 max-w-2xl mx-auto px-4">
+            <p className="text-responsive-lg text-gray-300 max-w-2xl mx-auto">
               Specialized teams working on cutting-edge space technology
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {domains.map((domain, index) => {
               const IconComponent = domain.icon
               return (
@@ -164,10 +166,10 @@ export default function Home() {
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="glass-card p-4 sm:p-6 text-center hover:bg-white/10 transition-all duration-300 min-h-[120px] sm:min-h-[140px] flex flex-col justify-center"
+                  className="glass-card text-center hover:bg-white/10 transition-all duration-300 min-h-[140px] sm:min-h-[160px] flex flex-col justify-center card-spacing"
                 >
                   <IconComponent className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400 mx-auto mb-3 sm:mb-4" />
-                  <h3 className="text-sm sm:text-base font-semibold text-white leading-tight">{domain.name}</h3>
+                  <h3 className="text-responsive-base font-semibold text-white leading-tight">{domain.name}</h3>
                 </motion.div>
               )
             })}
@@ -176,18 +178,18 @@ export default function Home() {
       </section>
 
       {/* Team Members Preview */}
-      <section className="section-padding container-fluid">
-        <div className="max-w-7xl mx-auto">
+      <section className="section-spacing py-16 sm:py-20 lg:py-24">
+        <div className="container-responsive max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-center mb-12 sm:mb-16 lg:mb-20"
           >
-            <h2 className="heading-lg font-bold mb-4 sm:mb-6 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent px-2">
+            <h2 className="text-responsive-4xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
               Meet Our Team
             </h2>
-            <p className="text-lg-responsive text-gray-300 max-w-2xl mx-auto px-4">
+            <p className="text-responsive-lg text-gray-300 max-w-2xl mx-auto">
               Passionate individuals driving space exploration forward
             </p>
           </motion.div>

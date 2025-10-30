@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, X, Plus } from 'lucide-react'
+import { ArrowLeft, Upload, X, Plus } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Merchandise } from '@/lib/types'
 import toast from 'react-hot-toast'
@@ -25,9 +25,9 @@ export default function EditMerchandisePage() {
     stockQuantity: '',
     featured: false
   })
-  const [images, setImages] = useState<File[]>([])
   const [existingImages, setExistingImages] = useState<string[]>([])
-  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [newImages, setNewImages] = useState<File[]>([])
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([])
   const [newSize, setNewSize] = useState('')
   const [newColor, setNewColor] = useState('')
 
@@ -44,13 +44,13 @@ export default function EditMerchandisePage() {
         const data = await response.json()
         setMerchandise(data)
         setFormData({
-          name: data.name,
-          description: data.description,
-          price: data.price.toString(),
-          category: data.category,
+          name: data.name || '',
+          description: data.description || '',
+          price: data.price?.toString() || '',
+          category: data.category || '',
           sizes: data.sizes || [],
           colors: data.colors || [],
-          inStock: data.inStock,
+          inStock: data.inStock ?? true,
           stockQuantity: data.stockQuantity?.toString() || '',
           featured: data.featured || false
         })
@@ -76,9 +76,9 @@ export default function EditMerchandisePage() {
     }))
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    if (files.length + images.length + existingImages.length > 5) {
+    if (files.length + newImages.length + existingImages.length > 5) {
       toast.error('Maximum 5 images allowed')
       return
     }
@@ -90,12 +90,12 @@ export default function EditMerchandisePage() {
       }
     })
 
-    setImages(prev => [...prev, ...files])
+    setNewImages(prev => [...prev, ...files])
     
     files.forEach(file => {
       const reader = new FileReader()
       reader.onload = (e) => {
-        setImagePreviews(prev => [...prev, e.target?.result as string])
+        setNewImagePreviews(prev => [...prev, e.target?.result as string])
       }
       reader.readAsDataURL(file)
     })
@@ -106,8 +106,8 @@ export default function EditMerchandisePage() {
   }
 
   const removeNewImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index))
-    setImagePreviews(prev => prev.filter((_, i) => i !== index))
+    setNewImages(prev => prev.filter((_, i) => i !== index))
+    setNewImagePreviews(prev => prev.filter((_, i) => i !== index))
   }
 
   const addSize = () => {
@@ -152,7 +152,7 @@ export default function EditMerchandisePage() {
       return
     }
 
-    if (existingImages.length === 0 && images.length === 0) {
+    if (existingImages.length === 0 && newImages.length === 0) {
       toast.error('Please add at least one image')
       return
     }
@@ -167,6 +167,7 @@ export default function EditMerchandisePage() {
       formDataToSend.append('category', formData.category.trim())
       formDataToSend.append('inStock', formData.inStock.toString())
       formDataToSend.append('featured', formData.featured.toString())
+      formDataToSend.append('existingImages', JSON.stringify(existingImages))
       
       if (formData.stockQuantity) {
         formDataToSend.append('stockQuantity', formData.stockQuantity)
@@ -180,9 +181,7 @@ export default function EditMerchandisePage() {
         formDataToSend.append('colors', JSON.stringify(formData.colors))
       }
 
-      formDataToSend.append('existingImages', JSON.stringify(existingImages))
-
-      images.forEach((image, index) => {
+      newImages.forEach((image, index) => {
         formDataToSend.append(`image${index}`, image)
       })
 
@@ -219,7 +218,7 @@ export default function EditMerchandisePage() {
   if (!merchandise) {
     return (
       <AdminLayout title="Edit Merchandise">
-        <div className="text-center py-20">
+        <div className="text-center py-12">
           <h3 className="text-xl font-bold text-gray-400 mb-2">Merchandise not found</h3>
           <button onClick={() => router.push('/admin/merchandise')} className="btn-primary">
             Back to Merchandise
@@ -245,13 +244,13 @@ export default function EditMerchandisePage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="glass-card-admin p-6">
-            <h2 className="text-xl font-bold text-white mb-6">Basic Information</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="glass-card-admin p-4">
+            <h2 className="text-lg font-bold text-white mb-4">Basic Information</h2>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Product Name *
                 </label>
                 <input
@@ -259,14 +258,14 @@ export default function EditMerchandisePage() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                  className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
                   placeholder="Enter product name"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Price (₹) *
                 </label>
                 <input
@@ -274,7 +273,7 @@ export default function EditMerchandisePage() {
                   name="price"
                   value={formData.price}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                  className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
                   placeholder="0"
                   min="0"
                   step="0.01"
@@ -283,24 +282,24 @@ export default function EditMerchandisePage() {
               </div>
             </div>
 
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Description *
               </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                rows={4}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                rows={3}
+                className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
                 placeholder="Describe the product..."
                 required
               />
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6 mt-6">
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Category *
                 </label>
                 <input
@@ -308,14 +307,14 @@ export default function EditMerchandisePage() {
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                  className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
                   placeholder="e.g., T-Shirts, Hoodies, Accessories"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Stock Quantity
                 </label>
                 <input
@@ -323,14 +322,14 @@ export default function EditMerchandisePage() {
                   name="stockQuantity"
                   value={formData.stockQuantity}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                  className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
                   placeholder="Optional"
                   min="0"
                 />
               </div>
             </div>
 
-            <div className="flex gap-6 mt-6">
+            <div className="flex gap-4 mt-4">
               <label className="flex items-center">
                 <input
                   type="checkbox"
@@ -339,7 +338,7 @@ export default function EditMerchandisePage() {
                   onChange={handleInputChange}
                   className="mr-2"
                 />
-                <span className="text-gray-300">In Stock</span>
+                <span className="text-sm text-gray-300">In Stock</span>
               </label>
 
               <label className="flex items-center">
@@ -350,19 +349,21 @@ export default function EditMerchandisePage() {
                   onChange={handleInputChange}
                   className="mr-2"
                 />
-                <span className="text-gray-300">Featured Product</span>
+                <span className="text-sm text-gray-300">Featured Product</span>
               </label>
             </div>
           </div>
 
           {/* Images */}
-          <div className="glass-card-admin p-6">
-            <h2 className="text-xl font-bold text-white mb-6">Product Images</h2>
+          <div className="glass-card-admin p-4">
+            <h2 className="text-lg font-bold text-white mb-4">Product Images</h2>
             
             {/* Existing Images */}
             {existingImages.length > 0 && (
               <div className="mb-4">
-                <h3 className="text-base font-medium text-gray-300 mb-2">Current Images</h3>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Current Images
+                </label>
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
                   {existingImages.map((image, index) => (
                     <div key={index} className="relative group">
@@ -383,53 +384,50 @@ export default function EditMerchandisePage() {
                 </div>
               </div>
             )}
-
-            {/* New Images */}
+            
             <div className="mb-3">
               <label className="block text-sm font-medium text-gray-300 mb-1">
-                Add New Images (Max 5 total)
+                Add New Images (Max {5 - existingImages.length - newImages.length} more)
               </label>
               <input
                 type="file"
                 accept="image/*"
                 multiple
-                onChange={handleImageChange}
-                className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600"
+                onChange={handleNewImageChange}
+                disabled={existingImages.length + newImages.length >= 5}
+                className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 disabled:opacity-50"
               />
             </div>
 
-            {imagePreviews.length > 0 && (
-              <div>
-                <h3 className="text-base font-medium text-gray-300 mb-2">New Images</h3>
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-                  {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={preview}
-                        alt={`New ${index + 1}`}
-                        className="w-full aspect-square object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeNewImage(index)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+            {newImagePreviews.length > 0 && (
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                {newImagePreviews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`New ${index + 1}`}
+                      className="w-full aspect-square object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeNewImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
           {/* Sizes and Colors */}
-          <div className="glass-card-admin p-6">
-            <h2 className="text-xl font-bold text-white mb-6">Variants</h2>
+          <div className="glass-card-admin p-4">
+            <h2 className="text-lg font-bold text-white mb-4">Variants</h2>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Sizes
                 </label>
                 <div className="flex gap-2 mb-2">
@@ -437,7 +435,7 @@ export default function EditMerchandisePage() {
                     type="text"
                     value={newSize}
                     onChange={(e) => setNewSize(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                    className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
                     placeholder="e.g., S, M, L, XL"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSize())}
                   />
@@ -446,14 +444,14 @@ export default function EditMerchandisePage() {
                     onClick={addSize}
                     className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-3 w-3" />
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1">
                   {formData.sizes.map(size => (
                     <span
                       key={size}
-                      className="bg-white/10 px-3 py-1 rounded-full text-sm text-gray-300 flex items-center gap-2"
+                      className="bg-white/10 px-2 py-1 rounded-full text-xs text-gray-300 flex items-center gap-1"
                     >
                       {size}
                       <button
@@ -469,7 +467,7 @@ export default function EditMerchandisePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Colors
                 </label>
                 <div className="flex gap-2 mb-2">
@@ -477,7 +475,7 @@ export default function EditMerchandisePage() {
                     type="text"
                     value={newColor}
                     onChange={(e) => setNewColor(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                    className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
                     placeholder="e.g., Red, Blue, Black"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addColor())}
                   />
@@ -486,14 +484,14 @@ export default function EditMerchandisePage() {
                     onClick={addColor}
                     className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-3 w-3" />
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1">
                   {formData.colors.map(color => (
                     <span
                       key={color}
-                      className="bg-white/10 px-3 py-1 rounded-full text-sm text-gray-300 flex items-center gap-2"
+                      className="bg-white/10 px-2 py-1 rounded-full text-xs text-gray-300 flex items-center gap-1"
                     >
                       {color}
                       <button

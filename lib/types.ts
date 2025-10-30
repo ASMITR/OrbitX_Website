@@ -130,6 +130,35 @@ export interface Merchandise {
   updatedAt?: string
 }
 
+export interface Order {
+  id: string
+  orderNumber: string
+  items: {
+    id: string
+    merchandiseId: string
+    name: string
+    price: number
+    image: string
+    size?: string
+    color?: string
+    quantity: number
+  }[]
+  total: number
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
+  customerInfo: {
+    name: string
+    email: string
+    phone: string
+    address: string
+    city?: string
+    state?: string
+    pincode?: string
+    notes?: string
+  }
+  createdAt: string
+  updatedAt?: string
+}
+
 export interface AdminUser {
   id: string
   email: string

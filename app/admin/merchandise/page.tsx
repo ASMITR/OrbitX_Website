@@ -93,12 +93,19 @@ export default function AdminMerchandisePage() {
             <h1 className="text-xl font-bold text-white">Merchandise Management</h1>
             <p className="text-sm text-gray-400">Manage your organization's merchandise catalog</p>
           </div>
-          <Link href="/admin/merchandise/new">
-            <button className="btn-primary flex items-center text-sm px-4 py-2">
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Item
-            </button>
-          </Link>
+          <div className="flex gap-3">
+            <Link href="/admin/orders">
+              <button className="btn-secondary flex items-center text-sm px-4 py-2">
+                View Orders
+              </button>
+            </Link>
+            <Link href="/admin/merchandise/new">
+              <button className="btn-primary flex items-center text-sm px-4 py-2">
+                <Plus className="h-4 w-4 mr-2" />
+                Add New Item
+              </button>
+            </Link>
+          </div>
         </div>
 
         {/* Filters */}
@@ -161,9 +168,13 @@ export default function AdminMerchandisePage() {
                 {/* Image */}
                 <div className="relative aspect-square overflow-hidden">
                   <img
-                    src={item.coverImage || item.images[0] || '/placeholder-merchandise.jpg'}
+                    src={item.coverImage || (item.images && item.images[0]) || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1f2937&color=ffffff&size=400`}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1f2937&color=ffffff&size=400`
+                    }}
                     alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-2 right-2 flex gap-1">
                     {item.featured && (
@@ -206,8 +217,8 @@ export default function AdminMerchandisePage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-1">
-                    <Link href={`/merchandise`} className="flex-1">
+                          <div className="flex gap-1">
+                    <Link href={`/merchandise/${item.id}`} className="flex-1">
                       <button className="w-full py-1.5 px-2 bg-white/10 hover:bg-white/20 text-white rounded text-xs transition-colors flex items-center justify-center">
                         <Eye className="h-3 w-3 mr-1" />
                         View

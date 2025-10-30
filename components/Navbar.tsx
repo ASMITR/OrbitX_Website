@@ -384,6 +384,29 @@ export default function Navbar() {
                       className="absolute right-0 top-full mt-3 w-56 bg-black/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl shadow-cyan-500/10 z-50 overflow-hidden"
                     >
                       <div className="p-2">
+                        {/* My Orders */}
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Link
+                            href="/orders"
+                            className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-orange-500/10 hover:to-red-500/10 transition-all duration-300 rounded-xl border-b border-white/10 mb-1 group"
+                            onClick={() => setShowProfileMenu(false)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium">My Orders</span>
+                              <motion.div
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                animate={{ x: [0, 5, 0] }}
+                                transition={{ duration: 1, repeat: Infinity }}
+                              >
+                                →
+                              </motion.div>
+                            </div>
+                          </Link>
+                        </motion.div>
+
                         {/* Member Dashboard - Show for members and admins, not owners */}
                         {userRole !== 'owner' && (
                           <motion.div
