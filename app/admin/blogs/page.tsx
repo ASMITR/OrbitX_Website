@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Calendar, User, Eye } from 'lucide-react'
+import { Plus, Edit, Trash2, Calendar, User, Eye, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { getBlogs, deleteBlog } from '@/lib/db'
 import { Blog } from '@/lib/types'
@@ -92,80 +92,99 @@ export default function AdminBlogsPage() {
 
         {/* Blogs List */}
         {blogs.length === 0 ? (
-          <div className="glass-card p-8 text-center">
+          <div className="glass-card-admin p-8 text-center">
             <p className="text-gray-400">No blogs found. Create your first blog post!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {blogs.map((blog, index) => (
               <motion.div
                 key={blog.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="glass-card group hover:scale-105 transition-all duration-300"
+                transition={{ delay: index * 0.1 }}
+                className="glass-card-admin hover:border-orange-400/50 transition-all duration-300 group flex flex-col overflow-hidden"
               >
-                <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
+                {/* Blog Image */}
+                <div className="relative h-48 flex-shrink-0 overflow-hidden">
                   <img
                     src={blog.image}
                     alt={blog.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  
+                  {/* Status Badge */}
+                  <div className="absolute top-3 left-3">
+                    <span className="px-2 py-1 bg-green-500/30 text-green-200 text-xs font-semibold rounded-full backdrop-blur-sm border border-green-400/50">
+                      Published
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="p-6">
-                  <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">
+                {/* Blog Content */}
+                <div className="p-4 sm:p-6 flex flex-col flex-1">
+                  <h3 className="text-white font-bold text-lg mb-2 line-clamp-2 group-hover:text-orange-300 transition-colors">
                     {blog.title}
                   </h3>
                   
-                  <p className="text-gray-300 mb-4 line-clamp-3 text-sm">
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed flex-1">
                     {blog.excerpt}
                   </p>
                   
-                  <div className="flex items-center text-xs text-gray-400 mb-4">
-                    <User className="h-3 w-3 mr-1" />
-                    <span className="mr-4">{blog.author}</span>
-                    <Calendar className="h-3 w-3 mr-1" />
-                    <span>{new Date(blog.publishedAt).toLocaleDateString()}</span>
+                  {/* Blog Details */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-gray-400 text-sm">
+                      <User className="h-4 w-4 mr-2 text-orange-400 flex-shrink-0" />
+                      <span className="truncate">{blog.author}</span>
+                    </div>
+                    <div className="flex items-center text-gray-400 text-sm">
+                      <Calendar className="h-4 w-4 mr-2 text-blue-400 flex-shrink-0" />
+                      <span>
+                        {new Date(blog.publishedAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <div className="flex space-x-2 relative z-10">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          window.open(`/blogs/${blog.id}`, '_blank')
-                        }}
-                        className="p-2 text-gray-400 hover:text-blue-400 transition-colors cursor-pointer"
-                        title="View Blog"
-                        type="button"
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-4 border-t border-white/10 mt-auto">
+                    <div className="flex items-center space-x-2">
+                      <motion.button
+                        onClick={() => window.open(`/blogs/${blog.id}`, '_blank')}
+                        className="p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        <Eye className="h-4 w-4 pointer-events-none" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleEdit(blog)
-                        }}
-                        className="p-2 text-gray-400 hover:text-yellow-400 transition-colors cursor-pointer"
-                        title="Edit Blog"
-                        type="button"
+                        <Eye className="h-4 w-4" />
+                      </motion.button>
+                      <motion.button
+                        onClick={() => handleEdit(blog)}
+                        className="p-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded-lg transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        <Edit className="h-4 w-4 pointer-events-none" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDelete(blog.id)
-                        }}
-                        className="p-2 text-gray-400 hover:text-red-400 transition-colors cursor-pointer"
-                        title="Delete Blog"
-                        type="button"
+                        <Edit className="h-4 w-4" />
+                      </motion.button>
+                      <motion.button
+                        onClick={() => handleDelete(blog.id)}
+                        className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        <Trash2 className="h-4 w-4 pointer-events-none" />
-                      </button>
+                        <Trash2 className="h-4 w-4" />
+                      </motion.button>
                     </div>
+                    
+                    {/* Tags indicator */}
+                    {blog.tags && blog.tags.length > 0 && (
+                      <div className="text-xs text-gray-500">
+                        {blog.tags.length} tags
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>

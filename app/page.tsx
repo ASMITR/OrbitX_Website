@@ -122,15 +122,15 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center mb-12 sm:mb-16 lg:mb-20"
           >
-            <h2 className="text-responsive-4xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
               Explore OrbitX
             </h2>
-            <p className="text-responsive-lg text-gray-300 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg lg:text-xl xl:text-2xl text-gray-300 max-w-3xl mx-auto">
               Discover our events, projects, and teams as we push the boundaries of space exploration
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 px-2 sm:px-0">
             {previews.map((preview, index) => (
               <div key={preview.title} className="card-spacing">
                 <PreviewCard {...preview} index={index} />
@@ -157,7 +157,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 px-2 sm:px-0">
             {domains.map((domain, index) => {
               const IconComponent = domain.icon
               return (
@@ -166,10 +166,10 @@ export default function Home() {
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="glass-card text-center hover:bg-white/10 transition-all duration-300 min-h-[140px] sm:min-h-[160px] flex flex-col justify-center card-spacing"
+                  className="glass-card text-center hover:bg-white/10 transition-all duration-300 min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] xl:min-h-[180px] flex flex-col justify-center p-4 sm:p-6 xl:p-8"
                 >
-                  <IconComponent className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400 mx-auto mb-3 sm:mb-4" />
-                  <h3 className="text-responsive-base font-semibold text-white leading-tight">{domain.name}</h3>
+                  <IconComponent className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 xl:h-12 xl:w-12 text-blue-400 mx-auto mb-2 sm:mb-3 lg:mb-4 xl:mb-5" />
+                  <h3 className="text-xs sm:text-sm lg:text-base xl:text-lg font-semibold text-white leading-tight px-1">{domain.name}</h3>
                 </motion.div>
               )
             })}
@@ -201,7 +201,7 @@ export default function Home() {
             transition={{ duration: 0.8 }}
           >
             <motion.div 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text mb-4"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text mb-4"
               animate={{ 
                 backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
               }}
@@ -209,13 +209,13 @@ export default function Home() {
             >
               {members.length}+
             </motion.div>
-            <p className="text-lg-responsive text-gray-300 mb-6 sm:mb-8 px-4">Active Team Members</p>
+            <p className="text-base sm:text-lg lg:text-xl xl:text-2xl text-gray-300 mb-6 sm:mb-8 px-4">Active Team Members</p>
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-4"
             >
-              <Link href="/members" className="btn-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg touch-target">
+              <Link href="/members" className="btn-primary px-6 sm:px-8 xl:px-10 py-3 sm:py-4 xl:py-5 text-base sm:text-lg xl:text-xl touch-target">
                 Meet the Team
               </Link>
             </motion.div>

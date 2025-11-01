@@ -189,7 +189,7 @@ export default function AdminMembers() {
                 <img
                   src={member.photo}
                   alt={member.name}
-                  className="w-16 h-16 mx-auto rounded-full object-cover border-2 border-white/20"
+                  className="w-16 h-16 mx-auto rounded-full object-contain border-2 border-white/20 bg-white/5"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement
                     target.style.display = 'none'

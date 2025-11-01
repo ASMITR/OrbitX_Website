@@ -5,12 +5,12 @@ import { Merchandise } from '@/lib/types'
 import { uploadToCloudinary } from '@/lib/cloudinary'
 import { writeFile } from 'fs/promises'
 import path from 'path'
-import { getCachedData, setCachedData } from '@/lib/cache'
+import { getCache, setCache } from '@/lib/cache'
 
 export async function GET() {
   try {
     const cacheKey = 'merchandise-list'
-    const cached = getCachedData(cacheKey)
+    const cached = getCache(cacheKey)
     
     if (cached) {
       return NextResponse.json(cached, {
@@ -43,7 +43,7 @@ export async function GET() {
       } as Merchandise)
     })
 
-    setCachedData(cacheKey, merchandise, 300000)
+    setCache(cacheKey, merchandise, 300000)
     return NextResponse.json(merchandise, {
       headers: {
         'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'

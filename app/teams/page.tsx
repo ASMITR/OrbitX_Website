@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { motion } from 'framer-motion'
 import { Lightbulb, Cpu, Settings, Users, FileText, Camera, Users as UsersIcon, X } from 'lucide-react'
 import { getMembers } from '@/lib/db'
 import { Member } from '@/lib/types'
+import { POSITIONS } from '@/lib/constants'
+import { imageLoader } from '@/lib/performance'
+import { getCache, setCache } from '@/lib/cache'
 
 export default function Teams() {
   const [selectedTeam, setSelectedTeam] = useState<any>(null)
@@ -14,7 +17,14 @@ export default function Teams() {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const membersData = await getMembers()
+        const cacheKey = 'teams_members_data'
+        let membersData = getCache(cacheKey)
+        
+        if (!membersData) {
+          membersData = await getMembers()
+          setCache(cacheKey, membersData, 180000)
+        }
+        
         setMembers(membersData)
       } catch (error) {
         console.error('Error fetching members:', error)
@@ -25,11 +35,24 @@ export default function Teams() {
     fetchMembers()
   }, [])
 
-  const getTeamMembers = (teamName: string) => {
-    return members.filter(member => member.team === teamName)
-  }
+  const sortMembersByPosition = useCallback((members: Member[]) => {
+    return [...members].sort((a, b) => {
+      const aIndex = POSITIONS.indexOf(a.position)
+      const bIndex = POSITIONS.indexOf(b.position)
+      
+      const aPos = aIndex === -1 ? POSITIONS.length : aIndex
+      const bPos = bIndex === -1 ? POSITIONS.length : bIndex
+      
+      return aPos - bPos
+    })
+  }, [])
 
-  const teams = [
+  const getTeamMembers = useCallback((teamName: string) => {
+    const teamMembers = members.filter(member => member.team === teamName)
+    return sortMembersByPosition(teamMembers)
+  }, [members, sortMembersByPosition])
+
+  const teams = useMemo(() => [
     {
       id: 1,
       name: 'Design & Innovation Team',
@@ -90,18 +113,13 @@ export default function Teams() {
       members: getTeamMembers('Social Media & Editing Team'),
       projects: ['Social Media Campaigns', 'Video Production', 'Digital Content Creation']
     }
-  ]
+  ], [getTeamMembers])
 
   return (
     <div className="pt-16 sm:pt-20 px-4 sm:px-6 lg:px-8 gpu-accelerated">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-12 sm:mb-16 lg:mb-20"
-        >
+        <div className="text-center mb-12 sm:mb-16 lg:mb-20">
           {loading && (
             <div className="flex justify-center mb-6">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
@@ -114,65 +132,62 @@ export default function Teams() {
             Meet the specialized teams that make OrbitX's mission possible. Each team brings unique expertise 
             and passion to our space exploration endeavors.
           </p>
-        </motion.div>
+        </div>
 
         {/* Teams Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 mb-12 sm:mb-16 lg:mb-20">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 mb-8 sm:mb-12 lg:mb-16 xl:mb-20">
           {teams.map((team, index) => (
-            <motion.div
+            <div
               key={team.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              whileHover={{ y: -8, scale: 1.02 }}
-              className="glass-card cursor-pointer hover:bg-white/20 transition-all duration-300 gpu-accelerated group relative overflow-hidden min-h-[320px] flex flex-col"
+              className="glass-card cursor-pointer hover:bg-white/20 transition-colors duration-300 group relative overflow-hidden min-h-[280px] sm:min-h-[320px] lg:min-h-[360px] xl:min-h-[400px] flex flex-col"
               onClick={() => setSelectedTeam(team)}
             >
               {/* Background Gradient Overlay */}
               <div className={`absolute inset-0 bg-gradient-to-br ${team.color} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}></div>
               
               {/* Content */}
-              <div className="relative z-10 flex flex-col h-full p-6">
+              <div className="relative z-10 flex flex-col h-full p-4 sm:p-6 lg:p-8">
                 {/* Header */}
-                <div className="flex items-start justify-between mb-6">
-                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${team.color} flex items-center justify-center shadow-lg`}>
-                    <team.icon className="h-7 w-7 text-white" />
+                <div className="flex items-start justify-between mb-4 sm:mb-6">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl bg-gradient-to-r ${team.color} flex items-center justify-center shadow-lg`}>
+                    <team.icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-white" />
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-white">{team.members.length}</div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide">Members</div>
+                    <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">{team.members.length}</div>
+                    <div className="text-xs lg:text-sm text-gray-400 uppercase tracking-wide">Members</div>
                   </div>
                 </div>
 
                 {/* Team Name */}
-                <h3 className="text-xl font-bold text-white mb-4 leading-tight group-hover:text-cyan-300 transition-colors">
+                <h3 className="text-base sm:text-lg lg:text-xl font-bold text-white mb-3 sm:mb-4 leading-tight group-hover:text-cyan-300 transition-colors">
                   {team.name}
                 </h3>
 
                 {/* Description */}
-                <p className="text-gray-300 mb-6 flex-grow text-sm leading-relaxed">
+                <p className="text-gray-300 mb-4 sm:mb-6 flex-grow text-xs sm:text-sm lg:text-base leading-relaxed">
                   {team.shortDescription}
                 </p>
 
                 {/* Member Avatars */}
                 {team.members.length > 0 && (
-                  <div className="mb-6">
-                    <div className="flex -space-x-2 mb-3">
+                  <div className="mb-4 sm:mb-6">
+                    <div className="flex -space-x-1 sm:-space-x-2 mb-2 sm:mb-3">
                       {team.members.slice(0, 4).map((member: Member, idx: number) => (
                         <img
                           key={idx}
                           src={member.photo}
                           alt={member.name}
-                          className="w-8 h-8 rounded-full border-2 border-gray-800 object-cover"
+                          loading="lazy"
+                          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-gray-800 object-cover"
                         />
                       ))}
                       {team.members.length > 4 && (
-                        <div className="w-8 h-8 rounded-full border-2 border-gray-800 bg-gray-700 flex items-center justify-center text-xs text-white font-medium">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-gray-800 bg-gray-700 flex items-center justify-center text-xs text-white font-medium">
                           +{team.members.length - 4}
                         </div>
                       )}
                     </div>
-                    <div className="text-xs text-gray-400 leading-relaxed">
+                    <div className="text-xs sm:text-sm text-gray-400 leading-relaxed">
                       {team.members.slice(0, 2).map(m => m.name.split(' ')[0]).join(', ')}
                       {team.members.length > 2 && ` and ${team.members.length - 2} others`}
                     </div>
@@ -190,7 +205,7 @@ export default function Teams() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
@@ -241,6 +256,7 @@ export default function Teams() {
                         <img
                           src={member.photo}
                           alt={member.name}
+                          loading="lazy"
                           className="w-12 h-12 rounded-full object-cover mr-3 ring-2 ring-cyan-400/20 group-hover:ring-cyan-400/40 transition-all"
                         />
                         <div className="flex-1">

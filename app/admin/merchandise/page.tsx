@@ -156,17 +156,17 @@ export default function AdminMerchandisePage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredMerchandise.map((item, index) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="glass-card-admin overflow-hidden group"
+                transition={{ delay: index * 0.1 }}
+                className="glass-card-admin hover:border-green-400/50 transition-all duration-300 group flex flex-col overflow-hidden"
               >
                 {/* Image */}
-                <div className="relative aspect-square overflow-hidden">
+                <div className="relative h-48 flex-shrink-0 overflow-hidden bg-white/5">
                   <img
                     src={item.coverImage || (item.images && item.images[0]) || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1f2937&color=ffffff&size=400`}
                     onError={(e) => {
@@ -176,71 +176,92 @@ export default function AdminMerchandisePage() {
                     alt={item.name}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute top-2 right-2 flex gap-1">
+                  
+                  {/* Status Badges */}
+                  <div className="absolute top-3 left-3 flex flex-col gap-2">
                     {item.featured && (
-                      <span className="bg-yellow-500 text-black px-1.5 py-0.5 rounded-full text-xs font-bold">
-                        Featured
+                      <span className="bg-yellow-500/30 text-yellow-200 px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-yellow-400/50">
+                        ⭐ Featured
                       </span>
                     )}
-                    <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${
-                      item.inStock ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${
+                      item.inStock 
+                        ? 'bg-green-500/30 text-green-200 border border-green-400/50' 
+                        : 'bg-red-500/30 text-red-200 border border-red-400/50'
                     }`}>
                       {item.inStock ? 'In Stock' : 'Out of Stock'}
                     </span>
                   </div>
+                  
+                  {/* Price Badge */}
+                  <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm rounded-lg p-2 border border-white/20">
+                    <span className="text-green-400 font-bold text-sm">₹{item.price}</span>
+                  </div>
                 </div>
 
                 {/* Content */}
-                <div className="p-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-sm font-bold text-white line-clamp-1 flex-1 mr-2">
-                      {item.name}
-                    </h3>
-                    <span className="text-base font-bold text-blue-400 flex-shrink-0">
-                      ₹{item.price}
-                    </span>
-                  </div>
+                <div className="p-4 flex flex-col flex-1">
+                  <h3 className="text-white font-bold text-lg mb-2 line-clamp-2 group-hover:text-green-300 transition-colors">
+                    {item.name}
+                  </h3>
                   
-                  <p className="text-gray-300 text-xs mb-2 line-clamp-2">
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed flex-1">
                     {item.description}
                   </p>
 
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs text-gray-400 bg-white/10 px-2 py-0.5 rounded-full">
-                      {item.category}
-                    </span>
+                  {/* Product Details */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-gray-400 text-sm">
+                      <Package className="h-4 w-4 mr-2 text-green-400 flex-shrink-0" />
+                      <span className="truncate">{item.category}</span>
+                    </div>
                     {item.stockQuantity !== undefined && (
-                      <span className="text-xs text-gray-400">
-                        Stock: {item.stockQuantity}
-                      </span>
+                      <div className="flex items-center text-gray-400 text-sm">
+                        <span className="w-4 h-4 mr-2 text-blue-400 flex-shrink-0 text-center">#</span>
+                        <span>Stock: {item.stockQuantity}</span>
+                      </div>
                     )}
                   </div>
 
                   {/* Actions */}
-                          <div className="flex gap-1">
-                    <Link href={`/merchandise/${item.id}`} className="flex-1">
-                      <button className="w-full py-1.5 px-2 bg-white/10 hover:bg-white/20 text-white rounded text-xs transition-colors flex items-center justify-center">
-                        <Eye className="h-3 w-3 mr-1" />
-                        View
-                      </button>
-                    </Link>
-                    <Link href={`/admin/merchandise/${item.id}/edit`} className="flex-1">
-                      <button className="w-full py-1.5 px-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded text-xs transition-colors flex items-center justify-center">
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
-                      </button>
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      disabled={deleteLoading === item.id}
-                      className="py-1.5 px-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded text-xs transition-colors disabled:opacity-50"
-                    >
-                      {deleteLoading === item.id ? (
-                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-300"></div>
-                      ) : (
-                        <Trash2 className="h-3 w-3" />
-                      )}
-                    </button>
+                  <div className="flex items-center justify-between pt-4 border-t border-white/10 mt-auto">
+                    <div className="flex items-center space-x-2">
+                      <motion.button
+                        onClick={() => window.open(`/merchandise/${item.id}`, '_blank')}
+                        className="p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </motion.button>
+                      <Link href={`/admin/merchandise/${item.id}/edit`}>
+                        <motion.button
+                          className="p-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded-lg transition-colors"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </motion.button>
+                      </Link>
+                      <motion.button
+                        onClick={() => handleDelete(item.id)}
+                        disabled={deleteLoading === item.id}
+                        className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors disabled:opacity-50"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {deleteLoading === item.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-400"></div>
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </motion.button>
+                    </div>
+                    
+                    {/* Sales indicator */}
+                    <div className="text-xs text-gray-500">
+                      ID: {item.id.slice(-6)}
+                    </div>
                   </div>
                 </div>
               </motion.div>

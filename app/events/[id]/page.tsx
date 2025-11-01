@@ -183,12 +183,13 @@ This workshop is perfect for engineering students, professionals looking to tran
               className="mb-8"
             >
               <div className="glass-card p-4 mb-4">
-                <div className="relative h-96 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg overflow-hidden group">
+                <div className="relative min-h-64 max-h-[80vh] bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg overflow-hidden group flex items-center justify-center">
                   {displayEvent.images && displayEvent.images[selectedImage] ? (
                     <img 
                       src={displayEvent.images[selectedImage]} 
                       alt={displayEvent.title}
-                      className="w-full h-full object-cover"
+                      className="max-w-full max-h-full object-contain bg-gray-900/50"
+                      style={{ width: 'auto', height: 'auto' }}
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -236,7 +237,7 @@ This workshop is perfect for engineering students, professionals looking to tran
                         <img 
                           src={displayEvent.images[index]} 
                           alt={`${displayEvent.title} ${index + 1}`}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain bg-gray-900/50"
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">

@@ -8,6 +8,7 @@ import { Calendar, Users, ExternalLink, Search } from 'lucide-react'
 import { getProjects } from '@/lib/db'
 import { Project } from '@/lib/types'
 import LikeComment from '@/components/LikeComment'
+import { getCache, setCache } from '@/lib/cache'
 
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([])
@@ -18,11 +19,30 @@ export default function Projects() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const projectsData = await getProjects()
+        const cacheKey = 'projects_page_data'
+        let projectsData = getCache(cacheKey)
+        
+        if (!projectsData) {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 5000)
+          
+          try {
+            projectsData = await getProjects()
+            clearTimeout(timeoutId)
+            setCache(cacheKey, projectsData, 300000)
+          } catch (error) {
+            clearTimeout(timeoutId)
+            console.error('Error fetching projects:', error)
+            projectsData = sampleProjects
+          }
+        }
+        
         setProjects(projectsData)
         setFilteredProjects(projectsData)
       } catch (error) {
         console.error('Error fetching projects:', error)
+        setProjects(sampleProjects)
+        setFilteredProjects(sampleProjects)
       } finally {
         setLoading(false)
       }
@@ -118,56 +138,50 @@ export default function Projects() {
   }
 
   return (
-    <div className="pt-20 px-4">
+    <div className="pt-16 sm:pt-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-16"
-        >
-          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             Our Projects
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
+          <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-gray-300 max-w-3xl mx-auto mb-6 sm:mb-8 leading-relaxed">
             Explore our innovative space technology projects, from satellite development to 
             propulsion systems and everything in between.
           </p>
 
           {/* Search Bar */}
           <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
               placeholder="Search projects..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-colors"
+              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 transition-colors text-sm"
             />
           </div>
-        </motion.div>
+        </div>
 
         {/* Projects Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {displayProjects.map((project, index) => (
             <motion.div
               key={project.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              whileHover={{ y: -10 }}
-              className="glass-card overflow-hidden group"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="glass-card overflow-hidden group hover:bg-white/10 transition-all duration-300 flex flex-col"
             >
               {/* Project Image */}
-              <div className="relative aspect-video bg-gradient-to-br from-blue-500/20 to-purple-500/20 overflow-hidden">
+              <div className="relative h-48 bg-gradient-to-br from-purple-500/20 to-blue-500/20 overflow-hidden flex-shrink-0">
                 {project.images && project.images.length > 0 ? (
                   <Image 
                     src={project.images[0]} 
                     alt={project.title}
                     width={400}
-                    height={300}
-                    className="w-full h-full object-contain bg-gray-900/50"
+                    height={200}
+                    className="w-full h-full object-cover"
                     loading="lazy"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     onError={(e) => {
@@ -177,20 +191,20 @@ export default function Projects() {
                   />
                 ) : null}
                 <div className={`absolute inset-0 flex items-center justify-center ${project.images && project.images.length > 0 ? 'hidden' : ''}`}>
-                  <div className="text-6xl opacity-20">🚀</div>
+                  <div className="text-4xl opacity-20">🚀</div>
                 </div>
-                <div className="absolute top-4 right-4 bg-black/50 rounded-full p-2">
+                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm rounded-lg p-2 border border-white/20">
                   <Calendar className="h-4 w-4 text-white" />
                 </div>
               </div>
 
               {/* Project Content */}
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-blue-300 transition-colors">
+              <div className="p-4 flex flex-col flex-1">
+                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-purple-300 transition-colors line-clamp-2">
                   {project.title}
                 </h3>
                 
-                <p className="text-gray-300 mb-4 line-clamp-3">
+                <p className="text-sm text-gray-300 mb-4 line-clamp-2 leading-relaxed flex-1">
                   {project.description}
                 </p>
 
@@ -200,58 +214,61 @@ export default function Projects() {
                     {project.technologies.slice(0, 3).map((tech, techIndex) => (
                       <span
                         key={techIndex}
-                        className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full"
+                        className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-lg border border-purple-500/30"
                       >
                         {tech}
                       </span>
                     ))}
                     {project.technologies.length > 3 && (
-                      <span className="px-2 py-1 bg-gray-500/20 text-gray-300 text-xs rounded-full">
-                        +{project.technologies.length - 3} more
+                      <span className="px-2 py-1 bg-gray-500/20 text-gray-300 text-xs rounded-lg border border-gray-500/30">
+                        +{project.technologies.length - 3}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Contributors */}
-                <div className="flex items-center justify-between">
+                {/* Project Details */}
+                <div className="space-y-2 mb-4">
                   <div className="flex items-center text-gray-400 text-sm">
-                    <Users className="h-4 w-4 mr-1" />
+                    <Users className="h-4 w-4 mr-2 text-blue-400 flex-shrink-0" />
                     <span>{project.contributors.length} teams</span>
                   </div>
-                  
+                  <div className="flex items-center text-gray-400 text-sm">
+                    <Calendar className="h-4 w-4 mr-2 text-green-400 flex-shrink-0" />
+                    <span>
+                      {new Date(project.date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom Section */}
+                <div className="mt-auto space-y-3">
+                  {/* Action Button */}
                   <Link
                     href={`/projects/${project.id}`}
-                    className="flex items-center text-blue-400 hover:text-blue-300 transition-colors text-sm font-semibold"
+                    className="inline-flex items-center justify-center w-full px-4 py-2 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 rounded-lg transition-colors font-semibold text-sm border border-purple-500/30"
                   >
                     Read More
-                    <ExternalLink className="h-4 w-4 ml-1" />
+                    <ExternalLink className="ml-2 h-4 w-4" />
                   </Link>
-                </div>
 
-                {/* Date */}
-                <div className="mt-3 pt-3 border-t border-white/10 mb-4">
-                  <span className="text-gray-400 text-sm">
-                    {new Date(project.date).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </span>
+                  {/* Like and Comment */}
+                  <LikeComment
+                    collection="projects"
+                    id={project.id}
+                    likes={project.likes || 0}
+                    likedBy={project.likedBy || []}
+                    comments={project.comments || []}
+                    onUpdate={(likes, likedBy, comments) => {
+                      setProjects(prev => prev.map(p => p.id === project.id ? { ...p, likes, likedBy, comments } : p))
+                      setFilteredProjects(prev => prev.map(p => p.id === project.id ? { ...p, likes, likedBy, comments } : p))
+                    }}
+                  />
                 </div>
-
-                {/* Like and Comment */}
-                <LikeComment
-                  collection="projects"
-                  id={project.id}
-                  likes={project.likes || 0}
-                  likedBy={project.likedBy || []}
-                  comments={project.comments || []}
-                  onUpdate={(likes, likedBy, comments) => {
-                    setProjects(prev => prev.map(p => p.id === project.id ? { ...p, likes, likedBy, comments } : p))
-                    setFilteredProjects(prev => prev.map(p => p.id === project.id ? { ...p, likes, likedBy, comments } : p))
-                  }}
-                />
               </div>
             </motion.div>
           ))}
@@ -259,15 +276,11 @@ export default function Projects() {
 
         {/* No Results */}
         {filteredProjects.length === 0 && searchTerm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
-            <p className="text-gray-400 text-lg">
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-gray-400 text-base sm:text-lg">
               No projects found matching "{searchTerm}"
             </p>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>

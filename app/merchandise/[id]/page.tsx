@@ -108,21 +108,21 @@ export default function MerchandiseDetailPage() {
   }
 
   return (
-    <div className="min-h-screen text-white pt-16">
-      <div className="container-responsive max-w-7xl mx-auto">
+    <div className="min-h-screen text-white pt-16 sm:pt-20 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
         {/* Enhanced Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-3 sm:gap-4">
           <button
             onClick={() => router.back()}
             className="flex items-center text-gray-400 hover:text-white transition-all duration-300 hover:scale-105 group"
           >
-            <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-            <span className="font-medium">Back to Merchandise</span>
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium text-sm sm:text-base">Back to Merchandise</span>
           </button>
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/my-orders')}
-              className="group px-5 py-2.5 bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 border border-green-400/30 text-green-400 hover:text-green-300 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 flex items-center gap-2"
+              className="group px-3 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 border border-green-400/30 text-green-400 hover:text-green-300 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 flex items-center gap-2 text-sm sm:text-base"
             >
               <Package className="h-4 w-4 group-hover:rotate-12 transition-transform" />
               <span>Track Orders</span>
@@ -131,9 +131,9 @@ export default function MerchandiseDetailPage() {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
           {/* Enhanced Images Section */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -195,12 +195,12 @@ export default function MerchandiseDetailPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="space-y-8"
+            className="space-y-4 sm:space-y-6 lg:space-y-8"
           >
             <div className="glass-card">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <h1 className="text-responsive-3xl font-bold text-white mb-2 leading-tight">{merchandise.name}</h1>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2 leading-tight">{merchandise.name}</h1>
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-sm text-gray-400 bg-white/10 px-3 py-1 rounded-full">{merchandise.category}</span>
                     {merchandise.stockQuantity !== undefined && (

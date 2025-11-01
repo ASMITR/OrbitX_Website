@@ -128,7 +128,7 @@ export default function BlogPage() {
           className="glass-card p-8"
         >
           <div 
-            className="prose prose-invert prose-lg max-w-none"
+            className="prose prose-invert prose-lg max-w-none text-white"
             dangerouslySetInnerHTML={{ __html: blog.content.replace(/\n/g, '<br />') }}
           />
         </motion.div>

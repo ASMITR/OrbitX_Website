@@ -298,6 +298,27 @@ export default function HeroSection() {
               </div>
             </Link>
           </motion.div>
+          
+          <motion.div
+            whileHover={shouldReduceMotion ? {} : { scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            className="relative will-change-transform"
+          >
+            <Link href="/auth" className="relative group block overflow-hidden">
+              <div className="absolute inset-0 rounded-full p-0.5 bg-gradient-to-r from-orange-500 to-red-400">
+                <div className="h-full w-full rounded-full bg-black" />
+              </div>
+              
+              <div className="absolute inset-1 bg-gradient-to-r from-orange-700 to-red-600 rounded-full group-hover:from-orange-600 group-hover:to-red-500 transition-all duration-200" />
+              
+              <div className="relative z-10 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-bold text-white text-center">
+                <span className="group-hover:text-orange-300 transition-colors duration-200">
+                  Get Started
+                </span>
+              </div>
+            </Link>
+          </motion.div>
         </motion.div>
 
         <motion.div

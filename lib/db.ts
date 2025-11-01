@@ -1,6 +1,6 @@
 import { Event, Project, Member, ContactMessage, Blog, Badge, Merchandise } from './types'
 import { db } from './firebase'
-import { getCachedData, setCachedData } from './cache'
+import { getCache, setCache } from './cache'
 import {
   collection,
   doc,
@@ -19,7 +19,7 @@ import {
 // Events
 export const getEvents = async (limitCount?: number) => {
   const cacheKey = `events_${limitCount || 'all'}`
-  const cached = getCachedData(cacheKey)
+  const cached = getCache(cacheKey)
   if (cached) return cached
   
   const q = limitCount 
@@ -29,7 +29,7 @@ export const getEvents = async (limitCount?: number) => {
   const snapshot = await getDocs(q)
   const events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event))
   
-  setCachedData(cacheKey, events, 120000)
+  setCache(cacheKey, events, 120000)
   return events
 }
 
@@ -56,7 +56,7 @@ export const deleteEvent = async (id: string) => {
 // Projects
 export const getProjects = async (limitCount?: number) => {
   const cacheKey = `projects_${limitCount || 'all'}`
-  const cached = getCachedData(cacheKey)
+  const cached = getCache(cacheKey)
   if (cached) return cached
   
   const q = limitCount 
@@ -66,7 +66,7 @@ export const getProjects = async (limitCount?: number) => {
   const snapshot = await getDocs(q)
   const projects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project))
   
-  setCachedData(cacheKey, projects, 120000)
+  setCache(cacheKey, projects, 120000)
   return projects
 }
 
@@ -206,7 +206,7 @@ export const deleteContactMessage = async (id: string) => {
 // Blogs
 export const getBlogs = async (limitCount?: number) => {
   const cacheKey = `blogs_${limitCount || 'all'}`
-  const cached = getCachedData(cacheKey)
+  const cached = getCache(cacheKey)
   if (cached) return cached
   
   const q = limitCount 
@@ -216,7 +216,7 @@ export const getBlogs = async (limitCount?: number) => {
   const snapshot = await getDocs(q)
   const blogs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Blog))
   
-  setCachedData(cacheKey, blogs, 120000)
+  setCache(cacheKey, blogs, 120000)
   return blogs
 }
 
@@ -367,7 +367,7 @@ export const addComment = async (collection: string, id: string, comment: { auth
 // Merchandise
 export const getMerchandise = async (limitCount?: number) => {
   const cacheKey = `merchandise_${limitCount || 'all'}`
-  const cached = getCachedData(cacheKey)
+  const cached = getCache(cacheKey)
   if (cached) return cached
   
   const q = limitCount 
@@ -377,7 +377,7 @@ export const getMerchandise = async (limitCount?: number) => {
   const snapshot = await getDocs(q)
   const merchandise = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Merchandise))
   
-  setCachedData(cacheKey, merchandise, 120000)
+  setCache(cacheKey, merchandise, 120000)
   return merchandise
 }
 

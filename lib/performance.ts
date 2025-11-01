@@ -1,17 +1,27 @@
 // Performance optimization utilities
 
-export const debounce = <T extends (...args: any[]) => any>(
+export const imageLoader = ({ src, width, quality }: { src: string; width: number; quality?: number }) => {
+  if (src.includes('ui-avatars.com')) {
+    return `${src}&size=${width}`
+  }
+  if (src.includes('cloudinary.com')) {
+    return `${src}?w=${width}&q=${quality || 75}&f=auto`
+  }
+  return src
+}
+
+export const debounce = <T extends (...args: any[]) => void>(
   func: T,
-  wait: number
+  delay: number
 ): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout
+  let timeoutId: NodeJS.Timeout
   return (...args: Parameters<T>) => {
-    clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => func(...args), delay)
   }
 }
 
-export const throttle = <T extends (...args: any[]) => any>(
+export const throttle = <T extends (...args: any[]) => void>(
   func: T,
   limit: number
 ): ((...args: Parameters<T>) => void) => {
@@ -20,28 +30,16 @@ export const throttle = <T extends (...args: any[]) => any>(
     if (!inThrottle) {
       func(...args)
       inThrottle = true
-      setTimeout(() => inThrottle = false, limit)
+      setTimeout(() => (inThrottle = false), limit)
     }
   }
 }
 
-export const preloadRoute = (href: string) => {
-  const link = document.createElement('link')
-  link.rel = 'prefetch'
-  link.href = href
-  document.head.appendChild(link)
-}
-
-export const lazyLoad = (target: HTMLElement, callback: () => void) => {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        callback()
-        observer.unobserve(entry.target)
-      }
-    })
-  }, { threshold: 0.1 })
-  
-  observer.observe(target)
-  return observer
+export const preloadImage = (src: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve()
+    img.onerror = reject
+    img.src = src
+  })
 }

@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { Search, Filter, Linkedin, Github, Instagram, X } from 'lucide-react'
 import { getMembers } from '@/lib/db'
 import { Member } from '@/lib/types'
+import { POSITIONS } from '@/lib/constants'
+import { imageLoader, debounce } from '@/lib/performance'
+import { getCache, setCache } from '@/lib/cache'
 
 export default function Members() {
   const [members, setMembers] = useState<Member[]>([])
@@ -15,14 +18,33 @@ export default function Members() {
   const [loading, setLoading] = useState(true)
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
 
+  const sortMembersByPosition = useCallback((members: Member[]) => {
+    return [...members].sort((a, b) => {
+      const aIndex = POSITIONS.indexOf(a.position)
+      const bIndex = POSITIONS.indexOf(b.position)
+      
+      const aPos = aIndex === -1 ? POSITIONS.length : aIndex
+      const bPos = bIndex === -1 ? POSITIONS.length : bIndex
+      
+      return aPos - bPos
+    })
+  }, [])
+
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const membersData = await getMembers()
-        // Only show approved members to the public
-        const approvedMembers = membersData.filter(member => member.approved !== false)
-        setMembers(approvedMembers)
-        setFilteredMembers(approvedMembers)
+        const cacheKey = 'members_data'
+        let membersData = getCache(cacheKey)
+        
+        if (!membersData) {
+          membersData = await getMembers()
+          setCache(cacheKey, membersData, 180000) // 1 minute cache
+        }
+        
+        const approvedMembers = membersData.filter((member: Member) => member.approved !== false)
+        const sortedMembers = sortMembersByPosition(approvedMembers)
+        setMembers(sortedMembers)
+        setFilteredMembers(sortedMembers)
       } catch (error) {
         console.error('Error fetching members:', error)
       } finally {
@@ -31,9 +53,9 @@ export default function Members() {
     }
 
     fetchMembers()
-  }, [])
+  }, [sortMembersByPosition])
 
-  useEffect(() => {
+  const filteredAndSortedMembers = useMemo(() => {
     let filtered = members.filter(member =>
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -44,8 +66,12 @@ export default function Members() {
       filtered = filtered.filter(member => member.team === filterTeam)
     }
 
-    setFilteredMembers(filtered)
-  }, [searchTerm, filterTeam, members])
+    return sortMembersByPosition(filtered)
+  }, [searchTerm, filterTeam, members, sortMembersByPosition])
+
+  useEffect(() => {
+    setFilteredMembers(filteredAndSortedMembers)
+  }, [filteredAndSortedMembers])
 
   // Sample members data for demonstration
   const sampleMembers: Member[] = [
@@ -57,14 +83,21 @@ export default function Members() {
   const getRoleColor = (position: string) => {
     if (!position) return 'bg-gray-500/20 text-gray-300 border-gray-500/30'
     switch (position.toLowerCase()) {
-      case 'faculty coordinator':
-        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
-      case 'team lead':
-        return 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-      case 'core member':
-        return 'bg-green-500/20 text-green-300 border-green-500/30'
+      case 'president':
+        return 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-300 border-yellow-500/30'
+      case 'chairman':
+        return 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border-purple-500/30'
+      case 'secretary':
+        return 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-300 border-blue-500/30'
+      case 'treasurer':
+      case 'co-treasurer':
+        return 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border-green-500/30'
+      case 'team leader':
+        return 'bg-gradient-to-r from-indigo-500/20 to-blue-500/20 text-indigo-300 border-indigo-500/30'
+      case 'member':
+        return 'bg-gradient-to-r from-gray-500/20 to-slate-500/20 text-gray-300 border-gray-500/30'
       default:
-        return 'bg-gray-500/20 text-gray-300 border-gray-500/30'
+        return 'bg-gradient-to-r from-teal-500/20 to-cyan-500/20 text-teal-300 border-teal-500/30'
     }
   }
 
@@ -80,41 +113,36 @@ export default function Members() {
   }
 
   return (
-    <div className="pt-20 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="pt-16 sm:pt-20 px-3 sm:px-4 lg:px-6 xl:px-8 min-h-screen">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-16"
-        >
-          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent leading-tight">
             Our Team
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-300 max-w-2xl lg:max-w-3xl mx-auto mb-6 sm:mb-8 px-2 sm:px-0 leading-relaxed">
             Meet the passionate individuals who make OrbitX's mission possible. 
             From faculty coordinators to dedicated students, we're all united by our love for space exploration.
           </p>
 
           {/* Search and Filter */}
-          <div className="flex flex-col md:flex-row gap-4 max-w-2xl mx-auto">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-xl sm:max-w-2xl mx-auto px-2 sm:px-0">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
               <input
                 type="text"
                 placeholder="Search members..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-colors"
+                onChange={debounce((e) => setSearchTerm(e.target.value), 300)}
+                className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-colors"
               />
             </div>
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <div className="relative sm:flex-shrink-0">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
               <select
                 value={filterTeam}
                 onChange={(e) => setFilterTeam(e.target.value)}
-                className="pl-10 pr-8 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors appearance-none min-w-[200px]"
+                className="w-full sm:w-auto pl-9 sm:pl-10 pr-8 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-400 transition-colors appearance-none min-w-[180px] sm:min-w-[200px]"
               >
                 <option value="all">All Teams</option>
                 {teams.map(team => (
@@ -123,30 +151,29 @@ export default function Members() {
               </select>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Members Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
           {displayMembers.map((member, index) => (
-            <motion.div
+            <div
               key={member.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.05 }}
-              whileHover={{ y: -10, scale: 1.02 }}
-              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-md border border-white/10 shadow-2xl hover:shadow-blue-500/20 transition-all duration-500"
+              className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-md border border-white/10 shadow-xl hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.02] hover:border-blue-500/30"
             >
               {/* Background Image */}
               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
               
               {/* Profile Photo */}
-              <div className="relative h-80 overflow-hidden">
+              <div className="relative h-64 sm:h-72 lg:h-80 overflow-hidden bg-gray-900/50 flex items-center justify-center">
                 <Image
                   src={member.photo}
                   alt={member.name}
                   width={300}
                   height={320}
-                  className="w-full h-full object-contain bg-gray-900/50"
+                  loader={imageLoader}
+                  priority={index < 8}
+                  loading={index < 8 ? 'eager' : 'lazy'}
+                  className="max-w-full max-h-full object-contain"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement
                     target.style.display = 'none'
@@ -154,15 +181,10 @@ export default function Members() {
                   }}
                 />
                 <div className="hidden w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                  <div className="text-8xl opacity-30">👤</div>
+                  <div className="text-6xl sm:text-7xl lg:text-8xl opacity-30">👤</div>
                 </div>
                 
-                {/* Role Badge */}
-                <div className="absolute top-4 right-4 z-20">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md ${getRoleColor(member.position)}`}>
-                    {member.position}
-                  </span>
-                </div>
+
                 
                 {/* Hover Overlay */}
                 <div 
@@ -177,30 +199,34 @@ export default function Members() {
               </div>
 
               {/* Member Info */}
-              <div className="relative z-20 p-4 sm:p-6 bg-gradient-to-t from-black/90 to-transparent">
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors line-clamp-2">
+              <div className="relative z-20 p-2 sm:p-3 lg:p-4 xl:p-6 bg-gradient-to-t from-black/95 to-transparent">
+                <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 group-hover:text-blue-300 transition-colors line-clamp-1 sm:line-clamp-2 leading-tight">
                   {member.name}
                 </h3>
                 {member.team && member.team !== 'NA' && (
-                  <p className="text-blue-400 text-xs sm:text-sm font-medium mb-1 line-clamp-1">{member.team}</p>
+                  <p className="text-blue-400 text-xs font-medium mb-1 line-clamp-1 leading-tight hidden sm:block">{member.team}</p>
                 )}
-                <p className="text-purple-400 text-xs font-medium mb-1 line-clamp-1">{member.position}</p>
-                <p className="text-gray-400 text-xs mb-3 sm:mb-4 line-clamp-1">{member.branch} • {member.year}-{member.division}</p>
+                <div className="mb-1 sm:mb-2">
+                  <span className={`inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${getRoleColor(member.position)} border truncate max-w-full`}>
+                    {member.position}
+                  </span>
+                </div>
+                <p className="text-gray-400 text-xs mb-1 sm:mb-2 line-clamp-1 hidden sm:block">{member.branch} • {member.year}-{member.division}</p>
                 
 
 
                 {/* Skills */}
                 {member.skills && member.skills.length > 0 && (
-                  <div className="mb-3">
+                  <div className="mb-1 sm:mb-2 hidden md:block">
                     <div className="flex flex-wrap gap-1">
-                      {member.skills.slice(0, 3).map((skill, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30">
+                      {member.skills.slice(0, 1).map((skill, idx) => (
+                        <span key={idx} className="px-1.5 py-0.5 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30 truncate max-w-[60px] lg:max-w-[80px]">
                           {skill}
                         </span>
                       ))}
-                      {member.skills.length > 3 && (
-                        <span className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded-full">
-                          +{member.skills.length - 3}
+                      {member.skills.length > 1 && (
+                        <span className="px-1.5 py-0.5 bg-gray-700 text-gray-300 text-xs rounded-full flex-shrink-0">
+                          +{member.skills.length - 1}
                         </span>
                       )}
                     </div>
@@ -208,17 +234,17 @@ export default function Members() {
                 )}
 
                 {/* Social Links */}
-                <div className="flex justify-between items-center gap-2">
-                  <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
+                <div className="flex justify-between items-center gap-1 sm:gap-2">
+                  <div className="flex space-x-1 flex-shrink-0 min-w-0">
                     {member.socialLinks?.linkedin && (
                       <a
                         href={member.socialLinks.linkedin.startsWith('http') ? member.socialLinks.linkedin : `https://${member.socialLinks.linkedin}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600/20 border border-blue-500/30 rounded-lg flex items-center justify-center hover:bg-blue-600/40 hover:scale-110 transition-all duration-200 group/social"
+                        className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 bg-blue-600/20 border border-blue-500/30 rounded flex items-center justify-center hover:bg-blue-600/40 hover:scale-110 transition-all duration-200 group/social flex-shrink-0"
                         aria-label="LinkedIn"
                       >
-                        <Linkedin className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400 group-hover/social:text-blue-300" />
+                        <Linkedin className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-3.5 lg:w-3.5 text-blue-400 group-hover/social:text-blue-300" />
                       </a>
                     )}
                     {member.socialLinks?.github && (
@@ -226,10 +252,10 @@ export default function Members() {
                         href={member.socialLinks.github.startsWith('http') ? member.socialLinks.github : `https://${member.socialLinks.github}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-600/20 border border-gray-500/30 rounded-lg flex items-center justify-center hover:bg-gray-600/40 hover:scale-110 transition-all duration-200 group/social"
+                        className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 bg-gray-600/20 border border-gray-500/30 rounded flex items-center justify-center hover:bg-gray-600/40 hover:scale-110 transition-all duration-200 group/social flex-shrink-0"
                         aria-label="GitHub"
                       >
-                        <Github className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 group-hover/social:text-gray-300" />
+                        <Github className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-3.5 lg:w-3.5 text-gray-400 group-hover/social:text-gray-300" />
                       </a>
                     )}
                     {member.socialLinks?.instagram && (
@@ -237,10 +263,10 @@ export default function Members() {
                         href={member.socialLinks.instagram.startsWith('http') ? member.socialLinks.instagram : `https://${member.socialLinks.instagram}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-7 h-7 sm:w-8 sm:h-8 bg-pink-600/20 border border-pink-500/30 rounded-lg flex items-center justify-center hover:bg-pink-600/40 hover:scale-110 transition-all duration-200 group/social"
+                        className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 bg-pink-600/20 border border-pink-500/30 rounded flex items-center justify-center hover:bg-pink-600/40 hover:scale-110 transition-all duration-200 group/social flex-shrink-0"
                         aria-label="Instagram"
                       >
-                        <Instagram className="h-3 w-3 sm:h-4 sm:w-4 text-pink-400 group-hover/social:text-pink-300" />
+                        <Instagram className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-3.5 lg:w-3.5 text-pink-400 group-hover/social:text-pink-300" />
                       </a>
                     )}
                   </div>
@@ -248,7 +274,7 @@ export default function Members() {
                   {/* View More Button */}
                   <button 
                     onClick={() => setSelectedMember(member)}
-                    className="px-2 py-1 sm:px-3 sm:py-1 bg-blue-600/20 border border-blue-500/30 rounded-lg text-blue-400 text-xs font-medium hover:bg-blue-600/40 transition-all duration-200 flex-shrink-0"
+                    className="px-1.5 py-1 sm:px-2 sm:py-1 lg:px-3 lg:py-1.5 bg-blue-600/20 border border-blue-500/30 rounded text-blue-400 text-xs font-medium hover:bg-blue-600/40 transition-all duration-200 flex-shrink-0 whitespace-nowrap"
                   >
                     View
                   </button>
@@ -259,21 +285,17 @@ export default function Members() {
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500" />
               <div className="absolute -top-10 -right-10 w-20 h-20 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-all duration-500" />
               <div className="absolute -bottom-10 -left-10 w-16 h-16 bg-purple-500/10 rounded-full blur-xl group-hover:bg-purple-500/20 transition-all duration-500" />
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* No Results */}
         {filteredMembers.length === 0 && searchTerm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
-            <p className="text-gray-400 text-lg">
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-gray-400 text-base sm:text-lg px-4">
               No members found matching "{searchTerm}"
             </p>
-          </motion.div>
+          </div>
         )}
 
         {/* Member Detail Modal */}
@@ -282,7 +304,7 @@ export default function Members() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4"
             onClick={() => setSelectedMember(null)}
           >
             <motion.div
@@ -290,7 +312,7 @@ export default function Members() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 50 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-xl border border-white/20 rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+              className="bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-xl border border-white/20 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 max-w-xs sm:max-w-2xl lg:max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -314,7 +336,7 @@ export default function Members() {
                 </motion.button>
               </motion.div>
 
-              <div className="flex flex-col lg:flex-row gap-8">
+              <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
                 {/* Photo Section */}
                 <motion.div 
                   initial={{ opacity: 0, x: -50 }}
@@ -327,13 +349,15 @@ export default function Members() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.3, type: "spring", damping: 20 }}
-                      className="w-40 h-52 lg:w-44 lg:h-56 rounded-3xl border-4 border-white/20 shadow-2xl overflow-hidden"
+                      className="w-32 h-40 sm:w-36 sm:h-44 lg:w-44 lg:h-56 rounded-2xl sm:rounded-3xl border-2 sm:border-4 border-white/20 shadow-2xl overflow-hidden mx-auto lg:mx-0"
                     >
                       <Image
                         src={selectedMember.photo}
                         alt={selectedMember.name}
                         width={176}
                         height={224}
+                        loader={imageLoader}
+                        priority
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement
@@ -535,23 +559,18 @@ export default function Members() {
         )}
 
         {/* Join Us Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mt-20 text-center"
-        >
-          <div className="glass-card p-12 bg-gradient-to-r from-blue-500/10 to-purple-500/10">
-            <h2 className="text-3xl font-bold text-white mb-4">Want to Join Our Team?</h2>
-            <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+        <div className="mt-12 sm:mt-16 lg:mt-20 text-center">
+          <div className="glass-card p-6 sm:p-8 lg:p-12 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl sm:rounded-2xl">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Want to Join Our Team?</h2>
+            <p className="text-sm sm:text-base text-gray-300 mb-6 sm:mb-8 max-w-xl sm:max-w-2xl mx-auto px-2 sm:px-0 leading-relaxed">
               We're always looking for passionate individuals to join our space exploration journey. 
               Whether you're interested in engineering, research, or outreach, there's a place for you at OrbitX.
             </p>
-            <a href="/contact" className="btn-primary">
+            <a href="/contact" className="btn-primary inline-block px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-sm sm:text-base">
               Get In Touch
             </a>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   )

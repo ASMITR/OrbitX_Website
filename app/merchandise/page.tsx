@@ -71,50 +71,45 @@ export default function MerchandisePage() {
   }
 
   return (
-    <div className="min-h-screen text-white pt-16">
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="section-spacing-sm text-center"
-      >
-        <div className="container-responsive max-w-4xl mx-auto">
-          <h1 className="text-responsive-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+    <div className="min-h-screen text-white pt-16 sm:pt-20 px-4 sm:px-6 lg:px-8">
+      <section className="text-center mb-8 sm:mb-12">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             OrbitX Merchandise
           </h1>
-          <p className="text-responsive-lg text-gray-300 mb-8">
+          <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-gray-300 mb-6 sm:mb-8 leading-relaxed">
             Show your space exploration spirit with our exclusive merchandise collection
           </p>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
             <CartIcon />
             <button
               onClick={() => router.push('/my-orders')}
-              className="btn-primary bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 border border-green-400/30 text-green-400 hover:text-green-300 flex items-center gap-2"
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 border border-green-400/30 text-green-400 hover:text-green-300 rounded-lg transition-all duration-300 flex items-center gap-2 text-sm sm:text-base"
             >
-              <Package className="h-4 w-4" />
+              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Track Orders</span>
             </button>
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      <div className="container-responsive max-w-6xl mx-auto mb-8">
-        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-          <div className="relative flex-1 max-w-full sm:max-w-sm">
+      <div className="max-w-6xl mx-auto mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
               placeholder="Search merchandise..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-green-400"
             />
           </div>
 
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white focus:outline-none focus:border-blue-400"
+            className="px-3 py-3 bg-white/10 border border-white/20 rounded-lg text-sm text-white focus:outline-none focus:border-green-400 sm:w-40"
           >
             {categories.map(category => (
               <option key={category} value={category} className="bg-black">
@@ -126,7 +121,7 @@ export default function MerchandisePage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white focus:outline-none focus:border-blue-400"
+            className="px-3 py-3 bg-white/10 border border-white/20 rounded-lg text-sm text-white focus:outline-none focus:border-green-400 sm:w-44"
           >
             <option value="newest" className="bg-black">Newest First</option>
             <option value="price-low" className="bg-black">Price: Low to High</option>
@@ -136,7 +131,7 @@ export default function MerchandisePage() {
         </div>
       </div>
 
-      <div className="container-responsive max-w-7xl mx-auto pb-16">
+      <div className="max-w-7xl mx-auto pb-12 sm:pb-16">
         {filteredMerchandise.length === 0 ? (
           <div className="text-center py-12">
             <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -144,108 +139,119 @@ export default function MerchandisePage() {
             <p className="text-gray-500">Try adjusting your search or filters</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredMerchandise.map((item, index) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-blue-400/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 w-full max-w-md mx-auto"
+                transition={{ delay: index * 0.1 }}
+                className="group glass-card hover:border-green-400/50 hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 flex flex-col overflow-hidden"
               >
-                <div className="relative aspect-square overflow-hidden bg-white/5">
+                {/* Product Image */}
+                <div className="relative h-48 flex-shrink-0 overflow-hidden bg-white/5">
                   <img
                     src={item.coverImage || (item.images && item.images[0]) || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1f2937&color=ffffff&size=400`}
                     alt={item.name}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-2"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1f2937&color=ffffff&size=400`
                     }}
                   />
                   
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  <div className="absolute top-2 left-2 flex gap-2">
+                  {/* Status Badges */}
+                  <div className="absolute top-3 left-3 flex flex-col gap-2">
                     {item.featured && (
-                      <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-2 py-1 rounded-full text-xs font-bold shadow-lg">
+                      <span className="bg-yellow-500/30 text-yellow-200 px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-yellow-400/50">
                         ⭐ Featured
-                      </div>
+                      </span>
                     )}
                     {!item.inStock && (
-                      <div className="bg-red-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      <span className="bg-red-500/30 text-red-200 px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-red-400/50">
                         Out of Stock
-                      </div>
+                      </span>
                     )}
                   </div>
                   
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button className="p-2 bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-colors">
+                  {/* Price Badge */}
+                  <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm rounded-lg p-2 border border-white/20">
+                    <span className="text-green-400 font-bold text-sm">₹{item.price}</span>
+                  </div>
+                  
+                  {/* Wishlist Button */}
+                  <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <button className="p-2 bg-black/60 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-colors">
                       <Heart className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
 
-                <div className="p-4">
-                  <div className="mb-2">
-                    <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-blue-400 transition-colors">
-                      {item.name}
-                    </h3>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-lg font-bold text-blue-400">₹{item.price}</span>
-                      <span className="text-xs text-gray-400 bg-white/10 px-2 py-1 rounded-full">
-                        {item.category}
-                      </span>
-                    </div>
-                  </div>
+                {/* Product Content */}
+                <div className="p-4 flex flex-col flex-1">
+                  <h3 className="font-bold text-white text-lg mb-2 line-clamp-2 group-hover:text-green-300 transition-colors">
+                    {item.name}
+                  </h3>
                   
-                  <p className="text-xs text-gray-300 mb-3 line-clamp-2 leading-relaxed">
+                  <p className="text-sm text-gray-300 mb-4 line-clamp-2 leading-relaxed flex-1">
                     {item.description}
                   </p>
 
-                  {(item.sizes || item.colors) && (
-                    <div className="mb-3 space-y-1">
-                      {item.sizes && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-gray-400">Sizes:</span>
-                          <div className="flex gap-1">
-                            {item.sizes.slice(0, 3).map(size => (
-                              <span key={size} className="text-xs bg-white/10 px-1.5 py-0.5 rounded text-gray-300">
-                                {size}
-                              </span>
-                            ))}
-                            {item.sizes.length > 3 && (
-                              <span className="text-xs text-gray-400">+{item.sizes.length - 3}</span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      {item.colors && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-gray-400">Colors:</span>
-                          <div className="flex gap-1">
-                            {item.colors.slice(0, 4).map(color => (
-                              <div
-                                key={color}
-                                className="w-3 h-3 rounded-full border border-white/30 shadow-sm"
-                                style={{ backgroundColor: color.toLowerCase() }}
-                                title={color}
-                              />
-                            ))}
-                            {item.colors.length > 4 && (
-                              <span className="text-xs text-gray-400">+{item.colors.length - 4}</span>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                  {/* Product Details */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-gray-400 text-sm">
+                      <Package className="h-4 w-4 mr-2 text-green-400 flex-shrink-0" />
+                      <span className="truncate">{item.category}</span>
                     </div>
-                  )}
+                    
+                    {/* Sizes */}
+                    {item.sizes && item.sizes.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">Sizes:</span>
+                        <div className="flex gap-1">
+                          {item.sizes.slice(0, 3).map(size => (
+                            <span key={size} className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded border border-green-500/30">
+                              {size}
+                            </span>
+                          ))}
+                          {item.sizes.length > 3 && (
+                            <span className="text-xs text-gray-400">+{item.sizes.length - 3}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Colors */}
+                    {item.colors && item.colors.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">Colors:</span>
+                        <div className="flex gap-1">
+                          {item.colors.slice(0, 4).map(color => (
+                            <div
+                              key={color}
+                              className="w-4 h-4 rounded-full border-2 border-white/30 shadow-sm"
+                              style={{ backgroundColor: color.toLowerCase() }}
+                              title={color}
+                            />
+                          ))}
+                          {item.colors.length > 4 && (
+                            <span className="text-xs text-gray-400">+{item.colors.length - 4}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-                  <Link href={`/merchandise/${item.id}`} className="block">
-                    <button className="w-full py-2 px-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg text-sm font-medium transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 transform hover:-translate-y-0.5">
-                      View Details
-                    </button>
-                  </Link>
+                  {/* Bottom Section */}
+                  <div className="mt-auto space-y-3">
+                    {/* View Details Button */}
+                    <Link href={`/merchandise/${item.id}`} className="block">
+                      <button className="w-full py-2 px-4 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded-lg font-semibold text-sm border border-green-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/25">
+                        View Details
+                        <ShoppingCart className="inline ml-2 h-4 w-4" />
+                      </button>
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
             ))}

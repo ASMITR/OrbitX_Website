@@ -310,7 +310,7 @@ export default function Navbar() {
               >
                 <Link
                   href="/auth"
-                  className="relative group bg-gradient-to-r from-blue-500 to-purple-500 text-cyan-100 px-4 py-2 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 text-sm font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 overflow-hidden"
+                  className="relative group bg-gradient-to-r from-blue-500 to-purple-500 text-cyan-100 p-2 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 text-sm font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 overflow-hidden"
                 >
                   <span className="relative z-10">Get Started</span>
                   <motion.div
@@ -666,7 +666,7 @@ export default function Navbar() {
                 ) : (
                   <Link
                     href="/auth"
-                    className="block py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-all duration-300 rounded-xl font-medium text-center"
+                    className="block p-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-all duration-300 rounded-lg font-medium text-center"
                     onClick={() => setIsOpen(false)}
                   >
                     Get Started
@@ -915,10 +915,10 @@ export default function Navbar() {
                 setSidebarVisible(false)
                 setSidebarMinimized(false)
               }}
-              className={`rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 flex items-center transition-all duration-300 group relative touch-target ${
+              className={`rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 flex items-center transition-all duration-300 group relative touch-target ${
                 sidebarMinimized 
                   ? 'w-10 h-10 justify-center' 
-                  : 'w-full px-4 py-3 space-x-3'
+                  : 'w-full p-2 space-x-3'
               }`}
               title="Get Started"
             >

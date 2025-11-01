@@ -136,15 +136,15 @@ export default function MyOrdersPage() {
           <p className="text-responsive-lg text-gray-300">Track your order status and history</p>
         </div>
 
-        <div className="glass-card mb-8">
+        <div className="glass-card mb-8 p-4">
           <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
               placeholder="Search by order number..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
             />
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function MyOrdersPage() {
         {filteredOrders.length === 0 ? (
           <div className="glass-card text-center py-12">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-6" />
-            <h3 className="text-responsive-xl font-bold text-gray-400 mb-4">No orders found</h3>
+            <h3 className="text-xl font-bold text-gray-400 mb-4">No orders found</h3>
             <p className="text-gray-500 mb-8 max-w-md mx-auto">
               {searchTerm ? 'Try adjusting your search terms' : 'You haven\'t placed any orders yet. Start shopping to see your orders here!'}
             </p>
@@ -164,102 +164,117 @@ export default function MyOrdersPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {filteredOrders.map((order, index) => (
               <motion.div
                 key={order.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-blue-400/30 transition-all duration-300 group"
+                transition={{ delay: index * 0.1 }}
+                className="glass-card hover:border-cyan-400/30 transition-all duration-300 group flex flex-col overflow-hidden"
               >
-                <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
-                      <div className="mb-4 sm:mb-0">
-                        <h3 className="text-white font-bold text-xl mb-2">{order.orderNumber}</h3>
-                        <p className="text-gray-400">Ordered on {new Date(order.createdAt).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}</p>
-                      </div>
-                      <div className="text-left sm:text-right">
-                        <p className="text-blue-400 font-bold text-2xl mb-2">₹{order.total}</p>
-                        <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold shadow-lg ${
-                          order.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-400/30' :
-                          order.status === 'confirmed' ? 'bg-blue-500/20 text-blue-400 border border-blue-400/30' :
-                          order.status === 'shipped' ? 'bg-purple-500/20 text-purple-400 border border-purple-400/30' :
-                          order.status === 'delivered' ? 'bg-green-500/20 text-green-400 border border-green-400/30' :
-                          'bg-red-500/20 text-red-400 border border-red-400/30'
-                        }`}>
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </span>
-                      </div>
+                {/* Order Header */}
+                <div className="p-4 border-b border-white/10">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-bold text-xl mb-1 group-hover:text-cyan-300 transition-colors">
+                        {order.orderNumber}
+                      </h3>
+                      <p className="text-gray-400 text-sm">
+                        {new Date(order.createdAt).toLocaleDateString('en-US', { 
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </p>
                     </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-cyan-400 font-bold text-2xl mb-2">₹{order.total}</p>
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border ${
+                        order.status === 'pending' ? 'bg-yellow-500/30 text-yellow-200 border-yellow-400/50' :
+                        order.status === 'confirmed' ? 'bg-blue-500/30 text-blue-200 border-blue-400/50' :
+                        order.status === 'shipped' ? 'bg-purple-500/30 text-purple-200 border-purple-400/50' :
+                        order.status === 'delivered' ? 'bg-green-500/30 text-green-200 border-green-400/50' :
+                        'bg-red-500/30 text-red-200 border-red-400/50'
+                      }`}>
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                      {order.items?.map((item, idx) => (
-                        <div key={idx} className="group relative bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-md rounded-xl p-4 hover:from-white/15 hover:to-white/10 transition-all duration-300 border border-white/10 hover:border-blue-400/30 hover:shadow-lg hover:shadow-blue-500/10">
-                          <div className="flex items-center gap-4">
-                            <div className="relative flex-shrink-0">
-                              <div className="w-20 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-1 shadow-lg">
-                                <img 
-                                  src={item.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1f2937&color=ffffff&size=80`}
-                                  alt={item.name} 
-                                  className="w-full h-full object-contain rounded" 
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement
-                                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1f2937&color=ffffff&size=80`
-                                  }}
-                                />
-                              </div>
-                              <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
-                                {item.quantity}
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-white font-semibold text-sm mb-2 line-clamp-1 group-hover:text-blue-400 transition-colors">{item.name}</h4>
-                              
-                              <div className="flex items-center gap-3 mb-2">
-                                {item.size && (
-                                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-500/20 text-blue-300">
-                                    📏 {item.size}
-                                  </span>
-                                )}
-                                {item.color && (
-                                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-500/20 text-purple-300">
-                                    🎨 {item.color}
-                                  </span>
-                                )}
-                              </div>
-                              
-                              <div className="flex items-center justify-between">
-                                <span className="text-gray-400 text-sm">₹{item.price} × {item.quantity}</span>
-                                <span className="text-blue-400 font-bold">₹{item.price * item.quantity}</span>
-                              </div>
-                            </div>
+                {/* Order Items */}
+                <div className="p-4 flex-1">
+                  <div className="space-y-3 mb-4">
+                    {order.items?.slice(0, 3).map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-3 bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors">
+                        <div className="relative flex-shrink-0">
+                          <img 
+                            src={item.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1f2937&color=ffffff&size=60`}
+                            alt={item.name} 
+                            className="w-12 h-12 object-cover rounded-lg" 
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1f2937&color=ffffff&size=60`
+                            }}
+                          />
+                          <div className="absolute -top-1 -right-1 bg-cyan-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                            {item.quantity}
                           </div>
                         </div>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-white/20 gap-3">
-                      <div className="flex items-center gap-4">
-                        <span className="text-gray-400">
-                          {order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? 's' : ''}
-                        </span>
-                        <span className="text-gray-400">•</span>
-                        <span className="text-gray-400">Order ID: {order.id.slice(-8)}</span>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-white font-medium text-sm mb-1 line-clamp-1 group-hover:text-cyan-400 transition-colors">
+                            {item.name}
+                          </h4>
+                          
+                          {/* Size and Color */}
+                          <div className="flex items-center gap-2 mb-1">
+                            {item.size && (
+                              <span className="text-xs bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded border border-cyan-500/30">
+                                {item.size}
+                              </span>
+                            )}
+                            {item.color && (
+                              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">
+                                {item.color}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-400 text-xs">₹{item.price} × {item.quantity}</span>
+                            <span className="text-cyan-400 font-bold text-sm">₹{item.price * item.quantity}</span>
+                          </div>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => router.push(`/order-confirmation/${order.id}`)}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 text-blue-300 hover:text-blue-200 rounded-lg font-medium transition-all duration-300 hover:scale-105 border border-blue-400/20"
-                      >
-                        <Eye className="h-4 w-4" />
-                        View Details
-                      </button>
+                    ))}
+                    
+                    {(order.items?.length || 0) > 3 && (
+                      <div className="text-center py-2">
+                        <span className="text-xs text-gray-400 bg-white/5 px-3 py-1 rounded-full">
+                          +{(order.items?.length || 0) - 3} more items
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Order Footer */}
+                <div className="p-4 border-t border-white/10 mt-auto">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-sm text-gray-400">
+                      <span>{order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? 's' : ''}</span>
+                      <span>•</span>
+                      <span>ID: {order.id.slice(-8)}</span>
                     </div>
+                    
+                    <button
+                      onClick={() => router.push(`/order-confirmation/${order.id}`)}
+                      className="flex items-center gap-2 px-4 py-2 bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 rounded-lg font-medium transition-all duration-300 hover:scale-105 border border-cyan-500/30 text-sm"
+                    >
+                      <Eye className="h-4 w-4" />
+                      View Details
+                    </button>
                   </div>
                 </div>
               </motion.div>
