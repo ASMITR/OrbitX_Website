@@ -226,6 +226,7 @@ export default function Navbar() {
     { name: 'Blogs', href: '/blogs' },
     { name: 'Merchandise', href: '/merchandise' },
     { name: 'Members', href: '/members' },
+    { name: 'Leaderboard', href: '/leaderboard' },
     { name: 'Contact', href: '/contact' }
   ]
 
@@ -267,29 +268,26 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center flex-1 justify-center ml-8">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
             {navItems.map((item, index) => (
               <motion.div
                 key={item.name}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.08 }}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.5, delay: index * 0.05 }}
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <Link
                   href={item.href}
-                  className="relative group px-3 py-2 rounded-xl font-medium text-base text-gray-300 hover:text-cyan-300 transition-all duration-300 overflow-hidden"
+                  className="relative group px-2 py-2 rounded-lg font-medium text-base text-gray-300 hover:text-cyan-300 transition-all duration-200 overflow-hidden"
                 >
                   <span className="relative z-20">{item.name}</span>
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-blue-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:via-blue-500/15 group-hover:to-purple-500/10 rounded-xl transition-all duration-300"
+                    className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/10 group-hover:to-blue-500/10 rounded-lg transition-all duration-200"
                   />
                   <motion.div
-                    className="absolute inset-0 rounded-xl border border-transparent group-hover:border-cyan-400/30 transition-all duration-300"
-                  />
-                  <motion.div
-                    className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 w-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent group-hover:w-full transition-all duration-300"
+                    className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 w-0 bg-cyan-400 group-hover:w-full transition-all duration-200"
                   />
                 </Link>
               </motion.div>

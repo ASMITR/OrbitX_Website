@@ -119,7 +119,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       )}
 
       <div className="flex-1">
-        <header className="mt-8 mb-8 relative z-10">
+        <header className="mt-20 mb-8 relative z-10">
           <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 rounded-2xl mx-4">
             <div className="overflow-x-auto scrollbar-hide">
               <div className="flex items-center justify-center space-x-2 sm:space-x-3 md:space-x-4 lg:space-x-5 px-2 sm:px-3 py-1.5 sm:py-2 min-w-max">

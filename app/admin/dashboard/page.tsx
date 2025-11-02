@@ -215,13 +215,6 @@ export default function AdminDashboard() {
         icon: Crown,
         href: '/admin/manage-admins',
         color: 'from-yellow-500 to-yellow-600'
-      },
-      {
-        title: 'Manage Members',
-        description: 'Award badges, add to events & projects',
-        icon: Users,
-        href: '/admin/manage-members',
-        color: 'from-indigo-500 to-indigo-600'
       }
     ] : [])
   ]

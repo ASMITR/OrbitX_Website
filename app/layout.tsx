@@ -53,25 +53,35 @@ export default function RootLayout({
             <div className="relative z-10">
               <Navbar />
               <main className="min-h-screen">
-                {children}
+                <Suspense fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
+                  </div>
+                }>
+                  {children}
+                </Suspense>
               </main>
               <Suspense fallback={null}>
                 <Footer />
+              </Suspense>
+              <Suspense fallback={null}>
                 <Chatbox />
               </Suspense>
             </div>
           </CartProvider>
-          <Toaster 
-            position="bottom-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#1e293b',
-                color: '#f1f5f9',
-                border: '1px solid #475569'
-              }
-            }}
-          />
+          <Suspense fallback={null}>
+            <Toaster 
+              position="bottom-right"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: '#1e293b',
+                  color: '#f1f5f9',
+                  border: '1px solid #475569'
+                }
+              }}
+            />
+          </Suspense>
         </AuthProvider>
       </body>
     </html>

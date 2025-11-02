@@ -48,7 +48,7 @@ export default function Teams() {
   }, [])
 
   const getTeamMembers = useCallback((teamName: string) => {
-    const teamMembers = members.filter(member => member.team === teamName)
+    const teamMembers = members.filter(member => member.team === teamName && member.approved !== false)
     return sortMembersByPosition(teamMembers)
   }, [members, sortMembersByPosition])
 

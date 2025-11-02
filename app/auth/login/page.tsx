@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { getMember, getMemberByEmail, createMemberFromAuth } from '@/lib/db'
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -19,64 +18,50 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!email || !password) {
+      toast.error('Please fill in all fields')
+      return
+    }
+    
     setIsLoading(true)
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      const user = userCredential.user
-      
-      // Check if member record exists, create if not
-      if (user.email && user.displayName) {
-        let memberData = await getMember(user.uid)
-        if (!memberData) {
-          memberData = await getMemberByEmail(user.email)
-        }
-        if (!memberData) {
-          await createMemberFromAuth(user.uid, user.email, user.displayName)
-        }
-      }
-      
+      await signInWithEmailAndPassword(auth, email, password)
       toast.success('Login successful!')
       router.push('/admin/dashboard')
     } catch (error: any) {
-      toast.error(error.message || 'Login failed')
+      console.error('Login error:', error)
+      const errorMessage = error.code === 'auth/user-not-found' 
+        ? 'No account found with this email'
+        : error.code === 'auth/wrong-password'
+        ? 'Incorrect password'
+        : error.code === 'auth/invalid-email'
+        ? 'Invalid email address'
+        : 'Login failed. Please try again.'
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-gray-900 to-gray-800">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full space-y-8"
+        transition={{ duration: 0.3 }}
+        className="max-w-md w-full space-y-6"
       >
         <div className="text-center">
-          <motion.h2
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-3xl font-bold text-white mb-2"
-          >
+          <h2 className="text-3xl font-bold text-white mb-2">
             Welcome Back
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-gray-400"
-          >
+          </h2>
+          <p className="text-gray-400">
             Sign in to access OrbitX Admin
-          </motion.p>
+          </p>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="glass-card p-8"
-        >
+        <div className="glass-card p-6">
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -121,8 +106,8 @@ export default function Login() {
 
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              disabled={isLoading || !email || !password}
+              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center py-3"
             >
               {isLoading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
@@ -143,7 +128,7 @@ export default function Login() {
               </Link>
             </p>
           </div>
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   )

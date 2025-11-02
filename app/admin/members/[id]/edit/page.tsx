@@ -8,6 +8,7 @@ import { ArrowLeft, Save, Upload, X, User, Plus } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { getMember, updateMember, updateMemberSkills } from '@/lib/db'
 import { Member } from '@/lib/types'
+
 import toast from 'react-hot-toast'
 
 interface MemberForm {
@@ -35,8 +36,10 @@ export default function EditMember() {
   const [photoPreview, setPhotoPreview] = useState<string>('')
   const [skills, setSkills] = useState<string[]>([])
   const [newSkill, setNewSkill] = useState('')
+
   const router = useRouter()
   const params = useParams()
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm<MemberForm>()
 
   const teams = [
@@ -58,6 +61,8 @@ export default function EditMember() {
     'Team Leader',
     'Member'
   ]
+
+
 
   const branches = [
     'CS',
@@ -150,6 +155,8 @@ export default function EditMember() {
   const removeSkill = (skillToRemove: string) => {
     setSkills(skills.filter(skill => skill !== skillToRemove))
   }
+
+
 
   const onSubmit = async (data: MemberForm) => {
     setIsSubmitting(true)
@@ -507,6 +514,8 @@ export default function EditMember() {
                 </div>
               </div>
             </div>
+
+
 
             {/* Social Links */}
             <div>

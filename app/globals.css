@@ -2,265 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  html {
-    scroll-behavior: smooth;
-    font-size: clamp(14px, 2.5vw, 16px);
+/* Performance optimizations */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #000000;
+  color: #ffffff;
+  overflow-x: hidden;
+}
+
+/* GPU acceleration for animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Optimized animations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Performance-optimized components */
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6 transition-all duration-200;
   }
   
-  body {
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    line-height: 1.6;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  /* Responsive text scaling */
-  h1 { font-size: clamp(1.5rem, 4vw, 3rem); line-height: 1.2; }
-  h2 { font-size: clamp(1.25rem, 3.5vw, 2.5rem); line-height: 1.3; }
-  h3 { font-size: clamp(1.125rem, 3vw, 2rem); line-height: 1.4; }
-  h4 { font-size: clamp(1rem, 2.5vw, 1.5rem); line-height: 1.4; }
-  h5 { font-size: clamp(0.875rem, 2vw, 1.25rem); line-height: 1.5; }
-  h6 { font-size: clamp(0.75rem, 1.5vw, 1rem); line-height: 1.5; }
-  p { font-size: clamp(0.875rem, 2vw, 1rem); line-height: 1.6; }
-}
-
-@layer components {
   .btn-primary {
-    @apply px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25;
-    font-size: clamp(0.75rem, 2vw, 1rem);
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95;
   }
-
-  .glass-card {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl;
-    padding: clamp(1rem, 3vw, 1.5rem);
-    margin-bottom: clamp(1rem, 3vw, 1.5rem);
-  }
-
-  .glass-card-admin {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-lg;
-    padding: clamp(0.75rem, 2.5vw, 1.25rem);
-    margin-bottom: clamp(0.75rem, 2vw, 1rem);
-  }
-
-  /* Page Layout Utilities */
-  .page-container {
-    min-height: 100vh;
-    padding-top: clamp(4rem, 8vw, 6rem);
-    padding-bottom: clamp(2rem, 4vw, 3rem);
-  }
-
-  .page-header {
-    margin-bottom: clamp(2rem, 6vw, 4rem);
-    text-align: center;
-  }
-
-  .page-content {
-    margin-bottom: clamp(3rem, 6vw, 5rem);
-  }
-
-  /* Section spacing */
-  .section-spacing {
-    padding: clamp(3rem, 8vw, 6rem) 0;
-  }
-
-  .section-spacing-sm {
-    padding: clamp(2rem, 5vw, 3rem) 0;
-  }
-
-  .section-spacing-lg {
-    padding: clamp(4rem, 10vw, 8rem) 0;
-  }
-
-  /* Content spacing */
-  .content-spacing {
-    margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
-  }
-
-  .content-spacing-sm {
-    margin-bottom: clamp(1rem, 2vw, 1.5rem);
-  }
-
-  .content-spacing-lg {
-    margin-bottom: clamp(2rem, 5vw, 3rem);
-  }
-
-  /* Responsive text utilities */
-  .text-responsive-xs { font-size: clamp(0.625rem, 1.5vw, 0.75rem); }
-  .text-responsive-sm { font-size: clamp(0.75rem, 2vw, 0.875rem); }
-  .text-responsive-base { font-size: clamp(0.875rem, 2.5vw, 1rem); }
-  .text-responsive-lg { font-size: clamp(1rem, 3vw, 1.125rem); }
-  .text-responsive-xl { font-size: clamp(1.125rem, 3.5vw, 1.25rem); }
-  .text-responsive-2xl { font-size: clamp(1.25rem, 4vw, 1.5rem); }
-  .text-responsive-3xl { font-size: clamp(1.5rem, 5vw, 1.875rem); }
-  .text-responsive-4xl { font-size: clamp(1.875rem, 6vw, 2.25rem); }
-  .text-responsive-5xl { font-size: clamp(2.25rem, 7vw, 3rem); }
-
-  /* Responsive spacing utilities */
-  .spacing-xs { margin: clamp(0.25rem, 1vw, 0.5rem); }
-  .spacing-sm { margin: clamp(0.5rem, 2vw, 0.75rem); }
-  .spacing-md { margin: clamp(0.75rem, 3vw, 1rem); }
-  .spacing-lg { margin: clamp(1rem, 4vw, 1.5rem); }
-  .spacing-xl { margin: clamp(1.5rem, 5vw, 2rem); }
-
-  .padding-xs { padding: clamp(0.25rem, 1vw, 0.5rem); }
-  .padding-sm { padding: clamp(0.5rem, 2vw, 0.75rem); }
-  .padding-md { padding: clamp(0.75rem, 3vw, 1rem); }
-  .padding-lg { padding: clamp(1rem, 4vw, 1.5rem); }
-  .padding-xl { padding: clamp(1.5rem, 5vw, 2rem); }
-
-  /* Text overflow prevention */
-  .line-clamp-1 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-    word-break: break-word;
-  }
-
-  .line-clamp-2 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    word-break: break-word;
-  }
-
-  .line-clamp-3 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    word-break: break-word;
-  }
-
-  /* Container utilities */
+  
   .container-responsive {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-    padding-left: clamp(1rem, 4vw, 2rem);
-    padding-right: clamp(1rem, 4vw, 2rem);
+    @apply px-4 sm:px-6 lg:px-8 xl:px-12;
   }
-
-  .container-full {
-    width: 100%;
-    padding-left: clamp(0.75rem, 3vw, 1.5rem);
-    padding-right: clamp(0.75rem, 3vw, 1.5rem);
+  
+  .section-spacing {
+    @apply py-12 sm:py-16 lg:py-20;
   }
-
-  .container-narrow {
-    max-width: min(100%, 800px);
-    margin: 0 auto;
-    padding-left: clamp(1rem, 4vw, 2rem);
-    padding-right: clamp(1rem, 4vw, 2rem);
+  
+  .card-spacing {
+    @apply p-4 sm:p-6 lg:p-8;
   }
-
-  @media (min-width: 640px) {
-    .container-responsive { max-width: 640px; }
+  
+  .text-responsive-xs {
+    @apply text-xs sm:text-sm;
   }
-  @media (min-width: 768px) {
-    .container-responsive { max-width: 768px; }
+  
+  .text-responsive-sm {
+    @apply text-sm sm:text-base;
   }
-  @media (min-width: 1024px) {
-    .container-responsive { max-width: 1024px; }
+  
+  .text-responsive-base {
+    @apply text-base sm:text-lg;
   }
-  @media (min-width: 1280px) {
-    .container-responsive { max-width: 1280px; }
+  
+  .text-responsive-lg {
+    @apply text-lg sm:text-xl lg:text-2xl;
   }
-  @media (min-width: 1536px) {
-    .container-responsive { max-width: 1536px; }
+  
+  .text-responsive-xl {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+  
+  .text-responsive-2xl {
+    @apply text-2xl sm:text-3xl lg:text-4xl;
+  }
+  
+  .text-responsive-3xl {
+    @apply text-3xl sm:text-4xl lg:text-5xl;
+  }
+  
+  .text-responsive-4xl {
+    @apply text-4xl sm:text-5xl lg:text-6xl;
+  }
+  
+  .heading-lg {
+    @apply text-3xl sm:text-4xl lg:text-5xl xl:text-6xl;
+  }
+  
+  .container-tight {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
   }
 }
 
-/* Performance optimizations */
-img {
-  max-width: 100%;
-  height: auto;
-  object-fit: cover;
-}
-
-/* Enhanced responsive utilities */
-@media (max-width: 480px) {
-  .hide-mobile { display: none !important; }
-  .text-mobile-center { text-align: center !important; }
-  .flex-mobile-col { flex-direction: column !important; }
-  .gap-mobile-2 { gap: 0.5rem !important; }
-  .px-mobile-4 { padding-left: 1rem !important; padding-right: 1rem !important; }
-  .py-mobile-8 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
-  .section-mobile { padding: 2rem 0 !important; }
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-  .hide-tablet { display: none !important; }
-  .text-tablet-center { text-align: center !important; }
-  .px-tablet-6 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
-  .py-tablet-12 { padding-top: 3rem !important; padding-bottom: 3rem !important; }
-  .section-tablet { padding: 3rem 0 !important; }
-}
-
-@media (min-width: 769px) {
-  .hide-desktop { display: none !important; }
-  .px-desktop-8 { padding-left: 2rem !important; padding-right: 2rem !important; }
-  .py-desktop-16 { padding-top: 4rem !important; padding-bottom: 4rem !important; }
-  .section-desktop { padding: 4rem 0 !important; }
-}
-
-/* Universal spacing classes */
-.space-y-responsive > * + * {
-  margin-top: clamp(1rem, 3vw, 1.5rem);
-}
-
-.gap-responsive {
-  gap: clamp(1rem, 3vw, 1.5rem);
-}
-
-/* Prevent text overflow and overlapping */
-.text-container {
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-  hyphens: auto;
-  max-width: 100%;
-}
-
-/* Enhanced grid utilities */
-.grid-responsive {
-  display: grid;
-  gap: clamp(1rem, 3vw, 1.5rem);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-}
-
-.grid-responsive-sm {
-  display: grid;
-  gap: clamp(0.75rem, 2vw, 1rem);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-}
-
-.grid-responsive-lg {
-  display: grid;
-  gap: clamp(1.5rem, 4vw, 2rem);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-}
-
-/* Card spacing */
-.card-spacing {
-  margin-bottom: clamp(1rem, 3vw, 1.5rem);
-}
-
-.card-grid {
-  display: grid;
-  gap: clamp(1rem, 3vw, 2rem);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-}
-
-/* Reduce motion for users who prefer it */
+/* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -273,66 +113,96 @@ img {
 }
 
 /* Loading states */
-.loading-skeleton {
-  @apply animate-pulse bg-gray-800 rounded;
+.skeleton {
+  @apply animate-pulse bg-gray-700 rounded;
 }
 
-/* Optimize scrolling */
-.scroll-smooth {
-  scroll-behavior: smooth;
+/* Optimized scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Focus styles for accessibility */
+.focus-visible:focus {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-black;
+}
+
+/* Performance optimizations for mobile */
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .glass-card {
+    @apply backdrop-blur-none bg-white/10;
+  }
+}
+
+/* Prevent layout shift */
+.aspect-video {
+  aspect-ratio: 16 / 9;
+}
+
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
+
+/* Optimized gradients */
+.gradient-text {
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Container queries for better responsive design */
+@container (min-width: 768px) {
+  .container-md\:text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+}
+
+/* Intersection observer optimization */
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.fade-in-up.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Critical CSS for above-the-fold content */
 .hero-section {
-  contain: layout style paint;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Optimize animations */
-.will-change-transform {
-  will-change: transform;
-}
-
-.will-change-opacity {
-  will-change: opacity;
-}
-
-/* Global page enhancements */
-body {
-  padding: 0;
-  margin: 0;
-}
-
-main {
-  padding-top: clamp(1rem, 3vw, 2rem);
-}
-
-section {
-  margin-bottom: clamp(2rem, 5vw, 3rem);
-}
-
-/* Typography spacing */
-h1, h2, h3, h4, h5, h6 {
-  margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
-  margin-top: clamp(1rem, 3vw, 1.5rem);
-}
-
-h1:first-child,
-h2:first-child,
-h3:first-child,
-h4:first-child,
-h5:first-child,
-h6:first-child {
-  margin-top: 0;
-}
-
-p {
-  margin-bottom: clamp(0.75rem, 2vw, 1rem);
-}
-
-/* Touch targets for mobile */
-@media (max-width: 768px) {
-  button, a, input, select, textarea {
-    min-height: 44px;
-    min-width: 44px;
-  }
+/* Preload critical fonts */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }

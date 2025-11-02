@@ -20,7 +20,8 @@ export default function CloudinaryImage({
   quality = 80 
 }: CloudinaryImageProps) {
   // Check if it's a Cloudinary URL
-  const isCloudinaryUrl = src.includes('cloudinary.com')
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+  const isCloudinaryUrl = src.includes('cloudinary.com') || src.includes(cloudName || '')
   
   if (!isCloudinaryUrl) {
     return (
