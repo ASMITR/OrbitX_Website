@@ -266,11 +266,11 @@ export default function AddMember() {
                 </label>
                 <select
                   {...register('branch', { required: 'Branch is required' })}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors"
+                  className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors"
                 >
-                  <option value="">Select branch</option>
+                  <option value="" className="bg-black text-white">Select branch</option>
                   {branches.map(branch => (
-                    <option key={branch} value={branch}>{branch}</option>
+                    <option key={branch} value={branch} className="bg-black text-white">{branch}</option>
                   ))}
                 </select>
                 {errors.branch && (
@@ -284,11 +284,11 @@ export default function AddMember() {
                 </label>
                 <select
                   {...register('year', { required: 'Year is required' })}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors"
+                  className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors"
                 >
-                  <option value="">Select year</option>
+                  <option value="" className="bg-black text-white">Select year</option>
                   {years.map(year => (
-                    <option key={year} value={year}>{year}</option>
+                    <option key={year} value={year} className="bg-black text-white">{year}</option>
                   ))}
                 </select>
                 {errors.year && (
@@ -304,11 +304,11 @@ export default function AddMember() {
                 </label>
                 <select
                   {...register('division', { required: 'Division is required' })}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors"
+                  className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors"
                 >
-                  <option value="">Select division</option>
+                  <option value="" className="bg-black text-white">Select division</option>
                   {divisions.map(division => (
-                    <option key={division} value={division}>{division}</option>
+                    <option key={division} value={division} className="bg-black text-white">{division}</option>
                   ))}
                 </select>
                 {errors.division && (
@@ -353,11 +353,11 @@ export default function AddMember() {
                 </label>
                 <select
                   {...register('team', { required: 'Team is required' })}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors"
+                  className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors"
                 >
-                  <option value="">Select team</option>
+                  <option value="" className="bg-black text-white">Select team</option>
                   {teams.map(team => (
-                    <option key={team} value={team}>{team}</option>
+                    <option key={team} value={team} className="bg-black text-white">{team}</option>
                   ))}
                 </select>
                 {errors.team && (
@@ -371,11 +371,11 @@ export default function AddMember() {
                 </label>
                 <select
                   {...register('position', { required: 'Position is required' })}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors"
+                  className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors"
                 >
-                  <option value="">Select position</option>
+                  <option value="" className="bg-black text-white">Select position</option>
                   {positions.map(position => (
-                    <option key={position} value={position}>{position}</option>
+                    <option key={position} value={position} className="bg-black text-white">{position}</option>
                   ))}
                 </select>
                 {errors.position && (

@@ -14,6 +14,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: `${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}.cloudinary.com`,
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 86400,

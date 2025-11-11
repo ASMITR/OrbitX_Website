@@ -1,49 +1,59 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, ShoppingCart, User, MapPin, Phone, Mail } from 'lucide-react'
+import { ArrowLeft, CreditCard, Smartphone, QrCode, User, Mail, Phone, MapPin } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
+import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
+interface CustomerDetails {
+  name: string
+  email: string
+  phone: string
+  address: string
+  city: string
+  pincode: string
+}
+
 export default function CheckoutPage() {
-  const router = useRouter()
   const { items, getTotalPrice, clearCart } = useCart()
-  const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
+  const router = useRouter()
+  const [step, setStep] = useState(1)
+  const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
     name: '',
     email: '',
     phone: '',
     address: '',
     city: '',
-    state: '',
-    pincode: '',
-    notes: ''
+    pincode: ''
   })
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }))
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push('/merchandise')
+    }
+    
+    // Load saved customer details
+    const saved = localStorage.getItem('orbitx-customer')
+    if (saved) {
+      setCustomerDetails(JSON.parse(saved))
+    }
+  }, [items, router])
+
+  const handleDetailsSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    localStorage.setItem('orbitx-customer', JSON.stringify(customerDetails))
+    setStep(2)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!formData.name || !formData.email || !formData.phone || !formData.address) {
-      toast.error('Please fill in all required fields')
-      return
-    }
-
-    setLoading(true)
-
+  const handlePayment = async (method: string) => {
     try {
       const orderData = {
         items,
-        customerInfo: formData,
+        customerDetails,
         total: getTotalPrice(),
+        paymentMethod: method,
         status: 'pending'
       }
 
@@ -55,231 +65,250 @@ export default function CheckoutPage() {
 
       if (response.ok) {
         const order = await response.json()
-        // Save customer email for order tracking
-        localStorage.setItem('customerEmail', formData.email)
         clearCart()
         toast.success('Order placed successfully!')
-        router.push(`/order-confirmation/${order.id}`)
+        router.push(`/orders/${order.id}`)
       } else {
         toast.error('Failed to place order')
       }
     } catch (error) {
-      console.error('Error placing order:', error)
-      toast.error('Failed to place order')
-    } finally {
-      setLoading(false)
+      toast.error('Payment failed')
     }
   }
 
-  if (items.length === 0) {
-    return (
-      <div className="min-h-screen text-white pt-16 flex items-center justify-center">
-        <div className="text-center">
-          <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-400 mb-2">Your cart is empty</h2>
-          <p className="text-gray-500 mb-6">Add some items to your cart before checkout</p>
-          <button
-            onClick={() => router.push('/merchandise')}
-            className="btn-primary"
-          >
-            Browse Merchandise
-          </button>
-        </div>
-      </div>
-    )
-  }
+  if (items.length === 0) return null
 
   return (
-    <div className="min-h-screen text-white pt-16">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center text-gray-400 hover:text-white mb-6 transition-colors"
+    <div className="min-h-screen pt-20 px-4 bg-gradient-to-br from-gray-900 via-black to-gray-900">
+      <div className="max-w-4xl mx-auto">
+        <motion.button
+          onClick={() => step === 1 ? router.back() : setStep(1)}
+          className="flex items-center text-blue-400 hover:text-blue-300 mb-6"
+          whileHover={{ x: -5 }}
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Cart
-        </button>
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          Back
+        </motion.button>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Order Summary */}
-          <div className="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10">
-            <h2 className="text-xl font-bold text-white mb-4">Order Summary</h2>
-            <div className="space-y-3 mb-4">
-              {items.map((item) => (
-                <div key={item.id} className="flex gap-3 p-3 bg-white/5 rounded-lg">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-16 h-16 object-cover rounded"
-                  />
-                  <div className="flex-1">
-                    <h3 className="text-white font-medium">{item.name}</h3>
-                    {item.size && <p className="text-gray-400 text-sm">Size: {item.size}</p>}
-                    {item.color && <p className="text-gray-400 text-sm">Color: {item.color}</p>}
-                    <p className="text-blue-400 font-bold">₹{item.price} × {item.quantity}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-white font-bold">₹{item.price * item.quantity}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="border-t border-white/20 pt-4">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-bold text-white">Total:</span>
-                <span className="text-2xl font-bold text-blue-400">₹{getTotalPrice()}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Customer Details Form */}
-          <div className="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10">
-            <h2 className="text-xl font-bold text-white mb-4">Customer Details</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
+        {step === 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-black/50 backdrop-blur-md border border-white/10 rounded-2xl p-6"
+          >
+            <h1 className="text-2xl font-bold text-white mb-6">Customer Details</h1>
+            
+            <form onSubmit={handleDetailsSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    <User className="h-4 w-4 inline mr-1" />
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
-                    placeholder="Enter your full name"
-                    required
-                  />
+                  <label className="block text-gray-300 mb-2">Full Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <input
+                      type="text"
+                      required
+                      value={customerDetails.name}
+                      onChange={(e) => setCustomerDetails(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-400 focus:outline-none"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    <Mail className="h-4 w-4 inline mr-1" />
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
-                    placeholder="Enter your email"
-                    required
-                  />
+                  <label className="block text-gray-300 mb-2">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <input
+                      type="email"
+                      required
+                      value={customerDetails.email}
+                      onChange={(e) => setCustomerDetails(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-400 focus:outline-none"
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-gray-300 mb-2">Phone</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <input
+                      type="tel"
+                      required
+                      value={customerDetails.phone}
+                      onChange={(e) => setCustomerDetails(prev => ({ ...prev, phone: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-400 focus:outline-none"
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-gray-300 mb-2">City</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <input
+                      type="text"
+                      required
+                      value={customerDetails.city}
+                      onChange={(e) => setCustomerDetails(prev => ({ ...prev, city: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-400 focus:outline-none"
+                      placeholder="Enter your city"
+                    />
+                  </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  <Phone className="h-4 w-4 inline mr-1" />
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
-                  placeholder="Enter your phone number"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  <MapPin className="h-4 w-4 inline mr-1" />
-                  Address *
-                </label>
+                <label className="block text-gray-300 mb-2">Address</label>
                 <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
+                  required
+                  value={customerDetails.address}
+                  onChange={(e) => setCustomerDetails(prev => ({ ...prev, address: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-400 focus:outline-none"
+                  placeholder="Enter your full address"
                   rows={3}
-                  className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
-                  placeholder="Enter your complete address"
+                />
+              </div>
+
+              <div className="w-full md:w-1/2">
+                <label className="block text-gray-300 mb-2">Pincode</label>
+                <input
+                  type="text"
                   required
+                  value={customerDetails.pincode}
+                  onChange={(e) => setCustomerDetails(prev => ({ ...prev, pincode: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-400 focus:outline-none"
+                  placeholder="Enter pincode"
                 />
               </div>
 
-              <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
-                    placeholder="City"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
-                    placeholder="State"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    PIN Code
-                  </label>
-                  <input
-                    type="text"
-                    name="pincode"
-                    value={formData.pincode}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
-                    placeholder="PIN Code"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Order Notes (Optional)
-                </label>
-                <textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  rows={2}
-                  className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
-                  placeholder="Any special instructions..."
-                />
-              </div>
-
-              <button
+              <motion.button
                 type="submit"
-                disabled={loading}
-                className="w-full py-3 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
               >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Placing Order...
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="h-5 w-5" />
-                    Place Order - ₹{getTotalPrice()}
-                  </>
-                )}
-              </button>
+                Proceed to Payment
+              </motion.button>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        )}
+
+        {step === 2 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            <div className="bg-black/50 backdrop-blur-md border border-white/10 rounded-2xl p-6">
+              <h1 className="text-2xl font-bold text-white mb-4">Payment Options</h1>
+              <div className="text-gray-300 mb-6">
+                Total Amount: <span className="text-2xl font-bold text-green-400">₹{getTotalPrice()}</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* UPI Apps */}
+                <motion.button
+                  onClick={() => handlePayment('phonepe')}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="p-4 bg-purple-600/20 border border-purple-500/30 rounded-xl hover:bg-purple-600/30 transition-all duration-200 flex items-center space-x-3"
+                >
+                  <Smartphone className="h-8 w-8 text-purple-400" />
+                  <div className="text-left">
+                    <div className="text-white font-semibold">PhonePe</div>
+                    <div className="text-gray-400 text-sm">Pay with PhonePe</div>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  onClick={() => handlePayment('googlepay')}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="p-4 bg-blue-600/20 border border-blue-500/30 rounded-xl hover:bg-blue-600/30 transition-all duration-200 flex items-center space-x-3"
+                >
+                  <Smartphone className="h-8 w-8 text-blue-400" />
+                  <div className="text-left">
+                    <div className="text-white font-semibold">Google Pay</div>
+                    <div className="text-gray-400 text-sm">Pay with Google Pay</div>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  onClick={() => handlePayment('paytm')}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="p-4 bg-cyan-600/20 border border-cyan-500/30 rounded-xl hover:bg-cyan-600/30 transition-all duration-200 flex items-center space-x-3"
+                >
+                  <Smartphone className="h-8 w-8 text-cyan-400" />
+                  <div className="text-left">
+                    <div className="text-white font-semibold">Paytm</div>
+                    <div className="text-gray-400 text-sm">Pay with Paytm</div>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  onClick={() => handlePayment('upi')}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="p-4 bg-green-600/20 border border-green-500/30 rounded-xl hover:bg-green-600/30 transition-all duration-200 flex items-center space-x-3"
+                >
+                  <QrCode className="h-8 w-8 text-green-400" />
+                  <div className="text-left">
+                    <div className="text-white font-semibold">UPI ID</div>
+                    <div className="text-gray-400 text-sm">Pay with UPI ID</div>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  onClick={() => handlePayment('qr')}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="p-4 bg-orange-600/20 border border-orange-500/30 rounded-xl hover:bg-orange-600/30 transition-all duration-200 flex items-center space-x-3"
+                >
+                  <QrCode className="h-8 w-8 text-orange-400" />
+                  <div className="text-left">
+                    <div className="text-white font-semibold">QR Code</div>
+                    <div className="text-gray-400 text-sm">Scan QR to pay</div>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  onClick={() => handlePayment('card')}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="p-4 bg-yellow-600/20 border border-yellow-500/30 rounded-xl hover:bg-yellow-600/30 transition-all duration-200 flex items-center space-x-3"
+                >
+                  <CreditCard className="h-8 w-8 text-yellow-400" />
+                  <div className="text-left">
+                    <div className="text-white font-semibold">Credit/Debit Card</div>
+                    <div className="text-gray-400 text-sm">Pay with card</div>
+                  </div>
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Order Summary */}
+            <div className="bg-black/50 backdrop-blur-md border border-white/10 rounded-2xl p-6">
+              <h2 className="text-xl font-bold text-white mb-4">Order Summary</h2>
+              <div className="space-y-3">
+                {items.map((item, index) => (
+                  <div key={index} className="flex justify-between text-gray-300">
+                    <span>{item.name} x {item.quantity}</span>
+                    <span>₹{item.price * item.quantity}</span>
+                  </div>
+                ))}
+                <div className="border-t border-white/10 pt-3 flex justify-between text-white font-bold">
+                  <span>Total</span>
+                  <span>₹{getTotalPrice()}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   )

@@ -26,7 +26,12 @@ export default function Members() {
       const aPos = aIndex === -1 ? POSITIONS.length : aIndex
       const bPos = bIndex === -1 ? POSITIONS.length : bIndex
       
-      return aPos - bPos
+      if (aPos !== bPos) {
+        return aPos - bPos
+      }
+      
+      // If same position, sort by name
+      return a.name.localeCompare(b.name)
     })
   }, [])
 
@@ -153,13 +158,195 @@ export default function Members() {
           </div>
         </div>
 
-        {/* Members Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
-          {displayMembers.map((member, index) => (
-            <div
-              key={member.id}
-              className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900/50 to-black/50 backdrop-blur-md border border-white/10 shadow-xl hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.02] hover:border-blue-500/30"
-            >
+        {/* Leadership Team Section */}
+        {filteredMembers.filter(member => 
+          member.position.toLowerCase().includes('president') || 
+          member.position.toLowerCase().includes('chairman') || 
+          member.position.toLowerCase().includes('secretary') ||
+          member.position.toLowerCase().includes('treasurer')
+        ).length > 0 && (
+          <div className="mb-12 sm:mb-16">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                Leadership Team
+              </h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-orange-400 mx-auto rounded-full"></div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+              {filteredMembers
+                .filter(member => 
+                  member.position.toLowerCase().includes('president') || 
+                  member.position.toLowerCase().includes('chairman') || 
+                  member.position.toLowerCase().includes('secretary') ||
+                  member.position.toLowerCase().includes('treasurer')
+                )
+                .sort((a, b) => {
+                  const order = ['president', 'chairman', 'secretary', 'treasurer', 'co-treasurer']
+                  const aIndex = order.findIndex(pos => a.position.toLowerCase().includes(pos))
+                  const bIndex = order.findIndex(pos => b.position.toLowerCase().includes(pos))
+                  return aIndex - bIndex
+                })
+                .map((member, index) => (
+                  <div
+                    key={member.id}
+                    className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-yellow-900/30 to-orange-900/30 backdrop-blur-md border-2 border-yellow-500/30 shadow-xl hover:shadow-yellow-500/20 transition-all duration-300 hover:scale-[1.02] hover:border-yellow-400/50"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+                    
+                    <div className="relative h-64 sm:h-72 lg:h-80 overflow-hidden bg-gray-900/50 flex items-center justify-center">
+                      <Image
+                        src={member.photo}
+                        alt={member.name}
+                        width={300}
+                        height={320}
+                        loader={imageLoader}
+                        priority={index < 4}
+                        loading={index < 4 ? 'eager' : 'lazy'}
+                        className="max-w-full max-h-full object-contain"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.style.display = 'none'
+                          target.nextElementSibling?.classList.remove('hidden')
+                        }}
+                      />
+                      <div className="hidden w-full h-full bg-gradient-to-br from-yellow-500/20 to-orange-500/20 flex items-center justify-center">
+                        <div className="text-6xl sm:text-7xl lg:text-8xl opacity-30">👤</div>
+                      </div>
+                      
+                      <div 
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-center justify-center cursor-pointer"
+                        onClick={() => setSelectedMember(member)}
+                      >
+                        <div className="text-center">
+                          <div className="text-white text-sm mb-2">View Profile</div>
+                          <div className="w-12 h-0.5 bg-yellow-400 mx-auto"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative z-20 p-2 sm:p-3 lg:p-4 xl:p-6 bg-gradient-to-t from-black/95 to-transparent">
+                      <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 group-hover:text-yellow-300 transition-colors line-clamp-1 sm:line-clamp-2 leading-tight">
+                        {member.name}
+                      </h3>
+                      {member.team && member.team !== 'NA' && (
+                        <p className="text-yellow-400 text-xs font-medium mb-1 line-clamp-1 leading-tight hidden sm:block">{member.team}</p>
+                      )}
+                      <div className="mb-1 sm:mb-2">
+                        <span className={`inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${getRoleColor(member.position)} border truncate max-w-full`}>
+                          {member.position}
+                        </span>
+                      </div>
+                      <p className="text-gray-400 text-xs mb-1 sm:mb-2 line-clamp-1 hidden sm:block">{member.branch} • {member.year}-{member.division}</p>
+                      
+                      <div className="flex justify-between items-center gap-1 sm:gap-2">
+                        <div className="flex space-x-1 flex-shrink-0 min-w-0">
+                          {member.socialLinks?.linkedin && (
+                            <a
+                              href={member.socialLinks.linkedin.startsWith('http') ? member.socialLinks.linkedin : `https://${member.socialLinks.linkedin}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 bg-blue-600/20 border border-blue-500/30 rounded flex items-center justify-center hover:bg-blue-600/40 hover:scale-110 transition-all duration-200 group/social flex-shrink-0"
+                            >
+                              <Linkedin className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-3.5 lg:w-3.5 text-blue-400 group-hover/social:text-blue-300" />
+                            </a>
+                          )}
+                          {member.socialLinks?.github && (
+                            <a
+                              href={member.socialLinks.github.startsWith('http') ? member.socialLinks.github : `https://${member.socialLinks.github}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 bg-gray-600/20 border border-gray-500/30 rounded flex items-center justify-center hover:bg-gray-600/40 hover:scale-110 transition-all duration-200 group/social flex-shrink-0"
+                            >
+                              <Github className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-3.5 lg:w-3.5 text-gray-400 group-hover/social:text-gray-300" />
+                            </a>
+                          )}
+                          {member.socialLinks?.instagram && (
+                            <a
+                              href={member.socialLinks.instagram.startsWith('http') ? member.socialLinks.instagram : `https://${member.socialLinks.instagram}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 bg-pink-600/20 border border-pink-500/30 rounded flex items-center justify-center hover:bg-pink-600/40 hover:scale-110 transition-all duration-200 group/social flex-shrink-0"
+                            >
+                              <Instagram className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-3.5 lg:w-3.5 text-pink-400 group-hover/social:text-pink-300" />
+                            </a>
+                          )}
+                        </div>
+                        
+                        <button 
+                          onClick={() => setSelectedMember(member)}
+                          className="px-1.5 py-1 sm:px-2 sm:py-1 lg:px-3 lg:py-1.5 bg-yellow-600/20 border border-yellow-500/30 rounded text-yellow-400 text-xs font-medium hover:bg-yellow-600/40 transition-all duration-200 flex-shrink-0 whitespace-nowrap"
+                        >
+                          View
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500" />
+                    <div className="absolute -top-10 -right-10 w-20 h-20 bg-yellow-500/10 rounded-full blur-xl group-hover:bg-yellow-500/20 transition-all duration-500" />
+                    <div className="absolute -bottom-10 -left-10 w-16 h-16 bg-orange-500/10 rounded-full blur-xl group-hover:bg-orange-500/20 transition-all duration-500" />
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        )}
+
+        {/* Team Leaders & Members Section */}
+        {filteredMembers.filter(member => 
+          member.position.toLowerCase().includes('team leader') ||
+          (member.position.toLowerCase() === 'member' ||
+          (!member.position.toLowerCase().includes('president') && 
+           !member.position.toLowerCase().includes('chairman') && 
+           !member.position.toLowerCase().includes('secretary') &&
+           !member.position.toLowerCase().includes('treasurer') &&
+           !member.position.toLowerCase().includes('team leader')))
+        ).length > 0 && (
+          <div className="mb-8">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Team Leaders & Members
+              </h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-purple-400 mx-auto rounded-full"></div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
+              {filteredMembers
+                .filter(member => 
+                  member.position.toLowerCase().includes('team leader') ||
+                  (member.position.toLowerCase() === 'member' ||
+                  (!member.position.toLowerCase().includes('president') && 
+                   !member.position.toLowerCase().includes('chairman') && 
+                   !member.position.toLowerCase().includes('secretary') &&
+                   !member.position.toLowerCase().includes('treasurer') &&
+                   !member.position.toLowerCase().includes('team leader')))
+                )
+                .sort((a, b) => {
+                  // Team Leaders first, then Members
+                  const aIsTeamLeader = a.position.toLowerCase().includes('team leader')
+                  const bIsTeamLeader = b.position.toLowerCase().includes('team leader')
+                  
+                  if (aIsTeamLeader && !bIsTeamLeader) return -1
+                  if (!aIsTeamLeader && bIsTeamLeader) return 1
+                  
+                  // Within same category, sort by position hierarchy
+                  const aIndex = POSITIONS.indexOf(a.position)
+                  const bIndex = POSITIONS.indexOf(b.position)
+                  
+                  const aPos = aIndex === -1 ? POSITIONS.length : aIndex
+                  const bPos = bIndex === -1 ? POSITIONS.length : bIndex
+                  
+                  return aPos - bPos
+                })
+                .map((member, index) => {
+                  const isTeamLeader = member.position.toLowerCase().includes('team leader')
+                  return (
+                    <div
+                      key={member.id}
+                      className={`group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-md border-2 shadow-xl transition-all duration-300 hover:scale-[1.02] ${
+                        isTeamLeader 
+                          ? 'bg-gradient-to-br from-indigo-900/30 to-blue-900/30 border-indigo-500/30 hover:shadow-indigo-500/20 hover:border-indigo-400/50'
+                          : 'bg-gradient-to-br from-green-900/30 to-teal-900/30 border-green-500/30 hover:shadow-green-500/20 hover:border-green-400/50'
+                      }`}
+                    >
               {/* Background Image */}
               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
               
@@ -193,18 +380,22 @@ export default function Members() {
                 >
                   <div className="text-center">
                     <div className="text-white text-sm mb-2">View Profile</div>
-                    <div className="w-12 h-0.5 bg-blue-400 mx-auto"></div>
+                    <div className={`w-12 h-0.5 mx-auto ${isTeamLeader ? 'bg-indigo-400' : 'bg-green-400'}`}></div>
                   </div>
                 </div>
               </div>
 
               {/* Member Info */}
               <div className="relative z-20 p-2 sm:p-3 lg:p-4 xl:p-6 bg-gradient-to-t from-black/95 to-transparent">
-                <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 group-hover:text-blue-300 transition-colors line-clamp-1 sm:line-clamp-2 leading-tight">
+                <h3 className={`text-sm sm:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 transition-colors line-clamp-1 sm:line-clamp-2 leading-tight ${
+                  isTeamLeader ? 'group-hover:text-indigo-300' : 'group-hover:text-green-300'
+                }`}>
                   {member.name}
                 </h3>
                 {member.team && member.team !== 'NA' && (
-                  <p className="text-blue-400 text-xs font-medium mb-1 line-clamp-1 leading-tight hidden sm:block">{member.team}</p>
+                  <p className={`text-xs font-medium mb-1 line-clamp-1 leading-tight hidden sm:block ${
+                    isTeamLeader ? 'text-indigo-400' : 'text-green-400'
+                  }`}>{member.team}</p>
                 )}
                 <div className="mb-1 sm:mb-2">
                   <span className={`inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${getRoleColor(member.position)} border truncate max-w-full`}>
@@ -274,7 +465,11 @@ export default function Members() {
                   {/* View More Button */}
                   <button 
                     onClick={() => setSelectedMember(member)}
-                    className="px-1.5 py-1 sm:px-2 sm:py-1 lg:px-3 lg:py-1.5 bg-blue-600/20 border border-blue-500/30 rounded text-blue-400 text-xs font-medium hover:bg-blue-600/40 transition-all duration-200 flex-shrink-0 whitespace-nowrap"
+                    className={`px-1.5 py-1 sm:px-2 sm:py-1 lg:px-3 lg:py-1.5 rounded text-xs font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
+                      isTeamLeader 
+                        ? 'bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
+                        : 'bg-green-600/20 border border-green-500/30 text-green-400 hover:bg-green-600/40'
+                    }`}
                   >
                     View
                   </button>
@@ -282,12 +477,28 @@ export default function Members() {
               </div>
               
               {/* Decorative Elements */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500" />
-              <div className="absolute -top-10 -right-10 w-20 h-20 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-all duration-500" />
-              <div className="absolute -bottom-10 -left-10 w-16 h-16 bg-purple-500/10 rounded-full blur-xl group-hover:bg-purple-500/20 transition-all duration-500" />
+              <div className={`absolute top-0 left-0 w-full h-1 ${
+                isTeamLeader 
+                  ? 'bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500'
+                  : 'bg-gradient-to-r from-green-500 via-teal-500 to-emerald-500'
+              }`} />
+              <div className={`absolute -top-10 -right-10 w-20 h-20 rounded-full blur-xl transition-all duration-500 ${
+                isTeamLeader 
+                  ? 'bg-indigo-500/10 group-hover:bg-indigo-500/20'
+                  : 'bg-green-500/10 group-hover:bg-green-500/20'
+              }`} />
+              <div className={`absolute -bottom-10 -left-10 w-16 h-16 rounded-full blur-xl transition-all duration-500 ${
+                isTeamLeader 
+                  ? 'bg-blue-500/10 group-hover:bg-blue-500/20'
+                  : 'bg-teal-500/10 group-hover:bg-teal-500/20'
+              }`} />
+                    </div>
+                  )
+                })
+              }
             </div>
-          ))}
-        </div>
+          </div>
+        )}
 
         {/* No Results */}
         {filteredMembers.length === 0 && searchTerm && (

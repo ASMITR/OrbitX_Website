@@ -217,16 +217,30 @@ export default function Navbar() {
     }
   }, [user])
 
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null)
+
   const navItems = [
     { name: 'Home', href: '/' },
     { name: 'About', href: '/about' },
     { name: 'Teams', href: '/teams' },
-    { name: 'Projects', href: '/projects' },
-    { name: 'Events', href: '/events' },
-    { name: 'Blogs', href: '/blogs' },
+    { 
+      name: 'Explore', 
+      href: '#',
+      dropdown: [
+        { name: 'Events', href: '/events' },
+        { name: 'Projects', href: '/projects' },
+        { name: 'Blogs', href: '/blogs' }
+      ]
+    },
     { name: 'Merchandise', href: '/merchandise' },
-    { name: 'Members', href: '/members' },
-    { name: 'Leaderboard', href: '/leaderboard' },
+    { 
+      name: 'Members', 
+      href: '/members',
+      dropdown: [
+        { name: 'All Members', href: '/members' },
+        { name: 'Leaderboard', href: '/leaderboard' }
+      ]
+    },
     { name: 'Contact', href: '/contact' }
   ]
 
@@ -277,19 +291,85 @@ export default function Navbar() {
                 transition={{ duration: 0.5, delay: index * 0.05 }}
                 whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
+                className="relative"
+                onMouseEnter={() => item.dropdown && setDropdownOpen(item.name)}
+                onMouseLeave={() => setDropdownOpen(null)}
               >
-                <Link
-                  href={item.href}
-                  className="relative group px-2 py-2 rounded-lg font-medium text-base text-gray-300 hover:text-cyan-300 transition-all duration-200 overflow-hidden"
-                >
-                  <span className="relative z-20">{item.name}</span>
+                {item.dropdown ? (
+                  <div className="relative">
+                    <motion.button 
+                      className="relative group px-3 py-2 rounded-lg font-medium text-base text-gray-300 hover:text-cyan-300 transition-all duration-200 overflow-hidden flex items-center bg-gradient-to-r from-transparent to-transparent hover:from-cyan-500/10 hover:to-blue-500/10 border border-transparent hover:border-cyan-500/30"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <span className="relative z-20 font-semibold">{item.name}</span>
+                      <motion.div
+                        animate={{ rotate: dropdownOpen === item.name ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="ml-2"
+                      >
+                        <ChevronDown className="h-4 w-4 text-cyan-400" />
+                      </motion.div>
+                      <motion.div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 rounded-lg transition-all duration-300" />
+                      <motion.div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 w-0 bg-gradient-to-r from-cyan-400 to-blue-400 group-hover:w-full transition-all duration-300" />
+                    </motion.button>
+                    <AnimatePresence>
+                      {dropdownOpen === item.name && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 15, scale: 0.9 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 15, scale: 0.9 }}
+                          transition={{ duration: 0.3, ease: "easeOut" }}
+                          className="absolute top-full mt-3 w-52 bg-black backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                        >
+                          <div className="p-2">
+                            {item.dropdown.map((subItem, subIndex) => (
+                              <motion.div
+                                key={subItem.name}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.2, delay: subIndex * 0.1 }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                              >
+                                <Link
+                                  href={subItem.href}
+                                  className="flex items-center px-4 py-3 text-white hover:text-gray-200 hover:bg-white/10 transition-all duration-300 text-sm font-medium rounded-xl border border-transparent hover:border-white/20 group relative overflow-hidden"
+                                  onClick={() => setDropdownOpen(null)}
+                                >
+
+                                  <span className="relative z-10">{subItem.name}</span>
+                                  <motion.div
+                                    className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-white"
+                                    animate={{ x: [0, 3, 0] }}
+                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                  >
+                                    →
+                                  </motion.div>
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                </Link>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/10 group-hover:to-blue-500/10 rounded-lg transition-all duration-200"
-                  />
-                  <motion.div
-                    className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 w-0 bg-cyan-400 group-hover:w-full transition-all duration-200"
-                  />
-                </Link>
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Link
+                      href={item.href}
+                      className="relative group px-3 py-2 rounded-lg font-medium text-base text-gray-300 hover:text-cyan-300 transition-all duration-200 overflow-hidden bg-gradient-to-r from-transparent to-transparent hover:from-cyan-500/10 hover:to-blue-500/10 border border-transparent hover:border-cyan-500/30"
+                    >
+                      <span className="relative z-20 font-semibold">{item.name}</span>
+                      <motion.div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 rounded-lg transition-all duration-300" />
+                      <motion.div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 w-0 bg-gradient-to-r from-cyan-400 to-blue-400 group-hover:w-full transition-all duration-300" />
+                    </Link>
+                  </motion.div>
+                )}
               </motion.div>
             ))}
             </div>
@@ -571,20 +651,51 @@ export default function Navbar() {
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Link
-                      href={item.href}
-                      className="flex items-center py-3 px-4 rounded-xl font-medium transition-all duration-300 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 group"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <span className="text-base">{item.name}</span>
-                      <motion.div
-                        className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
-                        animate={{ x: [0, 5, 0] }}
-                        transition={{ duration: 1, repeat: Infinity }}
+                    {item.dropdown ? (
+                      <div>
+                        <Link
+                          href={item.href}
+                          className="flex items-center py-3 px-4 rounded-xl font-medium transition-all duration-300 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 group"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <span className="text-base">{item.name}</span>
+                          <motion.div
+                            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                            animate={{ x: [0, 5, 0] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          >
+                            →
+                          </motion.div>
+                        </Link>
+                        <div className="ml-4 mt-1 space-y-1">
+                          {item.dropdown.map((subItem) => (
+                            <Link
+                              key={subItem.name}
+                              href={subItem.href}
+                              className="block py-2 px-3 text-sm text-gray-400 hover:text-cyan-300 transition-colors rounded-lg hover:bg-white/5"
+                              onClick={() => setIsOpen(false)}
+                            >
+                              {subItem.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className="flex items-center py-3 px-4 rounded-xl font-medium transition-all duration-300 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 group"
+                        onClick={() => setIsOpen(false)}
                       >
-                        →
-                      </motion.div>
-                    </Link>
+                        <span className="text-base">{item.name}</span>
+                        <motion.div
+                          className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                          animate={{ x: [0, 5, 0] }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                        >
+                          →
+                        </motion.div>
+                      </Link>
+                    )}
                   </motion.div>
                 ))}
               </div>
@@ -755,25 +866,16 @@ export default function Navbar() {
               whileTap={{ scale: 0.95 }}
               className={sidebarMinimized ? '' : 'w-full'}
             >
-              <Link
-                href={item.href}
-                onClick={() => {
-                  setSidebarVisible(false)
-                  setSidebarMinimized(false)
-                }}
-                className={`rounded-xl bg-white/10 hover:bg-white/20 flex items-center transition-all duration-150 group relative touch-target ${
-                  sidebarMinimized 
-                    ? 'w-10 h-10 justify-center' 
-                    : 'w-full px-4 py-3 space-x-3'
-                }`}
-                title={sidebarMinimized ? item.name : ''}
-              >
-                {sidebarMinimized ? (
-                  <span className="text-gray-300 group-hover:text-white font-bold text-sm">
-                    {item.name.charAt(0)}
-                  </span>
-                ) : (
-                  <>
+              {item.dropdown && !sidebarMinimized ? (
+                <div className="w-full">
+                  <Link
+                    href={item.href}
+                    onClick={() => {
+                      setSidebarVisible(false)
+                      setSidebarMinimized(false)
+                    }}
+                    className="rounded-xl bg-white/10 hover:bg-white/20 flex items-center transition-all duration-150 group relative touch-target w-full px-4 py-3 space-x-3"
+                  >
                     <span className="text-gray-300 group-hover:text-white font-bold text-base sm:text-lg">
                       {item.name.charAt(0)}
                     </span>
@@ -787,9 +889,82 @@ export default function Navbar() {
                     >
                       →
                     </motion.div>
-                  </>
-                )}
-              </Link>
+                  </Link>
+                  <motion.div 
+                    className="ml-4 mt-2 space-y-2 border-l-2 border-cyan-500/30 pl-4"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {item.dropdown.map((subItem, subIndex) => (
+                      <motion.div
+                        key={subItem.name}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2, delay: subIndex * 0.1 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Link
+                          href={subItem.href}
+                          onClick={() => {
+                            setSidebarVisible(false)
+                            setSidebarMinimized(false)
+                          }}
+                          className="flex items-center py-2 px-3 text-sm text-gray-400 hover:text-cyan-300 transition-all duration-200 rounded-lg hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 touch-target group relative overflow-hidden"
+                        >
+
+                          <span className="font-medium">{subItem.name}</span>
+                          <motion.div
+                            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-cyan-400"
+                            animate={{ x: [0, 3, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          >
+                            →
+                          </motion.div>
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </div>
+              ) : (
+                <Link
+                  href={item.href}
+                  onClick={() => {
+                    setSidebarVisible(false)
+                    setSidebarMinimized(false)
+                  }}
+                  className={`rounded-xl bg-white/10 hover:bg-white/20 flex items-center transition-all duration-150 group relative touch-target ${
+                    sidebarMinimized 
+                      ? 'w-10 h-10 justify-center' 
+                      : 'w-full px-4 py-3 space-x-3'
+                  }`}
+                  title={sidebarMinimized ? item.name : ''}
+                >
+                  {sidebarMinimized ? (
+                    <span className="text-gray-300 group-hover:text-white font-bold text-sm">
+                      {item.name.charAt(0)}
+                    </span>
+                  ) : (
+                    <>
+                      <span className="text-gray-300 group-hover:text-white font-bold text-base sm:text-lg">
+                        {item.name.charAt(0)}
+                      </span>
+                      <span className="text-gray-300 group-hover:text-white font-medium text-sm sm:text-base">
+                        {item.name}
+                      </span>
+                      <motion.div
+                        className="ml-auto opacity-100 transition-opacity"
+                        animate={{ x: [0, 5, 0] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      >
+                        →
+                      </motion.div>
+                    </>
+                  )}
+                </Link>
+              )}
             </motion.div>
           ))}
         </div>

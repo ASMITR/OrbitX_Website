@@ -326,11 +326,11 @@ export default function AdminMembers() {
           <select
             value={filterTeam}
             onChange={(e) => setFilterTeam(e.target.value)}
-            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400"
+            className="px-4 py-2 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400"
           >
-            <option value="all">All Teams</option>
+            <option value="all" className="bg-black text-white">All Teams</option>
             {teams.map(team => (
-              <option key={team} value={team}>{team}</option>
+              <option key={team} value={team} className="bg-black text-white">{team}</option>
             ))}
           </select>
           <span className="text-gray-400 text-sm">

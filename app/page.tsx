@@ -81,28 +81,28 @@ export default function Home() {
   const previews = useMemo(() => [
     {
       title: 'Events',
-      description: 'Join our exciting space exploration events and workshops',
+      description: 'Join space exploration events',
       icon: Calendar,
       href: '/events',
       color: 'from-cyan-500 via-blue-500 to-purple-600'
     },
     {
       title: 'Projects',
-      description: 'Explore our innovative space technology projects',
+      description: 'Explore space technology projects',
       icon: FolderOpen,
       href: '/projects',
       color: 'from-purple-500 via-pink-500 to-rose-600'
     },
     {
       title: 'Blogs',
-      description: 'Read our latest insights and space exploration stories',
+      description: 'Read space exploration insights',
       icon: BookOpen,
       href: '/blogs',
       color: 'from-emerald-500 via-teal-500 to-cyan-600'
     },
     {
       title: 'Teams',
-      description: 'Meet our dedicated teams working on various domains',
+      description: 'Meet our space technology teams',
       icon: Users,
       href: '/teams',
       color: 'from-orange-500 via-red-500 to-pink-600'
@@ -124,25 +124,56 @@ export default function Home() {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Floating elements */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        {Array.from({ length: 12 }).map((_, i) => (
+      {/* Enhanced Floating Elements */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* Floating particles */}
+        {Array.from({ length: 20 }).map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-cyan-400/20 rounded-full"
+            className={`absolute rounded-full ${
+              i % 3 === 0 ? 'w-3 h-3 bg-cyan-400/30' :
+              i % 3 === 1 ? 'w-2 h-2 bg-blue-400/25' :
+              'w-1 h-1 bg-purple-400/40'
+            }`}
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, -100, 0],
+              y: [0, -150, 0],
+              x: [0, Math.sin(i) * 50, 0],
               opacity: [0.2, 0.8, 0.2],
-              scale: [0.5, 1.2, 0.5]
+              scale: [0.5, 1.5, 0.5],
+              rotate: [0, 360]
             }}
             transition={{
-              duration: 8 + Math.random() * 4,
+              duration: 10 + Math.random() * 8,
               repeat: Infinity,
-              delay: Math.random() * 5
+              delay: Math.random() * 5,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+        
+        {/* Constellation lines */}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <motion.div
+            key={`line-${i}`}
+            className="absolute h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent"
+            style={{
+              left: `${Math.random() * 80}%`,
+              top: `${Math.random() * 80}%`,
+              width: `${50 + Math.random() * 100}px`,
+              transform: `rotate(${Math.random() * 360}deg)`
+            }}
+            animate={{
+              opacity: [0, 0.6, 0],
+              scaleX: [0, 1, 0]
+            }}
+            transition={{
+              duration: 4 + Math.random() * 3,
+              repeat: Infinity,
+              delay: Math.random() * 3
             }}
           />
         ))}
@@ -151,28 +182,42 @@ export default function Home() {
       <HeroSection />
       
       {/* Enhanced Preview Section */}
-      <section className="section-spacing py-16 sm:py-20 lg:py-24 relative">
-        {/* Background elements */}
+      <section className="py-20 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 relative">
+        {/* Enhanced Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
-            className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/15 via-purple-500/10 to-cyan-500/15 rounded-full blur-3xl"
             animate={{
-              scale: [1, 1.2, 1],
-              rotate: [0, 180, 360]
+              scale: [1, 1.3, 1],
+              rotate: [0, 180, 360],
+              x: [0, 50, 0],
+              y: [0, -30, 0]
             }}
-            transition={{ duration: 20, repeat: Infinity }}
+            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
-            className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-gradient-to-r from-cyan-500/10 to-teal-500/10 rounded-full blur-3xl"
+            className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-cyan-500/15 via-teal-500/10 to-blue-500/15 rounded-full blur-3xl"
             animate={{
-              scale: [1.2, 1, 1.2],
-              rotate: [360, 180, 0]
+              scale: [1.2, 0.8, 1.2],
+              rotate: [360, 180, 0],
+              x: [0, -40, 0],
+              y: [0, 40, 0]
             }}
-            transition={{ duration: 25, repeat: Infinity }}
+            transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-r from-pink-500/10 via-purple-500/15 to-indigo-500/10 rounded-full blur-3xl"
+            animate={{
+              scale: [0.8, 1.4, 0.8],
+              rotate: [0, -360, 0],
+              x: [-100, 100, -100],
+              y: [50, -50, 50]
+            }}
+            transition={{ duration: 35, repeat: Infinity, ease: "easeInOut" }}
           />
         </div>
         
-        <div className="container-responsive max-w-7xl mx-auto relative z-10">
+        <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -182,24 +227,57 @@ export default function Home() {
           >
             <motion.div
               className="flex items-center justify-center gap-4 mb-6"
-              initial={{ scale: 0 }}
-              whileInView={{ scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              initial={{ scale: 0, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 200 }}
             >
               <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                animate={{ 
+                  rotate: 360,
+                  scale: [1, 1.2, 1]
+                }}
+                transition={{ 
+                  rotate: { duration: 8, repeat: Infinity, ease: 'linear' },
+                  scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                }}
+                className="relative"
               >
-                <Star className="w-8 h-8 text-yellow-400" />
+                <Star className="w-8 h-8 text-yellow-400 drop-shadow-lg" />
+                <motion.div
+                  className="absolute inset-0 w-8 h-8 bg-yellow-400/30 rounded-full blur-md"
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0.6, 0.3] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
               </motion.div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                Explore OrbitX
-              </h2>
-              <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+              <motion.h2 
+                className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent"
+                animate={{
+                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+                }}
+                transition={{ duration: 5, repeat: Infinity }}
+                style={{
+                  backgroundSize: '200% 100%'
+                }}
               >
-                <Sparkles className="w-8 h-8 text-cyan-400" />
+                Explore OrbitX
+              </motion.h2>
+              <motion.div
+                animate={{ 
+                  rotate: -360,
+                  scale: [1, 1.3, 1]
+                }}
+                transition={{ 
+                  rotate: { duration: 8, repeat: Infinity, ease: 'linear' },
+                  scale: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+                }}
+                className="relative"
+              >
+                <Sparkles className="w-8 h-8 text-cyan-400 drop-shadow-lg" />
+                <motion.div
+                  className="absolute inset-0 w-8 h-8 bg-cyan-400/30 rounded-full blur-md"
+                  animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.7, 0.3] }}
+                  transition={{ duration: 2.5, repeat: Infinity }}
+                />
               </motion.div>
             </motion.div>
             
@@ -221,40 +299,19 @@ export default function Home() {
             />
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 px-2 sm:px-0">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10">
             {previews.map((preview, index) => (
               <motion.div 
                 key={preview.title} 
-                className="card-spacing group"
-                initial={{ opacity: 0, y: 50, rotateX: -15 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                transition={{ 
-                  duration: 0.6, 
-                  delay: index * 0.15,
-                  ease: [0.25, 0.46, 0.45, 0.94]
-                }}
-                viewport={{ once: true, margin: "-50px" }}
-                whileHover={{ 
-                  y: -10,
-                  scale: 1.02,
-                  transition: { duration: 0.3 }
-                }}
+                className="group relative"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true, margin: "-100px" }}
               >
-                <div className="relative overflow-hidden rounded-xl">
-                  {/* Hover glow effect */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    animate={{
-                      background: [
-                        'linear-gradient(45deg, rgba(6,182,212,0.2), rgba(59,130,246,0.2))',
-                        'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.2))',
-                        'linear-gradient(225deg, rgba(139,92,246,0.2), rgba(6,182,212,0.2))'
-                      ]
-                    }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  />
-                  <PreviewCard {...preview} index={index} />
-                </div>
+
+                
+                <PreviewCard {...preview} index={index} />
               </motion.div>
             ))}
           </div>
@@ -262,16 +319,46 @@ export default function Home() {
       </section>
 
       {/* Enhanced Domains Section */}
-      <section className="section-spacing py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-gray-800/30 to-gray-900/40 relative">
-        {/* Animated background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 25% 25%, #06b6d4 0%, transparent 50%),
-                             radial-gradient(circle at 75% 75%, #3b82f6 0%, transparent 50%)`
-          }} />
+      <section className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Enhanced Animated Background */}
+        <div className="absolute inset-0 opacity-20">
+          <motion.div 
+            className="absolute inset-0"
+            animate={{
+              background: [
+                'radial-gradient(circle at 25% 25%, #06b6d4 0%, transparent 50%), radial-gradient(circle at 75% 75%, #3b82f6 0%, transparent 50%)',
+                'radial-gradient(circle at 75% 25%, #8b5cf6 0%, transparent 50%), radial-gradient(circle at 25% 75%, #06b6d4 0%, transparent 50%)',
+                'radial-gradient(circle at 50% 50%, #3b82f6 0%, transparent 50%), radial-gradient(circle at 80% 20%, #8b5cf6 0%, transparent 50%)'
+              ]
+            }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Floating geometric shapes */}
+          {Array.from({ length: 6 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className={`absolute w-4 h-4 border border-cyan-400/20 ${
+                i % 2 === 0 ? 'rotate-45' : 'rounded-full'
+              }`}
+              style={{
+                left: `${20 + (i * 15)}%`,
+                top: `${10 + (i * 12)}%`
+              }}
+              animate={{
+                y: [0, -30, 0],
+                rotate: [0, 180, 360],
+                opacity: [0.2, 0.6, 0.2]
+              }}
+              transition={{
+                duration: 8 + i * 2,
+                repeat: Infinity,
+                delay: i * 0.5
+              }}
+            />
+          ))}
         </div>
         
-        <div className="container-responsive max-w-6xl mx-auto relative z-10">
+        <div className="max-w-6xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -313,7 +400,7 @@ export default function Home() {
             </motion.p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 px-2 sm:px-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
             {domains.map((domain, index) => {
               const IconComponent = domain.icon
               return (
@@ -334,54 +421,19 @@ export default function Home() {
                   }}
                   className="group relative"
                 >
-                  <div className="glass-card text-center hover:bg-white/15 transition-all duration-300 min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] xl:min-h-[180px] flex flex-col justify-center p-4 sm:p-6 xl:p-8 relative overflow-hidden">
-                    {/* Animated border */}
-                    <motion.div
-                      className="absolute inset-0 rounded-xl"
-                      style={{
-                        background: 'linear-gradient(45deg, transparent, rgba(6,182,212,0.3), transparent)',
-                        padding: '1px'
-                      }}
-                      animate={{
-                        rotate: [0, 360]
-                      }}
-                      transition={{
-                        duration: 8,
-                        repeat: Infinity,
-                        ease: 'linear'
-                      }}
-                    >
-                      <div className="w-full h-full rounded-xl bg-slate-900/50" />
-                    </motion.div>
+                  <div className="text-center transition-all duration-300 min-h-[80px] sm:min-h-[90px] lg:min-h-[100px] flex flex-col justify-center p-3 sm:p-4 lg:p-5 relative overflow-hidden border border-white/20 rounded-xl backdrop-blur-sm bg-white/5 hover:bg-white/10 hover:border-white/30 hover:shadow-lg hover:shadow-cyan-500/20">
+
                     
-                    {/* Icon with animation */}
-                    <motion.div
-                      className="relative z-10"
-                      whileHover={{ 
-                        rotate: [0, -10, 10, 0],
-                        scale: 1.2
-                      }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <IconComponent className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 xl:h-12 xl:w-12 text-blue-400 mx-auto mb-2 sm:mb-3 lg:mb-4 xl:mb-5 group-hover:text-cyan-300 transition-colors duration-300" />
-                    </motion.div>
+                    {/* Icon */}
+                    <div className="relative z-10">
+                      <IconComponent className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-blue-400 mx-auto mb-2 sm:mb-3 group-hover:text-cyan-300 transition-colors duration-300" />
+                    </div>
                     
-                    <h3 className="text-xs sm:text-sm lg:text-base xl:text-lg font-semibold text-white leading-tight px-1 relative z-10 group-hover:text-cyan-100 transition-colors duration-300">
+                    <h3 className="text-xs sm:text-sm lg:text-base font-semibold text-white leading-tight px-1 relative z-10 group-hover:text-cyan-100 transition-colors duration-300">
                       {domain.name}
                     </h3>
                     
-                    {/* Hover glow effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      animate={{
-                        background: [
-                          'linear-gradient(45deg, rgba(6,182,212,0.1), rgba(59,130,246,0.1))',
-                          'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1))',
-                          'linear-gradient(225deg, rgba(139,92,246,0.1), rgba(6,182,212,0.1))'
-                        ]
-                      }}
-                      transition={{ duration: 4, repeat: Infinity }}
-                    />
+
                   </div>
                 </motion.div>
               )
@@ -390,186 +442,109 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Enhanced Team Members Preview */}
-      <section className="section-spacing py-16 sm:py-20 lg:py-24 relative">
-        {/* Background animation */}
-        <div className="absolute inset-0 overflow-hidden">
-          <motion.div
-            className="absolute top-0 left-0 w-full h-full"
-            style={{
-              background: 'radial-gradient(ellipse at center, rgba(6,182,212,0.1) 0%, transparent 70%)'
-            }}
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.6, 0.3]
-            }}
-            transition={{ duration: 8, repeat: Infinity }}
-          />
-        </div>
-        
-        <div className="container-responsive max-w-7xl mx-auto relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16 lg:mb-20"
-          >
-            <motion.div className="flex items-center justify-center gap-4 mb-6">
-              <motion.div
-                animate={{ 
-                  rotate: [0, 360],
-                  scale: [1, 1.3, 1]
-                }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <Users className="w-10 h-10 text-orange-400" />
-              </motion.div>
-              <h2 className="text-responsive-4xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-                Meet Our Team
-              </h2>
-            </motion.div>
-            
-            <motion.p 
-              className="text-responsive-lg text-gray-300 max-w-2xl mx-auto"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              Passionate individuals driving space exploration forward
-            </motion.p>
-          </motion.div>
 
-          <motion.div 
-            className="text-center relative"
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            {/* Animated counter background */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-3xl blur-3xl"
-              animate={{
-                scale: [1, 1.1, 1],
-                rotate: [0, 5, -5, 0]
-              }}
-              transition={{ duration: 6, repeat: Infinity }}
-            />
-            
-            <div className="relative z-10 p-8">
-              <motion.div 
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 relative"
-                animate={{ 
-                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-                }}
-                transition={{ duration: 3, repeat: Infinity }}
-                style={{
-                  background: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4, #3b82f6)',
-                  backgroundSize: '200% 100%',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}
-              >
-                {/* Animated plus sign */}
-                <motion.span
-                  animate={{ 
-                    rotate: [0, 360],
-                    scale: [1, 1.2, 1]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  {members.length}+
-                </motion.span>
-                
-                {/* Floating particles around number */}
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-2 h-2 bg-cyan-400 rounded-full"
-                    style={{
-                      left: `${20 + (i * 15)}%`,
-                      top: `${30 + ((i % 2) * 40)}%`
-                    }}
-                    animate={{
-                      y: [0, -20, 0],
-                      opacity: [0.4, 1, 0.4],
-                      scale: [0.5, 1, 0.5]
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      delay: i * 0.5
-                    }}
-                  />
-                ))}
-              </motion.div>
-              
-              <motion.p 
-                className="text-base sm:text-lg lg:text-xl xl:text-2xl text-gray-300 mb-8 px-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                Active Team Members
-              </motion.p>
-              
-              <motion.div
-                className="px-4"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link href="/members" className="relative group">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-300"
-                    animate={{
-                      scale: [1, 1.05, 1]
-                    }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                  <div className="relative btn-primary px-6 sm:px-8 xl:px-10 py-3 sm:py-4 xl:py-5 text-base sm:text-lg xl:text-xl touch-target">
-                    Meet the Team
-                  </div>
-                </Link>
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Enhanced Latest Content */}
       {!isLoading && (
         <Suspense fallback={
           <div className="py-20 flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+            <motion.div 
+              className="relative"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+              <div className="w-12 h-12 border-4 border-cyan-400/20 border-t-cyan-400 rounded-full"></div>
+              <motion.div
+                className="absolute inset-0 w-12 h-12 border-4 border-transparent border-r-purple-400 rounded-full"
+                animate={{ rotate: -360 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              />
+            </motion.div>
           </div>
         }>
           <EnhancedLatestContent events={events} projects={projects} blogs={blogs} />
         </Suspense>
       )}
 
-      {/* Join Us Form */}
-      <section className="section-padding container-fluid">
+      {/* Enhanced Join Us Form */}
+      <section className="py-20 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0">
+          <motion.div
+            className="absolute top-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-full blur-3xl"
+            animate={{
+              scale: [1, 1.3, 1],
+              rotate: [0, 180, 360]
+            }}
+            transition={{ duration: 20, repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 left-1/4 w-48 h-48 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"
+            animate={{
+              scale: [1.2, 0.8, 1.2],
+              rotate: [360, 180, 0]
+            }}
+            transition={{ duration: 25, repeat: Infinity }}
+          />
+        </div>
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-center mb-12 sm:mb-16 relative z-10"
           >
-            <h2 className="heading-lg font-bold mb-4 sm:mb-6 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent px-2">
-              Join OrbitX
-            </h2>
-            <p className="text-lg-responsive text-gray-300 max-w-2xl mx-auto px-4">
-              Ready to explore beyond horizons? Apply to join our team and be part of the space revolution.
-            </p>
+            <motion.div className="flex items-center justify-center gap-4 mb-6">
+              <motion.div
+                animate={{ 
+                  rotate: 360,
+                  scale: [1, 1.2, 1]
+                }}
+                transition={{ 
+                  rotate: { duration: 8, repeat: Infinity, ease: 'linear' },
+                  scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                }}
+              >
+                <Rocket className="w-8 h-8 text-orange-400" />
+              </motion.div>
+              <motion.h2 
+                className="heading-lg font-bold bg-gradient-to-r from-orange-400 via-red-400 to-pink-400 bg-clip-text text-transparent"
+                animate={{
+                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+                }}
+                transition={{ duration: 5, repeat: Infinity }}
+                style={{ backgroundSize: '200% 100%' }}
+              >
+                Join OrbitX
+              </motion.h2>
+              <motion.div
+                animate={{ 
+                  rotate: -360,
+                  scale: [1, 1.3, 1]
+                }}
+                transition={{ 
+                  rotate: { duration: 8, repeat: Infinity, ease: 'linear' },
+                  scale: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+                }}
+              >
+                <Star className="w-8 h-8 text-red-400" />
+              </motion.div>
+            </motion.div>
+            <motion.p 
+              className="text-lg-responsive text-gray-300 max-w-2xl mx-auto px-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              Ready to explore beyond horizons? Apply to join our team and be part of the space revolution that will shape the future of humanity.
+            </motion.p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="card-responsive glass-card"
+            className="glass-card p-6 sm:p-8 lg:p-10 shadow-2xl"
           >
             <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div>
@@ -607,14 +582,17 @@ export default function Home() {
                 <label className="block text-sm font-medium text-gray-300 mb-2">Preferred Team *</label>
                 <select
                   {...register('team', { required: 'Team selection is required' })}
-                  className="w-full px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors touch-target"
+                  className="w-full px-3 sm:px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400 transition-colors touch-target appearance-none"
                   style={{
-                    backgroundImage: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em'
                   }}
                 >
-                  <option value="" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)', color: 'white' }}>Select a team</option>
+                  <option value="" className="bg-black text-white">Select a team</option>
                   {domains.map(domain => (
-                    <option key={domain.name} value={domain.name} style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)', color: 'white' }}>{domain.name}</option>
+                    <option key={domain.name} value={domain.name} className="bg-black text-white">{domain.name}</option>
                   ))}
                 </select>
                 {errors.team && <p className="mt-1 text-sm text-red-400">{errors.team.message}</p>}
@@ -657,12 +635,31 @@ export default function Home() {
       </section>
 
       {/* Enhanced Contact Info */}
-      <section className="section-padding container-fluid bg-gradient-to-b from-gray-800/30 to-gray-900/50 relative">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2306b6d4' fill-opacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }} />
+      <section className="section-padding container-fluid relative overflow-hidden">
+        {/* Enhanced Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <motion.div 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2306b6d4' fill-opacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+            }}
+            animate={{
+              backgroundPosition: ['0% 0%', '100% 100%', '0% 0%']
+            }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          />
+          {/* Orbiting elements */}
+          <motion.div
+            className="absolute top-1/4 left-1/4 w-32 h-32 border border-cyan-400/10 rounded-full"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          >
+            <motion.div
+              className="absolute top-0 left-1/2 w-2 h-2 bg-cyan-400/40 rounded-full transform -translate-x-1/2"
+              animate={{ rotate: -360 }}
+              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            />
+          </motion.div>
         </div>
         
         <div className="max-w-6xl mx-auto relative z-10">
@@ -708,7 +705,7 @@ export default function Home() {
                 }}
                 className="group relative"
               >
-                <div className="glass-card p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] flex flex-col justify-center relative overflow-hidden">
+                <div className="p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] flex flex-col justify-center relative overflow-hidden">
                   {/* Animated background */}
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"

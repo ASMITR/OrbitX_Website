@@ -75,7 +75,7 @@ export default function HeroSection() {
         >
           {/* Advanced Logo Section */}
           <motion.div 
-            className="mb-8 sm:mb-12 relative will-change-transform"
+            className="mb-4 sm:mb-6 relative will-change-transform"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
@@ -97,7 +97,7 @@ export default function HeroSection() {
               <img 
                 src="/Logo_without_background.png" 
                 alt="OrbitX Logo Glow" 
-                className="w-auto mx-auto h-40 sm:h-52 md:h-64 lg:h-80 max-w-full"
+                className="w-auto mx-auto h-32 sm:h-40 md:h-48 lg:h-56 max-w-full"
                 loading="eager"
               />
             </motion.div>
@@ -106,7 +106,7 @@ export default function HeroSection() {
             <motion.img 
               src="/Logo_without_background.png" 
               alt="OrbitX Logo" 
-              className="w-auto mx-auto relative z-10 cursor-pointer h-40 sm:h-52 md:h-64 lg:h-80 max-w-full will-change-transform"
+              className="w-auto mx-auto relative z-10 cursor-pointer h-32 sm:h-40 md:h-48 lg:h-56 max-w-full will-change-transform"
               loading="eager"
               whileHover={shouldReduceMotion ? {} : { 
                 scale: 1.05,
@@ -173,10 +173,10 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="mb-8 sm:mb-12 px-2"
+            className="mb-6 sm:mb-8 px-2"
           >
             <motion.h1 
-              className="heading-lg font-bold mb-6 sm:mb-8 will-change-transform"
+              className="heading-lg font-bold mb-4 sm:mb-6 will-change-transform"
               animate={shouldReduceMotion ? {} : {
                 backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
               }}

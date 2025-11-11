@@ -125,46 +125,53 @@ export default function Teams() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
             </div>
           )}
-          <h1 className="heading-responsive font-bold mb-6 sm:mb-8 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-            Our Teams
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+            Our Domains
           </h1>
-          <p className="text-responsive text-gray-300 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
-            Meet the specialized teams that make OrbitX's mission possible. Each team brings unique expertise 
-            and passion to our space exploration endeavors.
+          <p className="text-base sm:text-lg lg:text-xl text-gray-300 max-w-4xl mx-auto px-4 sm:px-0 leading-relaxed">
+            Specialized teams working on cutting-edge space technology
           </p>
         </div>
 
         {/* Teams Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 mb-8 sm:mb-12 lg:mb-16 xl:mb-20">
           {teams.map((team, index) => (
-            <div
+            <motion.div
               key={team.id}
-              className="glass-card cursor-pointer hover:bg-white/20 transition-colors duration-300 group relative overflow-hidden min-h-[280px] sm:min-h-[320px] lg:min-h-[360px] xl:min-h-[400px] flex flex-col"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              whileHover={{ y: -10, scale: 1.02 }}
+              className="cursor-pointer hover:bg-white/5 transition-all duration-300 group relative overflow-hidden min-h-[300px] sm:min-h-[340px] lg:min-h-[380px] xl:min-h-[420px] flex flex-col border border-white/10 rounded-2xl hover:border-white/30"
               onClick={() => setSelectedTeam(team)}
             >
-              {/* Background Gradient Overlay */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${team.color} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}></div>
+              {/* Enhanced Background Gradient Overlay */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${team.color} opacity-10 group-hover:opacity-20 transition-opacity duration-300`}></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
               
               {/* Content */}
               <div className="relative z-10 flex flex-col h-full p-4 sm:p-6 lg:p-8">
                 {/* Header */}
-                <div className="flex items-start justify-between mb-4 sm:mb-6">
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl bg-gradient-to-r ${team.color} flex items-center justify-center shadow-lg`}>
-                    <team.icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-white" />
-                  </div>
+                <div className="flex items-start justify-between mb-6">
+                  <motion.div 
+                    className={`w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-2xl bg-gradient-to-r ${team.color} flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300`}
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    <team.icon className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white" />
+                  </motion.div>
                   <div className="text-right">
-                    <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">{team.members.length}</div>
-                    <div className="text-xs lg:text-sm text-gray-400 uppercase tracking-wide">Members</div>
+                    <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white group-hover:text-cyan-300 transition-colors">{team.members.length}</div>
+                    <div className="text-sm text-gray-400 uppercase tracking-wide font-medium">Members</div>
                   </div>
                 </div>
 
                 {/* Team Name */}
-                <h3 className="text-base sm:text-lg lg:text-xl font-bold text-white mb-3 sm:mb-4 leading-tight group-hover:text-cyan-300 transition-colors">
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-4 leading-tight group-hover:text-cyan-300 transition-colors">
                   {team.name}
                 </h3>
 
                 {/* Description */}
-                <p className="text-gray-300 mb-4 sm:mb-6 flex-grow text-xs sm:text-sm lg:text-base leading-relaxed">
+                <p className="text-gray-300 mb-6 flex-grow text-sm sm:text-base lg:text-lg leading-relaxed group-hover:text-gray-200 transition-colors">
                   {team.shortDescription}
                 </p>
 
@@ -195,17 +202,17 @@ export default function Teams() {
                 )}
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-4 border-t border-white/10 mt-auto">
+                <div className="flex items-center justify-between pt-6 border-t border-white/20 mt-auto">
                   <div className="flex items-center text-cyan-400 group-hover:text-cyan-300 transition-colors">
-                    <UsersIcon className="h-4 w-4 mr-2" />
-                    <span className="text-sm font-medium">View Team</span>
+                    <UsersIcon className="h-5 w-5 mr-2" />
+                    <span className="text-base font-semibold">View Team</span>
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-sm text-gray-400 font-medium">
                     {team.projects.length} Projects
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
