@@ -9,42 +9,80 @@ import { Member } from '@/lib/types'
 interface LeaderboardMember extends Member {
   score: number
   rank: number
+  scoreBreakdown?: {
+    position: number
+    badges: number
+    events: number
+    projects: number
+    skills: number
+    tenure: number
+  }
 }
 
 const BADGE_SCORES = {
+  // Excellence Tier (55-65 pts)
+  'Outstanding Leader': 65,
+  'Visionary': 60,
+  'Pioneer': 55,
+  
+  // Leadership Tier (40-50 pts)
   'Event Organizer': 50,
   'Project Leader': 45,
-  'Active Contributor': 30,
-  'Team Player': 25,
   'Innovation Award': 40,
+  
+  // Expertise Tier (28-35 pts)
   'Excellence Award': 35,
-  'Participation Award': 15,
-  'Newcomer': 10,
+  'Technical Expert': 35,
+  'Research Champion': 35,
   'Mentor': 35,
-  'Technical Expert': 30
+  'Active Contributor': 30,
+  
+  // Collaboration Tier (18-25 pts)
+  'Team Player': 25,
+  'Collaborator': 25,
+  'Rising Star': 20,
+  
+  // Participation Tier (5-15 pts)
+  'Participation Award': 15,
+  'Attendance Award': 12,
+  'Newcomer': 10,
+  
+  // Additional badges
+  'Problem Solver': 30,
+  'Creative Thinker': 25,
+  'Community Builder': 20,
+  'Quick Learner': 15,
+  'Reliable': 15,
+  'Helpful': 12,
+  'Enthusiastic': 10
 }
 
 export default function Leaderboard() {
   const [members, setMembers] = useState<LeaderboardMember[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
+        setError(null)
         const allMembers = await getMembers()
         
         const scoredMembers = allMembers
-          .filter(member => member.approved)
-          .map(member => {
+          .filter((member: Member) => member.approved !== false)
+          .filter((member: Member) => !['President', 'Chairman', 'Secretary', 'Treasurer', 'Co-Treasurer'].includes(member.position))
+          .map((member: Member) => {
             const score = calculateMemberScore(member)
-            return { ...member, score }
+            const scoreBreakdown = getScoreBreakdown(member)
+            return { ...member, score, scoreBreakdown }
           })
-          .sort((a, b) => b.score - a.score)
-          .map((member, index) => ({ ...member, rank: index + 1 }))
+          .sort((a: any, b: any) => b.score - a.score)
+          .map((member: any, index: number) => ({ ...member, rank: index + 1 }))
 
         setMembers(scoredMembers)
       } catch (error) {
         console.error('Error fetching leaderboard:', error)
+        setError('Failed to load leaderboard data. Please try again.')
       } finally {
         setLoading(false)
       }
@@ -54,7 +92,74 @@ export default function Leaderboard() {
   }, [])
 
   const calculateMemberScore = (member: Member): number => {
-    return 0
+    let score = 0
+    
+    // Base score for position
+    const positionScores: { [key: string]: number } = {
+      'President': 100,
+      'Chairman': 90,
+      'Secretary': 80,
+      'Treasurer': 75,
+      'Co-Treasurer': 70,
+      'Team Leader': 60,
+      'Member': 20
+    }
+    
+    score += positionScores[member.position] || 20
+    
+    // Badge scores
+    if (member.badges && member.badges.length > 0) {
+      member.badges.forEach(badge => {
+        score += BADGE_SCORES[badge.name as keyof typeof BADGE_SCORES] || 10
+      })
+    }
+    
+    // Event participation bonus
+    if (member.eventsParticipated && member.eventsParticipated.length > 0) {
+      score += member.eventsParticipated.length * 5
+    }
+    
+    // Project participation bonus
+    if (member.projectsParticipated && member.projectsParticipated.length > 0) {
+      score += member.projectsParticipated.length * 8
+    }
+    
+    // Skills bonus
+    if (member.skills && member.skills.length > 0) {
+      score += Math.min(member.skills.length * 2, 20) // Max 20 points from skills
+    }
+    
+    // Tenure bonus (if member has been around longer)
+    if (member.createdAt) {
+      const joinDate = new Date(member.createdAt)
+      const now = new Date()
+      const monthsActive = Math.floor((now.getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24 * 30))
+      score += Math.min(monthsActive * 2, 24) // Max 24 points for 12+ months
+    }
+    
+    return Math.max(score, 0)
+  }
+
+  const getScoreBreakdown = (member: Member) => {
+    const positionScores: { [key: string]: number } = {
+      'President': 100, 'Chairman': 90, 'Secretary': 80, 'Treasurer': 75,
+      'Co-Treasurer': 70, 'Team Leader': 60, 'Member': 20
+    }
+    
+    const position = positionScores[member.position] || 20
+    const badges = member.badges?.reduce((sum, badge) => 
+      sum + (BADGE_SCORES[badge.name as keyof typeof BADGE_SCORES] || 10), 0) || 0
+    const events = (member.eventsParticipated?.length || 0) * 5
+    const projects = (member.projectsParticipated?.length || 0) * 8
+    const skills = Math.min((member.skills?.length || 0) * 2, 20)
+    
+    let tenure = 0
+    if (member.createdAt) {
+      const monthsActive = Math.floor((Date.now() - new Date(member.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 30))
+      tenure = Math.min(monthsActive * 2, 24)
+    }
+    
+    return { position, badges, events, projects, skills, tenure }
   }
 
   const getRankIcon = (rank: number) => {
@@ -69,7 +174,52 @@ export default function Leaderboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+          <p className="text-gray-300">Loading leaderboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-xl font-bold text-white mb-4">Error Loading Leaderboard</h3>
+          <p className="text-gray-400 mb-8 max-w-md">{error}</p>
+          <button 
+            onClick={() => {
+              setError(null)
+              setLoading(true)
+              window.location.reload()
+            }}
+            className="px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (members.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🏆</div>
+          <h3 className="text-xl font-bold text-white mb-4">No Members Found</h3>
+          <p className="text-gray-400 mb-8 max-w-md">
+            No approved members found to display on the leaderboard.
+          </p>
+          <a 
+            href="/members"
+            className="px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+          >
+            View All Members
+          </a>
+        </div>
       </div>
     )
   }
@@ -280,7 +430,7 @@ export default function Leaderboard() {
                     )}
                   </div>
 
-                  <div className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold text-sm">
+                  <div className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 text-white font-semibold text-sm cursor-help" title={`Position: ${member.scoreBreakdown?.position || 0} | Badges: ${member.scoreBreakdown?.badges || 0} | Events: ${member.scoreBreakdown?.events || 0} | Projects: ${member.scoreBreakdown?.projects || 0}`}>
                     {member.score} pts
                   </div>
                 </div>
@@ -297,171 +447,17 @@ export default function Leaderboard() {
         >
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <Award className="w-5 h-5 text-yellow-400" />
-            Badge System & How to Earn Points
+            How Points Are Calculated
           </h3>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Excellence Tier */}
-            <div className="bg-gradient-to-br from-red-500/10 to-pink-500/10 border border-red-500/20 rounded-lg p-4">
-              <h4 className="font-bold text-red-300 mb-3 flex items-center gap-2">
-                🏆 Excellence Tier (55-65 pts)
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Outstanding Leader</span>
-                  <span className="text-red-300 font-medium">65 pts</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-2">Lead multiple successful projects, mentor 5+ members</p>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Visionary</span>
-                  <span className="text-red-300 font-medium">60 pts</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-2">Propose innovative ideas that get implemented</p>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Pioneer</span>
-                  <span className="text-red-300 font-medium">55 pts</span>
-                </div>
-                <p className="text-xs text-gray-400">First to explore new technologies or methods</p>
-              </div>
-            </div>
-
-            {/* Leadership Tier */}
-            <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg p-4">
-              <h4 className="font-bold text-blue-300 mb-3 flex items-center gap-2">
-                🚀 Leadership Tier (40-50 pts)
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Event Organizer</span>
-                  <span className="text-blue-300 font-medium">50 pts</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-2">Successfully organize and execute events</p>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Project Leader</span>
-                  <span className="text-blue-300 font-medium">45 pts</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-2">Lead project teams to completion</p>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Innovation Award</span>
-                  <span className="text-blue-300 font-medium">40 pts</span>
-                </div>
-                <p className="text-xs text-gray-400">Create breakthrough solutions or concepts</p>
-              </div>
-            </div>
-
-            {/* Expertise Tier */}
-            <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-lg p-4">
-              <h4 className="font-bold text-green-300 mb-3 flex items-center gap-2">
-                🎓 Expertise Tier (28-35 pts)
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Excellence Award</span>
-                  <span className="text-green-300 font-medium">35 pts</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-2">Consistently deliver high-quality work</p>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Technical Expert</span>
-                  <span className="text-green-300 font-medium">35 pts</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-2">Master technical skills, help others learn</p>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Research Champion</span>
-                  <span className="text-green-300 font-medium">35 pts</span>
-                </div>
-                <p className="text-xs text-gray-400">Conduct valuable research, publish findings</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Collaboration & Participation Tiers */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <div className="bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border border-cyan-500/20 rounded-lg p-4">
-              <h4 className="font-bold text-cyan-300 mb-3 flex items-center gap-2">
-                🤝 Collaboration Tier (18-25 pts)
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Team Player</span>
-                  <span className="text-cyan-300 font-medium">25 pts</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-1">Work well with others, support team goals</p>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Collaborator</span>
-                  <span className="text-cyan-300 font-medium">25 pts</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-1">Actively collaborate across teams</p>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Rising Star</span>
-                  <span className="text-cyan-300 font-medium">20 pts</span>
-                </div>
-                <p className="text-xs text-gray-400">Show exceptional potential and growth</p>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20 rounded-lg p-4">
-              <h4 className="font-bold text-orange-300 mb-3 flex items-center gap-2">
-                🎆 Participation Tier (5-15 pts)
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Participation Award</span>
-                  <span className="text-orange-300 font-medium">15 pts</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-1">Actively participate in events and activities</p>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Attendance Award</span>
-                  <span className="text-orange-300 font-medium">12 pts</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-1">Maintain excellent attendance record</p>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Newcomer</span>
-                  <span className="text-orange-300 font-medium">10 pts</span>
-                </div>
-                <p className="text-xs text-gray-400">Welcome badge for new members</p>
-              </div>
-            </div>
-          </div>
-
-          {/* How to Earn Points */}
-          <div className="mt-6 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4">
-            <h4 className="font-bold text-purple-300 mb-3 flex items-center gap-2">
-              ✨ How to Earn Badges
-            </h4>
-            <div className="grid grid-cols-1 gap-4 text-sm text-gray-300">
-              <div>
-                <h5 className="font-semibold text-white mb-2">Active Participation:</h5>
-                <ul className="space-y-1 text-xs">
-                  <li>• Join events and workshops regularly</li>
-                  <li>• Contribute to project discussions</li>
-                  <li>• Share knowledge with team members</li>
-                  <li>• Attend meetings consistently</li>
-                </ul>
-              </div>
-              <div>
-                <h5 className="font-semibold text-white mb-2">Leadership & Innovation:</h5>
-                <ul className="space-y-1 text-xs">
-                  <li>• Propose and lead new initiatives</li>
-                  <li>• Mentor junior members</li>
-                  <li>• Solve complex technical challenges</li>
-                  <li>• Organize successful events</li>
-                </ul>
-              </div>
-            </div>
-            <div className="mt-3 p-3 bg-blue-500/10 rounded-lg">
-              <p className="text-xs text-blue-300">
-                💡 <strong>Pro Tip:</strong> Badges are awarded by admins based on your contributions and achievements. Focus on consistent participation and helping others to earn recognition!
-              </p>
+          <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4">
+            <h4 className="font-bold text-purple-300 mb-3">Scoring System</h4>
+            <div className="text-sm text-gray-300 space-y-2">
+              <p><strong>Position:</strong> President (100), Chairman (90), Secretary (80), Treasurer (75), Team Leader (60), Member (20)</p>
+              <p><strong>Badges:</strong> Each badge adds 10-65 points based on achievement level</p>
+              <p><strong>Participation:</strong> 5 points per event, 8 points per project</p>
+              <p><strong>Skills:</strong> 2 points per skill (max 20 points)</p>
+              <p><strong>Tenure:</strong> 2 points per month active (max 24 points)</p>
             </div>
           </div>
         </motion.div>

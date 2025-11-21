@@ -73,14 +73,13 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
       </div>
     )
   }
 
   if (!user) {
-    router.push('/admin')
     return null
   }
 
@@ -88,7 +87,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     try {
       await signOut(auth)
       toast.success('Logged out successfully')
-      router.push('/admin')
+      router.push('/auth')
     } catch (error) {
       console.error('Logout error:', error)
       toast.error('Failed to logout')
@@ -228,6 +227,22 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             </div>
           </div>
         </header>
+
+        {/* User Profile & Logout */}
+        <div className="fixed top-4 right-4 z-50">
+          <div className="flex items-center space-x-3">
+            <div className="text-right hidden sm:block">
+              <p className="text-white font-medium">{adminName || 'Admin'}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="p-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-400 hover:text-red-300 transition-colors"
+              title="Logout"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
 
         <main className="flex-1 p-4 sm:p-6 relative z-10 overflow-auto">
           <div className="max-w-7xl mx-auto h-full">

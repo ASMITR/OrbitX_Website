@@ -9,6 +9,7 @@ import { auth } from '@/lib/firebase'
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import SpaceBackground from '@/components/SpaceBackground'
+import { initializeOwner } from '@/lib/roles'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -27,9 +28,21 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      const user = userCredential.user
+      
       toast.success('Login successful!')
-      router.push('/admin/dashboard')
+      
+      // Initialize owner if needed and check user role
+      await initializeOwner(user.email!)
+      const { getUserRoleFromDB } = await import('@/lib/roles')
+      const role = await getUserRoleFromDB(user)
+      
+      if (role === 'owner' || role === 'admin') {
+        router.push('/admin/dashboard')
+      } else {
+        router.push('/member')
+      }
     } catch (error: any) {
       console.error('Login error:', error)
       const errorMessage = error.code === 'auth/user-not-found' 
@@ -49,9 +62,21 @@ export default function Login() {
     setIsLoading(true)
     try {
       const provider = new GoogleAuthProvider()
-      await signInWithPopup(auth, provider)
+      const userCredential = await signInWithPopup(auth, provider)
+      const user = userCredential.user
+      
       toast.success('Google login successful!')
-      router.push('/admin/dashboard')
+      
+      // Initialize owner if needed and check user role
+      await initializeOwner(user.email!)
+      const { getUserRoleFromDB } = await import('@/lib/roles')
+      const role = await getUserRoleFromDB(user)
+      
+      if (role === 'owner' || role === 'admin') {
+        router.push('/admin/dashboard')
+      } else {
+        router.push('/member')
+      }
     } catch (error: any) {
       toast.error(error.message || 'Google login failed')
     } finally {

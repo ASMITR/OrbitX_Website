@@ -223,7 +223,10 @@ export default function MemberPanel() {
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">Access Denied</h1>
-          <p className="text-gray-400">Please sign in to access the member panel.</p>
+          <p className="text-gray-400 mb-4">Please sign in to access the member panel.</p>
+          <a href="/auth" className="text-blue-400 hover:text-blue-300 underline">
+            Go to Login
+          </a>
         </div>
       </div>
     )
@@ -311,7 +314,7 @@ export default function MemberPanel() {
           ))}
           
           <motion.h1 
-            className="heading-xl font-bold mb-4 sm:mb-6 text-center break-words"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 text-center break-words"
             animate={{
               backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
             }}
@@ -332,7 +335,7 @@ export default function MemberPanel() {
           </motion.h1>
           
           <motion.p 
-            className="text-lg-responsive text-gray-300 max-w-4xl mx-auto leading-relaxed mb-6 sm:mb-8 text-center px-2"
+            className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-6 sm:mb-8 text-center px-2"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.4 }}
@@ -809,34 +812,74 @@ export default function MemberPanel() {
           </motion.div>
         )}
 
-        {/* Contact & Stats Section */}
+        {/* Enhanced Stats Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8"
         >
-          {/* Stats Cards */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-6 text-center">
-            <Award className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-400 mx-auto mb-1 sm:mb-2" />
-            <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white mb-1 break-words">Badges</h3>
-            <p className="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-400">{member?.badges?.length || 0}</p>
-          </div>
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 text-center">
-            <Calendar className="h-8 w-8 text-green-400 mx-auto mb-2" />
-            <h3 className="text-lg font-bold text-white mb-1">Events</h3>
-            <p className="text-2xl font-bold text-green-400">{member?.eventsParticipated?.length || 0}</p>
-          </div>
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 text-center">
-            <Briefcase className="h-8 w-8 text-purple-400 mx-auto mb-2" />
-            <h3 className="text-lg font-bold text-white mb-1">Projects</h3>
-            <p className="text-2xl font-bold text-purple-400">{member?.projectsParticipated?.length || 0}</p>
-          </div>
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 text-center">
-            <User className="h-8 w-8 text-orange-400 mx-auto mb-2" />
-            <h3 className="text-lg font-bold text-white mb-1">Skills</h3>
-            <p className="text-2xl font-bold text-orange-400">{member?.skills?.length || 0}</p>
-          </div>
+          {[
+            { icon: Award, label: 'Badges', value: member?.badges?.length || 0, color: 'yellow', gradient: 'from-yellow-500 to-amber-500' },
+            { icon: Calendar, label: 'Events', value: member?.eventsParticipated?.length || 0, color: 'green', gradient: 'from-green-500 to-emerald-500' },
+            { icon: Briefcase, label: 'Projects', value: member?.projectsParticipated?.length || 0, color: 'purple', gradient: 'from-purple-500 to-violet-500' },
+            { icon: User, label: 'Skills', value: member?.skills?.length || 0, color: 'orange', gradient: 'from-orange-500 to-red-500' }
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 + index * 0.1 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative group"
+            >
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-3 sm:p-4 lg:p-6 text-center relative overflow-hidden">
+                {/* Animated background */}
+                <motion.div
+                  className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                />
+                
+                {/* Floating particles */}
+                <motion.div
+                  className={`absolute top-2 right-2 w-1 h-1 bg-${stat.color}-400 rounded-full opacity-60`}
+                  animate={{ 
+                    y: [0, -10, 0],
+                    opacity: [0.6, 1, 0.6]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
+                />
+                
+                <motion.div
+                  whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <stat.icon className={`h-6 w-6 sm:h-8 sm:w-8 text-${stat.color}-400 mx-auto mb-1 sm:mb-2 relative z-10`} />
+                </motion.div>
+                
+                <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white mb-1 break-words relative z-10">{stat.label}</h3>
+                
+                <motion.p 
+                  className={`text-lg sm:text-xl lg:text-2xl font-bold text-${stat.color}-400 relative z-10`}
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
+                >
+                  {stat.value}
+                </motion.p>
+                
+                {/* Progress indicator */}
+                <div className="mt-2 w-full bg-white/10 rounded-full h-1 relative z-10">
+                  <motion.div
+                    className={`h-1 bg-gradient-to-r ${stat.gradient} rounded-full`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min((stat.value / 10) * 100, 100)}%` }}
+                    transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </motion.div>
 
         {/* Skills Section */}
@@ -916,72 +959,332 @@ export default function MemberPanel() {
           )}
         </motion.div>
 
-        {/* Badges Section */}
+        {/* Enhanced Badges Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 mb-8"
+          className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden"
         >
-          <div className="flex items-center mb-6">
-            <Award className="h-6 w-6 text-yellow-400 mr-3" />
-            <h3 className="text-xl font-bold text-white">Achievements & Badges</h3>
+          {/* Animated background elements */}
+          <motion.div
+            className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-full blur-2xl"
+            animate={{ rotate: 360, scale: [1, 1.2, 1] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          />
+          
+          <div className="flex items-center justify-between mb-6 relative z-10">
+            <div className="flex items-center">
+              <motion.div
+                whileHover={{ rotate: [0, -15, 15, 0] }}
+                transition={{ duration: 0.5 }}
+              >
+                <Award className="h-6 w-6 text-yellow-400 mr-3" />
+              </motion.div>
+              <h3 className="text-xl font-bold text-white">Achievements & Badges</h3>
+            </div>
+            <div className="text-sm text-gray-400">
+              {member?.badges?.length || 0} earned
+            </div>
           </div>
-          <div className="flex flex-wrap gap-3">
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
             {(member?.badges || []).map((badge, index) => (
-              <div key={index} className="flex items-center gap-2 px-4 py-2 bg-yellow-500/20 text-yellow-300 rounded-lg border border-yellow-500/30">
-                <Award className="h-4 w-4" />
-                <span className="font-medium">{badge.name}</span>
-              </div>
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.05, y: -3 }}
+                className="group relative"
+              >
+                <div className="bg-gradient-to-br from-yellow-500/20 to-amber-500/20 border border-yellow-500/30 rounded-xl p-4 relative overflow-hidden">
+                  {/* Shimmer effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100"
+                    animate={{ x: ['-100%', '100%'] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
+                  
+                  <div className="flex items-center gap-3 relative z-10">
+                    <motion.div
+                      animate={{ rotate: [0, 360] }}
+                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                      className="flex-shrink-0"
+                    >
+                      <Award className="h-8 w-8 text-yellow-400" />
+                    </motion.div>
+                    <div>
+                      <h4 className="font-semibold text-yellow-300 text-sm">{badge.name}</h4>
+                      <p className="text-xs text-yellow-200/80">{badge.description || 'Achievement unlocked!'}</p>
+                      <p className="text-xs text-gray-400 mt-1">Recently earned</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             ))}
+            
+            {/* Empty state with motivation */}
             {(!member?.badges || member?.badges.length === 0) && (
-              <p className="text-gray-400">No badges earned yet. Participate in events and projects to earn badges!</p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="col-span-full text-center py-12"
+              >
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="mb-4"
+                >
+                  <Award className="h-16 w-16 text-gray-500 mx-auto" />
+                </motion.div>
+                <h4 className="text-lg font-semibold text-gray-300 mb-2">No badges earned yet</h4>
+                <p className="text-gray-400 mb-4">Participate in events and projects to earn your first badge!</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {['Event Participant', 'Project Contributor', 'Skill Master', 'Team Player'].map((badge, index) => (
+                    <motion.div
+                      key={badge}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 0.5, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="px-3 py-1 bg-gray-600/20 text-gray-500 rounded-full text-xs border border-gray-600/30"
+                    >
+                      {badge}
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
             )}
           </div>
         </motion.div>
 
-        {/* Activity Section */}
+        {/* Enhanced Activity Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8"
         >
           {/* Events Participated */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8">
-            <div className="flex items-center mb-6">
-              <Calendar className="h-6 w-6 text-green-400 mr-3" />
-              <h3 className="text-xl font-bold text-white">Events Participated</h3>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 sm:p-8 relative overflow-hidden group"
+          >
+            {/* Animated background */}
+            <motion.div
+              className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-full blur-xl"
+              animate={{ scale: [1, 1.3, 1], rotate: [0, 180, 360] }}
+              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+            />
+            
+            <div className="flex items-center justify-between mb-6 relative z-10">
+              <div className="flex items-center">
+                <motion.div
+                  whileHover={{ rotate: [0, -10, 10, 0] }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Calendar className="h-6 w-6 text-green-400 mr-3" />
+                </motion.div>
+                <h3 className="text-xl font-bold text-white">Events Participated</h3>
+              </div>
+              <div className="text-sm text-gray-400">
+                {member?.eventsParticipated?.length || 0} events
+              </div>
             </div>
-            <div className="space-y-3">
+            
+            <div className="space-y-3 relative z-10">
               {(member?.eventsParticipated || []).slice(0, 5).map((eventId, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                  <Calendar className="h-4 w-4 text-green-400" />
-                  <span className="text-green-300">Event #{eventId}</span>
-                </div>
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ x: 5, scale: 1.02 }}
+                  className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20 hover:bg-green-500/20 transition-all duration-300 cursor-pointer group/item"
+                >
+                  <motion.div
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Calendar className="h-4 w-4 text-green-400" />
+                  </motion.div>
+                  <div className="flex-1">
+                    <span className="text-green-300 font-medium">Event #{eventId}</span>
+                    <p className="text-xs text-green-200/60">Participated successfully</p>
+                  </div>
+                  <motion.div
+                    className="opacity-0 group-hover/item:opacity-100 transition-opacity"
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    <span className="text-green-400">→</span>
+                  </motion.div>
+                </motion.div>
               ))}
+              
               {(!member?.eventsParticipated || member?.eventsParticipated.length === 0) && (
-                <p className="text-gray-400">No events participated yet. Join upcoming events!</p>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-8"
+                >
+                  <motion.div
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Calendar className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+                  </motion.div>
+                  <p className="text-gray-400 mb-2">No events participated yet</p>
+                  <p className="text-sm text-gray-500">Join upcoming events to get started!</p>
+                </motion.div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Projects Participated */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8">
-            <div className="flex items-center mb-6">
-              <Briefcase className="h-6 w-6 text-purple-400 mr-3" />
-              <h3 className="text-xl font-bold text-white">Projects Participated</h3>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 sm:p-8 relative overflow-hidden group"
+          >
+            {/* Animated background */}
+            <motion.div
+              className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-500/10 to-violet-500/10 rounded-full blur-xl"
+              animate={{ scale: [1, 1.3, 1], rotate: [360, 180, 0] }}
+              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+            />
+            
+            <div className="flex items-center justify-between mb-6 relative z-10">
+              <div className="flex items-center">
+                <motion.div
+                  whileHover={{ rotate: [0, -10, 10, 0] }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Briefcase className="h-6 w-6 text-purple-400 mr-3" />
+                </motion.div>
+                <h3 className="text-xl font-bold text-white">Projects Participated</h3>
+              </div>
+              <div className="text-sm text-gray-400">
+                {member?.projectsParticipated?.length || 0} projects
+              </div>
             </div>
-            <div className="space-y-3">
+            
+            <div className="space-y-3 relative z-10">
               {(member?.projectsParticipated || []).slice(0, 5).map((projectId, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                  <Briefcase className="h-4 w-4 text-purple-400" />
-                  <span className="text-purple-300">Project #{projectId}</span>
-                </div>
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ x: 5, scale: 1.02 }}
+                  className="flex items-center gap-3 p-3 bg-purple-500/10 rounded-lg border border-purple-500/20 hover:bg-purple-500/20 transition-all duration-300 cursor-pointer group/item"
+                >
+                  <motion.div
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Briefcase className="h-4 w-4 text-purple-400" />
+                  </motion.div>
+                  <div className="flex-1">
+                    <span className="text-purple-300 font-medium">Project #{projectId}</span>
+                    <p className="text-xs text-purple-200/60">Active contributor</p>
+                  </div>
+                  <motion.div
+                    className="opacity-0 group-hover/item:opacity-100 transition-opacity"
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    <span className="text-purple-400">→</span>
+                  </motion.div>
+                </motion.div>
               ))}
+              
               {(!member?.projectsParticipated || member?.projectsParticipated.length === 0) && (
-                <p className="text-gray-400">No projects participated yet. Join exciting projects!</p>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-8"
+                >
+                  <motion.div
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                  >
+                    <Briefcase className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+                  </motion.div>
+                  <p className="text-gray-400 mb-2">No projects participated yet</p>
+                  <p className="text-sm text-gray-500">Join exciting projects to showcase your skills!</p>
+                </motion.div>
               )}
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Footer with OrbitX Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-white/10 rounded-2xl p-6 sm:p-8 text-center relative overflow-hidden"
+        >
+          {/* Animated background elements */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5"
+            animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          />
+          
+          <div className="relative z-10">
+            <motion.h3
+              className="text-2xl font-bold text-white mb-4"
+              animate={{ 
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              style={{
+                background: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6)',
+                backgroundSize: '200% 100%',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
+            >
+              OrbitX
+            </motion.h3>
+            
+            <p className="text-gray-300 mb-4 max-w-2xl mx-auto">
+              Exploring beyond horizons through innovation, collaboration, and space technology. 
+              Join us in our mission to reach for the stars and unlock the mysteries of the cosmos.
+            </p>
+            
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-400 mb-6">
+              <MapPin className="h-4 w-4" />
+              <span>ZCOER, Pune, Maharashtra</span>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
+              {[
+                { label: 'Home', href: '/' },
+                { label: 'About', href: '/about' },
+                { label: 'Teams', href: '/teams' },
+                { label: 'Projects', href: '/projects' },
+                { label: 'Events', href: '/events' },
+                { label: 'Contact', href: '/contact' }
+              ].map((link, index) => (
+                <motion.a
+                  key={link.label}
+                  href={link.href}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  className="text-gray-400 hover:text-white transition-colors duration-300 p-2 rounded-lg hover:bg-white/5"
+                >
+                  {link.label}
+                </motion.a>
+              ))}
             </div>
           </div>
         </motion.div>

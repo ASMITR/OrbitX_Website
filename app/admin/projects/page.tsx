@@ -86,7 +86,7 @@ export default function AdminProjects() {
                   </h3>
                   <div className="flex items-center text-gray-400 text-sm">
                     <FolderOpen className="h-4 w-4 mr-2 text-purple-400 flex-shrink-0" />
-                    <span className="truncate">{project.contributors.length} teams</span>
+                    <span className="truncate">{project.contributors?.length || 0} teams</span>
                   </div>
                 </div>
               </div>

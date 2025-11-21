@@ -231,7 +231,7 @@ export default function Projects() {
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center text-gray-400 text-sm">
                     <Users className="h-4 w-4 mr-2 text-blue-400 flex-shrink-0" />
-                    <span>{project.contributors.length} teams</span>
+                    <span className="truncate">{project.contributors?.length || 0} teams</span>
                   </div>
                   <div className="flex items-center text-gray-400 text-sm">
                     <Calendar className="h-4 w-4 mr-2 text-green-400 flex-shrink-0" />

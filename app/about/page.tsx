@@ -24,8 +24,8 @@ export default function About() {
   useEffect(() => {
     if (!loading && realStats) {
       const animateToTarget = () => {
-        const duration = 800
-        const steps = 30
+        const duration = 400
+        const steps = 15
         const stepDuration = duration / steps
         
         let currentStep = 0
@@ -48,7 +48,7 @@ export default function About() {
         }, stepDuration)
       }
       
-      const timer = setTimeout(animateToTarget, 300)
+      const timer = setTimeout(animateToTarget, 100)
       return () => clearTimeout(timer)
     }
   }, [realStats, loading])
@@ -101,9 +101,9 @@ export default function About() {
               opacity: [0, 1, 0]
             }}
             transition={{
-              duration: 10 + i * 2,
+              duration: 5 + i,
               repeat: Infinity,
-              delay: i * 0.5
+              delay: i * 0.2
             }}
             style={{
               left: `${Math.random() * 100}%`,
@@ -117,7 +117,7 @@ export default function About() {
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.3 }}
           className="text-center mb-12 sm:mb-16 lg:mb-20 relative"
         >
           <motion.div
@@ -131,7 +131,7 @@ export default function About() {
           <motion.h1 
             className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
             animate={{ backgroundPosition: ['0%', '100%'] }}
-            transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse' }}
+            transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
           >
             About OrbitX
           </motion.h1>
@@ -140,7 +140,7 @@ export default function About() {
             className="text-base sm:text-lg lg:text-xl xl:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
           >
             OrbitX is a dynamic student organization dedicated to exploring the frontiers of space technology, 
             fostering innovation, and building a community of passionate learners and creators.
@@ -150,7 +150,7 @@ export default function About() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 0.8 }}
+            transition={{ delay: 0.3, duration: 0.3 }}
             className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto"
           >
             <div className="text-center p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-white/10 backdrop-blur-sm">
@@ -297,8 +297,8 @@ export default function About() {
                   className={`absolute inset-0 bg-gradient-to-br ${value.color}/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
                 />
                 <motion.div
-                  whileHover={{ rotate: 360, scale: 1.2 }}
-                  transition={{ duration: 0.6 }}
+                  whileHover={{ rotate: 180, scale: 1.1 }}
+                  transition={{ duration: 0.3 }}
                   className="relative z-10"
                 >
                   <value.icon className={`h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 bg-gradient-to-r ${value.color} bg-clip-text text-transparent mx-auto mb-3 sm:mb-4`} />
@@ -332,7 +332,7 @@ export default function About() {
               >
                 <motion.div
                   animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: index * 0.5 }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: index * 0.3 }}
                 >
                   <achievement.icon className="h-8 w-8 sm:h-10 sm:w-10 text-yellow-400 mx-auto mb-2 sm:mb-3" />
                 </motion.div>

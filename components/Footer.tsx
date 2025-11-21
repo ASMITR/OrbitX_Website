@@ -3,8 +3,16 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Rocket, Instagram, Linkedin, Youtube, Mail, MapPin, Star, Sparkles, Globe, Zap } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { getSiteSettings, SiteSettings } from '@/lib/settings'
 
 export default function Footer() {
+  const [settings, setSettings] = useState<SiteSettings | null>(null)
+
+  useEffect(() => {
+    getSiteSettings().then(setSettings)
+  }, [])
+
   const quickLinks = [
     { name: 'Home', href: '/' },
     { name: 'About', href: '/about' },
@@ -15,10 +23,10 @@ export default function Footer() {
   ]
 
   const socialLinks = [
-    { name: 'Instagram', href: 'https://instagram.com/orbitx_zcoer', icon: Instagram, color: 'hover:text-pink-400' },
-    { name: 'LinkedIn', href: '#', icon: Linkedin, color: 'hover:text-blue-400' },
-    { name: 'YouTube', href: '#', icon: Youtube, color: 'hover:text-red-400' }
-  ]
+    { name: 'Instagram', href: settings?.socialLinks?.instagram || 'https://instagram.com/orbitx_zcoer', icon: Instagram, color: 'hover:text-pink-400' },
+    { name: 'LinkedIn', href: settings?.socialLinks?.linkedin || 'https://linkedin.com/company/orbitx', icon: Linkedin, color: 'hover:text-blue-400' },
+    { name: 'YouTube', href: settings?.socialLinks?.youtube || 'https://youtube.com/@orbitx', icon: Youtube, color: 'hover:text-red-400' }
+  ].filter(link => link.href && link.href.trim() !== '')
 
   return (
     <footer className="relative bg-gradient-to-b from-gray-900/60 via-slate-900/70 to-black/80 border-t border-white/20 mt-20 overflow-hidden">
@@ -132,7 +140,7 @@ export default function Footer() {
               >
                 <MapPin className="h-6 w-6 text-purple-400 group-hover:text-purple-300" />
               </motion.div>
-              <span className="group-hover:text-white transition-colors">ZCOER, Pune, Maharashtra</span>
+              <span className="group-hover:text-white transition-colors">{settings?.location || 'ZCOER, Pune, Maharashtra'}</span>
             </motion.div>
           </motion.div>
 
@@ -221,7 +229,7 @@ export default function Footer() {
               >
                 <Mail className="h-6 w-6 text-blue-400 group-hover:text-blue-300" />
               </motion.div>
-              <span className="group-hover:text-white transition-colors">orbitx@zcoer.edu.in</span>
+              <span className="group-hover:text-white transition-colors">{settings?.contactEmail || 'Orbitx@zealeducation.com'}</span>
             </motion.div>
           </motion.div>
         </div>
@@ -239,7 +247,7 @@ export default function Footer() {
               whileHover={{ scale: 1.02 }}
             >
               <Sparkles className="h-4 w-4 text-yellow-400" />
-              © 2025 OrbitX | Developed with ❤️ by OrbitX Tech Team
+              © 2025 OrbitX | Developed with @Asmit Rajaramkar by OrbitX Team
             </motion.p>
             
             <motion.div 

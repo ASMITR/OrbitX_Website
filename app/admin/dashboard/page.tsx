@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation'
 import { Event, Project, Member, ContactMessage } from '@/lib/types'
 
 export default function AdminDashboard() {
-  const { user, loading } = useAuth()
+  const { user, loading, userRole } = useAuth()
   const router = useRouter()
   const [isOwnerUser, setIsOwnerUser] = useState(false)
   const [stats, setStats] = useState({
@@ -30,25 +30,10 @@ export default function AdminDashboard() {
 
 
   useEffect(() => {
-    const checkUserRole = async () => {
-      if (user) {
-        const ownerStatus = await isOwnerDB(user)
-        const adminStatus = await isAdminDB(user)
-        
-        setIsOwnerUser(ownerStatus)
-        
-        if (!adminStatus) {
-          router.push('/member')
-        }
-      } else {
-        router.push('/auth')
-      }
+    if (userRole === 'owner') {
+      setIsOwnerUser(true)
     }
-    
-    if (!loading) {
-      checkUserRole()
-    }
-  }, [user, loading, router])
+  }, [userRole])
 
 
 
@@ -127,11 +112,6 @@ export default function AdminDashboard() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
       </div>
     )
-  }
-
-  if (!user) {
-    router.push('/auth')
-    return null
   }
 
   const statCards = [

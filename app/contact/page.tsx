@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { Mail, Phone, MapPin, Send, Instagram, Linkedin, Youtube } from 'lucide-react'
 import { addContactMessage } from '@/lib/db'
+import { getSiteSettings, SiteSettings } from '@/lib/settings'
 
 interface ContactForm {
   name: string
@@ -15,7 +16,12 @@ interface ContactForm {
 
 export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [settings, setSettings] = useState<SiteSettings | null>(null)
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ContactForm>()
+
+  useEffect(() => {
+    getSiteSettings().then(setSettings)
+  }, [])
 
   const onSubmit = async (data: ContactForm) => {
     setIsSubmitting(true)
@@ -38,19 +44,19 @@ export default function Contact() {
     {
       icon: Mail,
       title: 'Email',
-      details: 'orbitx@zcoer.edu.in',
-      link: 'mailto:orbitx@zcoer.edu.in'
+      details: settings?.contactEmail || 'Orbitx@zealeducation.com',
+      link: `mailto:${settings?.contactEmail || 'Orbitx@zealeducation.com'}`
     },
     {
       icon: Phone,
       title: 'Phone',
-      details: '+91 98765 43210',
-      link: 'tel:+919876543210'
+      details: settings?.contactPhone || '+91 8767576542',
+      link: `tel:${settings?.contactPhone?.replace(/\s/g, '') || '+918767576542'}`
     },
     {
       icon: MapPin,
       title: 'Location',
-      details: 'ZCOER, Pune, Maharashtra, India',
+      details: settings?.location || 'ZCOER, Pune, Maharashtra, India',
       link: 'https://maps.google.com'
     }
   ]
@@ -59,22 +65,22 @@ export default function Contact() {
     {
       name: 'Instagram',
       icon: Instagram,
-      href: '#',
+      href: settings?.socialLinks.instagram || 'https://instagram.com/orbitx_zcoer',
       color: 'hover:text-pink-400'
     },
     {
       name: 'LinkedIn',
       icon: Linkedin,
-      href: '#',
+      href: settings?.socialLinks.linkedin || 'https://linkedin.com/company/orbitx',
       color: 'hover:text-blue-400'
     },
     {
       name: 'YouTube',
       icon: Youtube,
-      href: '#',
+      href: settings?.socialLinks.youtube || 'https://youtube.com/@orbitx',
       color: 'hover:text-red-400'
     }
-  ]
+  ].filter(link => link.href)
 
   return (
     <div className="pt-16 sm:pt-20 px-3 sm:px-4 lg:px-6 xl:px-8 min-h-screen">

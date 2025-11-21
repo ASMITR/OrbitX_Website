@@ -30,24 +30,29 @@ export const initializeOwner = async (ownerEmail: string) => {
 export const getUserRoleFromDB = async (user: User | null): Promise<'owner' | 'admin' | 'member'> => {
   if (!user?.email) return 'member'
   
+  const OWNER_EMAIL = 'asmitrajaramkar.orbitX@gmail.com'
+  
+  if (user.email.toLowerCase() === OWNER_EMAIL.toLowerCase()) {
+    return 'owner'
+  }
+  
   try {
     const rolesRef = doc(db, 'settings', 'roles')
     const rolesDoc = await getDoc(rolesRef)
     
-    if (!rolesDoc.exists()) {
-      return 'member'
+    if (rolesDoc.exists()) {
+      const data = rolesDoc.data()
+      const admins = data.admins || []
+      
+      if (admins.includes(user.email.toLowerCase())) {
+        return 'admin'
+      }
     }
-    
-    const data = rolesDoc.data()
-    const userEmail = user.email.toLowerCase()
-    
-    if (data.owner === userEmail) return 'owner'
-    if (data.admins?.includes(userEmail)) return 'admin'
-    return 'member'
   } catch (error) {
-    console.error('Error getting user role:', error)
-    return 'member'
+    console.error('Error checking user role:', error)
   }
+  
+  return 'member'
 }
 
 // Check if user is owner

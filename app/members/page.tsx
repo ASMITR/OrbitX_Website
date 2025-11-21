@@ -9,6 +9,7 @@ import { Member } from '@/lib/types'
 import { POSITIONS } from '@/lib/constants'
 import { imageLoader, debounce } from '@/lib/performance'
 import { getCache, setCache } from '@/lib/cache'
+import { testFirebaseConnection } from '@/lib/firebaseTest'
 
 export default function Members() {
   const [members, setMembers] = useState<Member[]>([])
@@ -16,6 +17,7 @@ export default function Members() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterTeam, setFilterTeam] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
 
   const sortMembersByPosition = useCallback((members: Member[]) => {
@@ -38,20 +40,37 @@ export default function Members() {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
+        // First test Firebase connection
+        const connectionTest = await testFirebaseConnection()
+        if (!connectionTest.success) {
+          throw new Error(`Firebase connection failed: ${connectionTest.error}`)
+        }
+
         const cacheKey = 'members_data'
         let membersData = getCache(cacheKey)
         
         if (!membersData) {
           membersData = await getMembers()
-          setCache(cacheKey, membersData, 180000) // 1 minute cache
+          setCache(cacheKey, membersData, 180000) // 3 minute cache
         }
         
         const approvedMembers = membersData.filter((member: Member) => member.approved !== false)
         const sortedMembers = sortMembersByPosition(approvedMembers)
         setMembers(sortedMembers)
         setFilteredMembers(sortedMembers)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching members:', error)
+        
+        // Provide specific error messages based on error type
+        if (error.message.includes('Firebase connection failed')) {
+          setError('Unable to connect to the database. Please check your internet connection and try again.')
+        } else if (error.message.includes('permission-denied')) {
+          setError('Access denied. The database may be temporarily unavailable.')
+        } else if (error.message.includes('unavailable')) {
+          setError('Database service is temporarily unavailable. Please try again in a few moments.')
+        } else {
+          setError('Failed to load members. Please check your internet connection and try again.')
+        }
       } finally {
         setLoading(false)
       }
@@ -78,11 +97,7 @@ export default function Members() {
     setFilteredMembers(filteredAndSortedMembers)
   }, [filteredAndSortedMembers])
 
-  // Sample members data for demonstration
-  const sampleMembers: Member[] = [
-  ]
-
-  const displayMembers = filteredMembers.length > 0 ? filteredMembers : sampleMembers
+  const displayMembers = filteredMembers
   const teams = ['Design & Innovation Team', 'Technical Team', 'Management & Operations Team', 'Public Outreach Team', 'Documentation Team', 'Social Media & Editing Team']
 
   const getRoleColor = (position: string) => {
@@ -117,6 +132,65 @@ export default function Members() {
     )
   }
 
+  if (error) {
+    return (
+      <div className="pt-20 px-4 min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-lg">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">Connection Error</h3>
+          <p className="text-gray-400 text-base sm:text-lg px-4 mb-6">
+            {error}
+          </p>
+          <div className="space-y-3">
+            <button 
+              onClick={() => {
+                setError(null)
+                setLoading(true)
+                // Force a fresh fetch without page reload
+                const fetchMembers = async () => {
+                  try {
+                    const connectionTest = await testFirebaseConnection()
+                    if (!connectionTest.success) {
+                      throw new Error(`Firebase connection failed: ${connectionTest.error}`)
+                    }
+                    const membersData = await getMembers()
+                    const approvedMembers = membersData.filter((member: Member) => member.approved !== false)
+                    const sortedMembers = sortMembersByPosition(approvedMembers)
+                    setMembers(sortedMembers)
+                    setFilteredMembers(sortedMembers)
+                    setCache('members_data', membersData, 180000)
+                  } catch (error: any) {
+                    setError('Still unable to connect. Please check your internet connection.')
+                  } finally {
+                    setLoading(false)
+                  }
+                }
+                fetchMembers()
+              }}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mr-3"
+            >
+              Retry Connection
+            </button>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
+          <div className="mt-6 text-sm text-gray-500">
+            <p>If the problem persists, please:</p>
+            <ul className="mt-2 space-y-1">
+              <li>• Check your internet connection</li>
+              <li>• Try refreshing the page</li>
+              <li>• Contact support if the issue continues</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="pt-16 sm:pt-20 px-3 sm:px-4 lg:px-6 xl:px-8 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -131,14 +205,14 @@ export default function Members() {
           </p>
 
           {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-xl sm:max-w-2xl mx-auto px-2 sm:px-0">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-xl sm:max-w-3xl mx-auto px-2 sm:px-0">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
               <input
                 type="text"
                 placeholder="Search members..."
                 value={searchTerm}
-                onChange={debounce((e) => setSearchTerm(e.target.value), 300)}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-colors"
               />
             </div>
@@ -147,7 +221,7 @@ export default function Members() {
               <select
                 value={filterTeam}
                 onChange={(e) => setFilterTeam(e.target.value)}
-                className="w-full sm:w-auto pl-9 sm:pl-10 pr-8 py-2.5 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-400 transition-colors appearance-none min-w-[180px] sm:min-w-[200px]"
+                className="w-full sm:w-auto pl-9 sm:pl-10 pr-8 py-2.5 sm:py-3 bg-black border border-white/20 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-400 transition-colors appearance-none min-w-[180px] sm:min-w-[200px]"
               >
                 <option value="all">All Teams</option>
                 {teams.map(team => (
@@ -155,11 +229,17 @@ export default function Members() {
                 ))}
               </select>
             </div>
+            <a
+              href="/leaderboard"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 text-sm sm:text-base whitespace-nowrap flex items-center justify-center"
+            >
+              🏆 Leaderboard
+            </a>
           </div>
         </div>
 
         {/* Leadership Team Section */}
-        {filteredMembers.filter(member => 
+        {!loading && filteredMembers.filter(member => 
           member.position.toLowerCase().includes('president') || 
           member.position.toLowerCase().includes('chairman') || 
           member.position.toLowerCase().includes('secretary') ||
@@ -291,61 +371,175 @@ export default function Members() {
           </div>
         )}
 
-        {/* Team Leaders & Members Section */}
-        {filteredMembers.filter(member => 
-          member.position.toLowerCase().includes('team leader') ||
-          (member.position.toLowerCase() === 'member' ||
+        {/* Team Leaders Section */}
+        {!loading && filteredMembers.filter(member => 
+          member.position.toLowerCase().includes('team leader')
+        ).length > 0 && (
+          <div className="mb-12 sm:mb-16">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent">
+                Team Leaders
+              </h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-indigo-400 to-blue-400 mx-auto rounded-full"></div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+              {filteredMembers
+                .filter(member => member.position.toLowerCase().includes('team leader'))
+                .map((member, index) => {
+                  return (
+                    <div
+                      key={member.id}
+                      className="group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-md border-2 shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-indigo-900/30 to-blue-900/30 border-indigo-500/30 hover:shadow-indigo-500/20 hover:border-indigo-400/50"
+                    >
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+              
+              <div className="relative h-64 sm:h-72 lg:h-80 overflow-hidden bg-gray-900/50 flex items-center justify-center">
+                <Image
+                  src={member.photo}
+                  alt={member.name}
+                  width={300}
+                  height={320}
+                  loader={imageLoader}
+                  priority={index < 8}
+                  loading={index < 8 ? 'eager' : 'lazy'}
+                  className="max-w-full max-h-full object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    target.nextElementSibling?.classList.remove('hidden')
+                  }}
+                />
+                <div className="hidden w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                  <div className="text-6xl sm:text-7xl lg:text-8xl opacity-30">👤</div>
+                </div>
+                
+                <div 
+                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-center justify-center cursor-pointer"
+                  onClick={() => setSelectedMember(member)}
+                >
+                  <div className="text-center">
+                    <div className="text-white text-sm mb-2">View Profile</div>
+                    <div className="w-12 h-0.5 mx-auto bg-indigo-400"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative z-20 p-2 sm:p-3 lg:p-4 xl:p-6 bg-gradient-to-t from-black/95 to-transparent">
+                <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 transition-colors line-clamp-1 sm:line-clamp-2 leading-tight group-hover:text-indigo-300">
+                  {member.name}
+                </h3>
+                {member.team && member.team !== 'NA' && (
+                  <p className="text-indigo-400 text-xs font-medium mb-1 line-clamp-1 leading-tight hidden sm:block">{member.team}</p>
+                )}
+                <div className="mb-1 sm:mb-2">
+                  <span className={`inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${getRoleColor(member.position)} border truncate max-w-full`}>
+                    {member.position}
+                  </span>
+                </div>
+                <p className="text-gray-400 text-xs mb-1 sm:mb-2 line-clamp-1 hidden sm:block">{member.branch} • {member.year}-{member.division}</p>
+                
+                {member.skills && member.skills.length > 0 && (
+                  <div className="mb-1 sm:mb-2 hidden md:block">
+                    <div className="flex flex-wrap gap-1">
+                      {member.skills.slice(0, 1).map((skill, idx) => (
+                        <span key={idx} className="px-1.5 py-0.5 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30 truncate max-w-[60px] lg:max-w-[80px]">
+                          {skill}
+                        </span>
+                      ))}
+                      {member.skills.length > 1 && (
+                        <span className="px-1.5 py-0.5 bg-gray-700 text-gray-300 text-xs rounded-full flex-shrink-0">
+                          +{member.skills.length - 1}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center gap-1 sm:gap-2">
+                  <div className="flex space-x-1 flex-shrink-0 min-w-0">
+                    {member.socialLinks?.linkedin && (
+                      <a
+                        href={member.socialLinks.linkedin.startsWith('http') ? member.socialLinks.linkedin : `https://${member.socialLinks.linkedin}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 bg-blue-600/20 border border-blue-500/30 rounded flex items-center justify-center hover:bg-blue-600/40 hover:scale-110 transition-all duration-200 group/social flex-shrink-0"
+                      >
+                        <Linkedin className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-3.5 lg:w-3.5 text-blue-400 group-hover/social:text-blue-300" />
+                      </a>
+                    )}
+                    {member.socialLinks?.github && (
+                      <a
+                        href={member.socialLinks.github.startsWith('http') ? member.socialLinks.github : `https://${member.socialLinks.github}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 bg-gray-600/20 border border-gray-500/30 rounded flex items-center justify-center hover:bg-gray-600/40 hover:scale-110 transition-all duration-200 group/social flex-shrink-0"
+                      >
+                        <Github className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-3.5 lg:w-3.5 text-gray-400 group-hover/social:text-gray-300" />
+                      </a>
+                    )}
+                    {member.socialLinks?.instagram && (
+                      <a
+                        href={member.socialLinks.instagram.startsWith('http') ? member.socialLinks.instagram : `https://${member.socialLinks.instagram}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 bg-pink-600/20 border border-pink-500/30 rounded flex items-center justify-center hover:bg-pink-600/40 hover:scale-110 transition-all duration-200 group/social flex-shrink-0"
+                      >
+                        <Instagram className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-3.5 lg:w-3.5 text-pink-400 group-hover/social:text-pink-300" />
+                      </a>
+                    )}
+                  </div>
+                  
+                  <button 
+                    onClick={() => setSelectedMember(member)}
+                    className="px-1.5 py-1 sm:px-2 sm:py-1 lg:px-3 lg:py-1.5 rounded text-xs font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40"
+                  >
+                    View
+                  </button>
+                </div>
+              </div>
+              
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500" />
+              <div className="absolute -top-10 -right-10 w-20 h-20 rounded-full blur-xl transition-all duration-500 bg-indigo-500/10 group-hover:bg-indigo-500/20" />
+              <div className="absolute -bottom-10 -left-10 w-16 h-16 rounded-full blur-xl transition-all duration-500 bg-blue-500/10 group-hover:bg-blue-500/20" />
+                    </div>
+                  )
+                })
+              }
+            </div>
+          </div>
+        )}
+
+        {/* Members Section */}
+        {!loading && filteredMembers.filter(member => 
+          member.position.toLowerCase() === 'member' ||
           (!member.position.toLowerCase().includes('president') && 
            !member.position.toLowerCase().includes('chairman') && 
            !member.position.toLowerCase().includes('secretary') &&
            !member.position.toLowerCase().includes('treasurer') &&
-           !member.position.toLowerCase().includes('team leader')))
+           !member.position.toLowerCase().includes('team leader'))
         ).length > 0 && (
           <div className="mb-8">
             <div className="text-center mb-8">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Team Leaders & Members
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">
+                Members
               </h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-purple-400 mx-auto rounded-full"></div>
+              <div className="w-24 h-1 bg-gradient-to-r from-green-400 to-teal-400 mx-auto rounded-full"></div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
               {filteredMembers
                 .filter(member => 
-                  member.position.toLowerCase().includes('team leader') ||
-                  (member.position.toLowerCase() === 'member' ||
+                  member.position.toLowerCase() === 'member' ||
                   (!member.position.toLowerCase().includes('president') && 
                    !member.position.toLowerCase().includes('chairman') && 
                    !member.position.toLowerCase().includes('secretary') &&
                    !member.position.toLowerCase().includes('treasurer') &&
-                   !member.position.toLowerCase().includes('team leader')))
+                   !member.position.toLowerCase().includes('team leader'))
                 )
-                .sort((a, b) => {
-                  // Team Leaders first, then Members
-                  const aIsTeamLeader = a.position.toLowerCase().includes('team leader')
-                  const bIsTeamLeader = b.position.toLowerCase().includes('team leader')
-                  
-                  if (aIsTeamLeader && !bIsTeamLeader) return -1
-                  if (!aIsTeamLeader && bIsTeamLeader) return 1
-                  
-                  // Within same category, sort by position hierarchy
-                  const aIndex = POSITIONS.indexOf(a.position)
-                  const bIndex = POSITIONS.indexOf(b.position)
-                  
-                  const aPos = aIndex === -1 ? POSITIONS.length : aIndex
-                  const bPos = bIndex === -1 ? POSITIONS.length : bIndex
-                  
-                  return aPos - bPos
-                })
                 .map((member, index) => {
-                  const isTeamLeader = member.position.toLowerCase().includes('team leader')
                   return (
                     <div
                       key={member.id}
-                      className={`group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-md border-2 shadow-xl transition-all duration-300 hover:scale-[1.02] ${
-                        isTeamLeader 
-                          ? 'bg-gradient-to-br from-indigo-900/30 to-blue-900/30 border-indigo-500/30 hover:shadow-indigo-500/20 hover:border-indigo-400/50'
-                          : 'bg-gradient-to-br from-green-900/30 to-teal-900/30 border-green-500/30 hover:shadow-green-500/20 hover:border-green-400/50'
-                      }`}
+                      className="group relative overflow-hidden rounded-xl sm:rounded-2xl backdrop-blur-md border-2 shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-green-900/30 to-teal-900/30 border-green-500/30 hover:shadow-green-500/20 hover:border-green-400/50"
                     >
               {/* Background Image */}
               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
@@ -380,22 +574,18 @@ export default function Members() {
                 >
                   <div className="text-center">
                     <div className="text-white text-sm mb-2">View Profile</div>
-                    <div className={`w-12 h-0.5 mx-auto ${isTeamLeader ? 'bg-indigo-400' : 'bg-green-400'}`}></div>
+                    <div className="w-12 h-0.5 mx-auto bg-green-400"></div>
                   </div>
                 </div>
               </div>
 
               {/* Member Info */}
               <div className="relative z-20 p-2 sm:p-3 lg:p-4 xl:p-6 bg-gradient-to-t from-black/95 to-transparent">
-                <h3 className={`text-sm sm:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 transition-colors line-clamp-1 sm:line-clamp-2 leading-tight ${
-                  isTeamLeader ? 'group-hover:text-indigo-300' : 'group-hover:text-green-300'
-                }`}>
+                <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 transition-colors line-clamp-1 sm:line-clamp-2 leading-tight group-hover:text-green-300">
                   {member.name}
                 </h3>
                 {member.team && member.team !== 'NA' && (
-                  <p className={`text-xs font-medium mb-1 line-clamp-1 leading-tight hidden sm:block ${
-                    isTeamLeader ? 'text-indigo-400' : 'text-green-400'
-                  }`}>{member.team}</p>
+                  <p className="text-green-400 text-xs font-medium mb-1 line-clamp-1 leading-tight hidden sm:block">{member.team}</p>
                 )}
                 <div className="mb-1 sm:mb-2">
                   <span className={`inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${getRoleColor(member.position)} border truncate max-w-full`}>
@@ -465,11 +655,7 @@ export default function Members() {
                   {/* View More Button */}
                   <button 
                     onClick={() => setSelectedMember(member)}
-                    className={`px-1.5 py-1 sm:px-2 sm:py-1 lg:px-3 lg:py-1.5 rounded text-xs font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
-                      isTeamLeader 
-                        ? 'bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
-                        : 'bg-green-600/20 border border-green-500/30 text-green-400 hover:bg-green-600/40'
-                    }`}
+                    className="px-1.5 py-1 sm:px-2 sm:py-1 lg:px-3 lg:py-1.5 rounded text-xs font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap bg-green-600/20 border border-green-500/30 text-green-400 hover:bg-green-600/40"
                   >
                     View
                   </button>
@@ -477,21 +663,9 @@ export default function Members() {
               </div>
               
               {/* Decorative Elements */}
-              <div className={`absolute top-0 left-0 w-full h-1 ${
-                isTeamLeader 
-                  ? 'bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500'
-                  : 'bg-gradient-to-r from-green-500 via-teal-500 to-emerald-500'
-              }`} />
-              <div className={`absolute -top-10 -right-10 w-20 h-20 rounded-full blur-xl transition-all duration-500 ${
-                isTeamLeader 
-                  ? 'bg-indigo-500/10 group-hover:bg-indigo-500/20'
-                  : 'bg-green-500/10 group-hover:bg-green-500/20'
-              }`} />
-              <div className={`absolute -bottom-10 -left-10 w-16 h-16 rounded-full blur-xl transition-all duration-500 ${
-                isTeamLeader 
-                  ? 'bg-blue-500/10 group-hover:bg-blue-500/20'
-                  : 'bg-teal-500/10 group-hover:bg-teal-500/20'
-              }`} />
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 via-teal-500 to-emerald-500" />
+              <div className="absolute -top-10 -right-10 w-20 h-20 rounded-full blur-xl transition-all duration-500 bg-green-500/10 group-hover:bg-green-500/20" />
+              <div className="absolute -bottom-10 -left-10 w-16 h-16 rounded-full blur-xl transition-all duration-500 bg-teal-500/10 group-hover:bg-teal-500/20" />
                     </div>
                   )
                 })
@@ -509,64 +683,254 @@ export default function Members() {
           </div>
         )}
 
+        {/* No Members at all */}
+        {!loading && members.length === 0 && !searchTerm && (
+          <div className="text-center py-12 sm:py-16">
+            <div className="text-6xl mb-4">👥</div>
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">No Members Found</h3>
+            <p className="text-gray-400 text-base sm:text-lg px-4 mb-8">
+              It looks like no members have been added yet or there might be a connection issue.
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
+        )}
+
         {/* Member Detail Modal */}
         {selectedMember && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4"
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4"
             onClick={() => setSelectedMember(null)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 50 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 50 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-xl border border-white/20 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 max-w-xs sm:max-w-2xl lg:max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl"
+              initial={{ 
+                opacity: 0, 
+                scale: 0.3, 
+                rotateY: -90, 
+                z: -1000,
+                filter: "blur(10px)"
+              }}
+              animate={{ 
+                opacity: 1, 
+                scale: 1, 
+                rotateY: 0, 
+                z: 0,
+                filter: "blur(0px)",
+                transition: {
+                  type: "spring",
+                  damping: 15,
+                  stiffness: 300,
+                  duration: 0.3
+                }
+              }}
+              exit={{ 
+                opacity: 0, 
+                scale: 0.3, 
+                rotateY: 90, 
+                z: -1000,
+                filter: "blur(10px)",
+                transition: { duration: 0.2 }
+              }}
+              whileHover={{ 
+                scale: 1.01,
+                rotateX: 1,
+                y: -5,
+                boxShadow: "0 25px 50px rgba(6, 182, 212, 0.3)",
+                transition: { duration: 0.3 }
+              }}
+              className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 max-w-5xl w-full max-h-[95vh] overflow-y-auto relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
+              style={{ 
+                perspective: 1500,
+                transformStyle: 'preserve-3d'
+              }}
             >
+              {/* Holographic grid overlay */}
+              <div className="absolute inset-0 rounded-3xl overflow-hidden">
+                <motion.div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+                    `,
+                    backgroundSize: '20px 20px'
+                  }}
+                  animate={{
+                    backgroundPosition: ['0px 0px', '20px 20px']
+                  }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                />
+                <motion.div
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)'
+                  }}
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
+              {/* Futuristic data streams */}
+              <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+                {[...Array(15)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-px h-full bg-gradient-to-b from-transparent via-white/20 to-transparent"
+                    style={{ left: Math.random() * 100 + '%' }}
+                    animate={{
+                      opacity: [0, 1, 0],
+                      scaleY: [0, 1, 0]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      delay: Math.random() * 2,
+                      ease: "easeInOut"
+                    }}
+                  />
+                ))}
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={`hex-${i}`}
+                    className="absolute w-12 h-12 border border-white/10"
+                    style={{
+                      left: Math.random() * 90 + '%',
+                      top: Math.random() * 90 + '%',
+                      clipPath: 'polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%)'
+                    }}
+                    animate={{
+                      rotate: [0, 360],
+                      scale: [0.8, 1.2, 0.8],
+                      opacity: [0.1, 0.3, 0.1]
+                    }}
+                    transition={{
+                      duration: 8 + i,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                  />
+                ))}
+              </div>
               {/* Header */}
               <motion.div 
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="flex justify-between items-start mb-8"
+                transition={{ delay: 0.1, duration: 0.3 }}
+                className="flex justify-between items-center mb-6"
               >
-                <div>
-                  <h2 className="text-3xl font-bold text-white mb-2">Member Profile</h2>
-                  <div className="w-16 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"></div>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setSelectedMember(null)}
-                  className="p-3 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200"
+                <motion.div
+                  initial={{ x: -20 }}
+                  animate={{ x: 0 }}
+                  transition={{ delay: 0.2, duration: 0.3 }}
                 >
-                  <X className="h-6 w-6" />
+                  <h2 className="text-2xl font-bold text-white/90">Member Profile</h2>
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: '100%' }}
+                    transition={{ delay: 0.4, duration: 0.5 }}
+                    className="h-0.5 bg-white/30 rounded-full mt-1"
+                  />
+                </motion.div>
+                <motion.button
+                  initial={{ scale: 0, rotate: -360, opacity: 0 }}
+                  animate={{ 
+                    scale: 1, 
+                    rotate: 0, 
+                    opacity: 1,
+                    transition: {
+                      type: "spring",
+                      damping: 8,
+                      stiffness: 400,
+                      delay: 0.8
+                    }
+                  }}
+                  whileHover={{ 
+                    scale: 1.2, 
+                    rotate: [0, -10, 10, 0],
+                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                    boxShadow: "0 0 20px rgba(239, 68, 68, 0.5)",
+                    transition: { duration: 0.3 }
+                  }}
+                  whileTap={{ 
+                    scale: 0.8,
+                    rotate: 180,
+                    transition: { duration: 0.1 }
+                  }}
+                  onClick={() => setSelectedMember(null)}
+                  className="p-2 text-gray-400 hover:text-white rounded-xl transition-all duration-200 border border-white/10 hover:border-white/30 relative overflow-hidden group backdrop-blur-sm"
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    initial={{ x: '-100%' }}
+                    whileHover={{ x: '100%' }}
+                    transition={{ duration: 0.6 }}
+                  />
+                  <motion.div
+                    animate={{ rotate: [0, 180, 360] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                  >
+                    <X className="h-5 w-5 relative z-10" />
+                  </motion.div>
                 </motion.button>
               </motion.div>
 
-              <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
+              <div className="flex flex-col lg:flex-row gap-6">
                 {/* Photo Section */}
                 <motion.div 
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
+                  initial={{ opacity: 0, x: -30, rotateY: -20 }}
+                  animate={{ opacity: 1, x: 0, rotateY: 0 }}
+                  transition={{ delay: 0.1, duration: 0.3, type: "spring" }}
                   className="flex-shrink-0 text-center lg:text-left"
                 >
                   <div className="relative inline-block">
                     <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.3, type: "spring", damping: 20 }}
-                      className="w-32 h-40 sm:w-36 sm:h-44 lg:w-44 lg:h-56 rounded-2xl sm:rounded-3xl border-2 sm:border-4 border-white/20 shadow-2xl overflow-hidden mx-auto lg:mx-0"
+                      initial={{ scale: 0.5, opacity: 0, rotateX: 45, rotateY: -30 }}
+                      animate={{ 
+                        scale: 1, 
+                        opacity: 1, 
+                        rotateX: 0, 
+                        rotateY: 0,
+                        transition: {
+                          type: "spring",
+                          damping: 12,
+                          stiffness: 200,
+                          delay: 0.3
+                        }
+                      }}
+                      whileHover={{
+                        scale: 1.05,
+                        rotateY: 5,
+                        rotateX: -5,
+                        transition: { duration: 0.3 }
+                      }}
+                      className="w-40 h-48 lg:w-48 lg:h-60 rounded-2xl border-2 border-cyan-500/30 shadow-2xl shadow-cyan-500/20 overflow-hidden mx-auto lg:mx-0 relative cursor-pointer"
+                      style={{ transformStyle: 'preserve-3d' }}
                     >
+                      {/* Glowing border animation */}
+                      <motion.div
+                        className="absolute inset-0 rounded-2xl"
+                        animate={{
+                          boxShadow: [
+                            '0 0 20px rgba(6, 182, 212, 0.3)',
+                            '0 0 40px rgba(6, 182, 212, 0.6)',
+                            '0 0 20px rgba(6, 182, 212, 0.3)'
+                          ]
+                        }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
                       <Image
                         src={selectedMember.photo}
                         alt={selectedMember.name}
-                        width={176}
-                        height={224}
+                        width={192}
+                        height={240}
                         loader={imageLoader}
                         priority
                         className="w-full h-full object-cover"
@@ -576,45 +940,173 @@ export default function Members() {
                           target.nextElementSibling?.classList.remove('hidden')
                         }}
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                     </motion.div>
-                    <div className="hidden w-40 h-52 lg:w-44 lg:h-56 rounded-3xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center border-4 border-white/20 shadow-2xl">
-                      <span className="text-6xl lg:text-7xl opacity-30">👤</span>
+                    <div className="hidden w-40 h-48 lg:w-48 lg:h-60 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center border-2 border-cyan-500/30 shadow-2xl">
+                      <span className="text-6xl opacity-30">👤</span>
                     </div>
-                    {/* Decorative elements */}
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full animate-pulse"></div>
-                    <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-purple-500 rounded-full animate-pulse delay-1000"></div>
+                    {/* Advanced floating elements */}
+                    <motion.div 
+                      animate={{ 
+                        scale: [1, 1.5, 1], 
+                        opacity: [0.7, 1, 0.7],
+                        rotate: [0, 180, 360],
+                        x: [0, 5, 0],
+                        y: [0, -5, 0]
+                      }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute -top-3 -right-3 w-4 h-4 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-lg shadow-cyan-400/50"
+                    />
+                    <motion.div 
+                      animate={{ 
+                        scale: [1, 1.3, 1], 
+                        opacity: [0.5, 1, 0.5],
+                        rotate: [360, 180, 0],
+                        x: [0, -3, 0],
+                        y: [0, 3, 0]
+                      }}
+                      transition={{ duration: 2.5, repeat: Infinity, delay: 0.5, ease: "easeInOut" }}
+                      className="absolute -bottom-3 -left-3 w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full shadow-lg shadow-purple-400/50"
+                    />
+                    {/* Orbiting particles */}
+                    {[...Array(3)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-1.5 h-1.5 bg-cyan-300 rounded-full"
+                        animate={{
+                          rotate: [0, 360],
+                          scale: [0.5, 1, 0.5]
+                        }}
+                        transition={{
+                          duration: 4 + i,
+                          repeat: Infinity,
+                          ease: "linear"
+                        }}
+                        style={{
+                          left: '50%',
+                          top: '50%',
+                          transformOrigin: `${60 + i * 20}px 0px`
+                        }}
+                      />
+                    ))}
                   </div>
                 </motion.div>
 
                 {/* Details Section */}
                 <motion.div 
-                  initial={{ opacity: 0, x: 50 }}
+                  initial={{ opacity: 0, x: 30 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex-1 space-y-6"
+                  transition={{ delay: 0.2, duration: 0.3 }}
+                  className="flex-1 space-y-4 relative"
                 >
+                  {/* Scroll-triggered animations */}
+                  <motion.div
+                    className="absolute -inset-4 bg-gradient-to-r from-cyan-500/5 via-blue-500/10 to-emerald-500/5 rounded-2xl"
+                    animate={{
+                      opacity: [0.3, 0.7, 0.3],
+                      scale: [0.98, 1.02, 0.98]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  />
                   {/* Name and Role */}
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
+                    transition={{ delay: 0.4, duration: 0.3 }}
                   >
-                    <h3 className="text-4xl font-bold text-white mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                      {selectedMember.name}
-                    </h3>
-                    <div className="flex flex-wrap gap-3 mb-4">
-                      <motion.span 
-                        whileHover={{ scale: 1.05 }}
-                        className={`px-4 py-2 rounded-full text-sm font-semibold ${getRoleColor(selectedMember.position)} border`}
+                    <motion.h3 
+                      initial={{ scale: 0.5, opacity: 0, y: 20 }}
+                      animate={{ 
+                        scale: 1, 
+                        opacity: 1, 
+                        y: 0,
+                        transition: {
+                          type: "spring",
+                          damping: 10,
+                          stiffness: 200,
+                          delay: 0.5
+                        }
+                      }}
+                      whileHover={{
+                        scale: 1.05,
+                        textShadow: "0px 0px 8px rgba(6, 182, 212, 0.8)",
+                        transition: { duration: 0.2 }
+                      }}
+                      className="text-3xl font-bold mb-3 text-white/90 whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer"
+                    >
+                      <motion.span
+                        animate={{
+                          backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+                        }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                        style={{
+                          backgroundSize: '200% 200%'
+                        }}
                       >
-                        {selectedMember.position}
+                        {selectedMember.name}
+                      </motion.span>
+                    </motion.h3>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <motion.span 
+                        initial={{ scale: 0, rotate: -180, opacity: 0 }}
+                        animate={{ 
+                          scale: 1, 
+                          rotate: 0, 
+                          opacity: 1,
+                          transition: {
+                            type: "spring",
+                            damping: 8,
+                            stiffness: 300,
+                            delay: 0.6
+                          }
+                        }}
+                        whileHover={{ 
+                          scale: 1.1, 
+                          y: -3,
+                          rotate: [0, -2, 2, 0],
+                          transition: { duration: 0.3 }
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`px-3 py-1.5 rounded-full text-sm font-semibold ${getRoleColor(selectedMember.position)} border shadow-lg cursor-pointer relative overflow-hidden`}
+                      >
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                          initial={{ x: '-100%' }}
+                          whileHover={{ x: '100%' }}
+                          transition={{ duration: 0.6 }}
+                        />
+                        <span className="relative z-10">{selectedMember.position}</span>
                       </motion.span>
                       {selectedMember.team && selectedMember.team !== 'NA' && (
                         <motion.span 
-                          whileHover={{ scale: 1.05 }}
-                          className="px-4 py-2 rounded-full text-sm bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                          initial={{ scale: 0, rotate: 180, opacity: 0 }}
+                          animate={{ 
+                            scale: 1, 
+                            rotate: 0, 
+                            opacity: 1,
+                            transition: {
+                              type: "spring",
+                              damping: 8,
+                              stiffness: 300,
+                              delay: 0.7
+                            }
+                          }}
+                          whileHover={{ 
+                            scale: 1.1, 
+                            y: -3,
+                            boxShadow: "0 10px 25px rgba(6, 182, 212, 0.4)",
+                            transition: { duration: 0.3 }
+                          }}
+                          whileTap={{ scale: 0.95 }}
+                          className="px-3 py-1.5 rounded-full text-sm bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg cursor-pointer relative overflow-hidden"
                         >
-                          {selectedMember.team}
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
+                            initial={{ x: '-100%' }}
+                            whileHover={{ x: '100%' }}
+                            transition={{ duration: 0.6 }}
+                          />
+                          <span className="relative z-10">{selectedMember.team}</span>
                         </motion.span>
                       )}
                     </div>
@@ -622,15 +1114,43 @@ export default function Members() {
 
                   {/* Personal Info */}
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="bg-white/5 rounded-2xl p-6 border border-white/10"
+                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    whileInView={{ 
+                      boxShadow: "0 0 30px rgba(6, 182, 212, 0.2)",
+                      borderColor: "rgba(6, 182, 212, 0.4)"
+                    }}
+                    transition={{ delay: 0.3, duration: 0.3 }}
+                    className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 relative overflow-hidden"
                   >
-                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-                      <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                      animate={{ x: ['-100%', '100%'] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    />
+                    <motion.h4 
+                      initial={{ x: -10 }}
+                      animate={{ x: 0 }}
+                      whileInView={{ 
+                        textShadow: "0 0 10px rgba(6, 182, 212, 0.5)"
+                      }}
+                      transition={{ delay: 0.4 }}
+                      className="text-lg font-semibold text-white mb-3 flex items-center relative z-10"
+                    >
+                      <motion.div 
+                        animate={{ 
+                          scale: [1, 1.3, 1],
+                          boxShadow: [
+                            '0 0 5px rgba(6, 182, 212, 0.5)',
+                            '0 0 15px rgba(6, 182, 212, 0.8)',
+                            '0 0 5px rgba(6, 182, 212, 0.5)'
+                          ]
+                        }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="w-2 h-2 bg-white/50 rounded-full mr-3"
+                      />
                       Personal Information
-                    </h4>
+                    </motion.h4>
                     <div className="grid grid-cols-1 gap-4 text-sm">
                       {selectedMember.dateOfBirth && (
                         <motion.div
@@ -723,7 +1243,7 @@ export default function Members() {
                         <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
                         Social Media
                       </h4>
-                      <div className="flex space-x-4">
+                      <div className="flex space-x-4 relative z-10">
                         {selectedMember.socialLinks?.linkedin && (
                           <motion.a
                             whileHover={{ scale: 1.1, y: -2 }}

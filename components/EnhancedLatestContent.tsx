@@ -19,6 +19,9 @@ export default function EnhancedLatestContent({ events, projects, blogs }: Props
   const [projectLikes, setProjectLikes] = useState<{[key: string]: boolean}>({})
   const [blogLikes, setBlogLikes] = useState<{[key: string]: boolean}>({})
   const [bookmarks, setBookmarks] = useState<{[key: string]: boolean}>({})
+  const [showComments, setShowComments] = useState<{[key: string]: boolean}>({})
+  const [comments, setComments] = useState<{[key: string]: string[]}>({})
+  const [newComment, setNewComment] = useState<{[key: string]: string}>({})
 
   const handleLike = (type: 'event' | 'project' | 'blog', id: string) => {
     if (type === 'event') {
@@ -32,8 +35,17 @@ export default function EnhancedLatestContent({ events, projects, blogs }: Props
     toast.success(isLiked ? 'Liked!' : 'Unliked!')
   }
 
-  const handleComment = (type: string, title: string) => {
-    toast.success(`Opening comments for ${title}`)
+  const handleComment = (type: string, title: string, id: string) => {
+    setShowComments(prev => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  const addComment = (id: string) => {
+    const comment = newComment[id]?.trim()
+    if (comment) {
+      setComments(prev => ({ ...prev, [id]: [...(prev[id] || []), comment] }))
+      setNewComment(prev => ({ ...prev, [id]: '' }))
+      toast.success('Comment added!')
+    }
   }
 
   const handleShare = async (title: string, id: string, type: string) => {
@@ -160,24 +172,52 @@ export default function EnhancedLatestContent({ events, projects, blogs }: Props
                         <div className="flex items-center space-x-3">
                           <div 
                             className="flex items-center space-x-1 hover:text-red-400 cursor-pointer transition-colors"
-                            onClick={() => handleLike('event', event.id)}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleLike('event', event.id); }}
                           >
                             <Heart className={`h-4 w-4 ${eventLikes[event.id] ? 'fill-red-400 text-red-400' : ''}`} />
                             <span>{(event.likes || 0) + (eventLikes[event.id] ? 1 : 0)}</span>
                           </div>
                           <div 
                             className="flex items-center space-x-1 hover:text-blue-400 cursor-pointer transition-colors"
-                            onClick={() => handleComment('event', event.title)}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleComment('event', event.title, event.id); }}
                           >
                             <MessageCircle className="h-4 w-4" />
-                            <span>{Array.isArray(event.comments) ? event.comments.length : event.comments || 0}</span>
+                            <span>{(comments[event.id]?.length || 0) + (Array.isArray(event.comments) ? event.comments.length : event.comments || 0)}</span>
                           </div>
                           <Share2 
                             className="h-4 w-4 hover:text-green-400 cursor-pointer transition-colors" 
-                            onClick={() => handleShare(event.title, event.id, 'event')}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleShare(event.title, event.id, 'event'); }}
                           />
                         </div>
                       </div>
+                      
+                      {showComments[event.id] && (
+                        <div className="mt-4 pt-4 border-t border-white/10" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                          <div className="space-y-2 mb-3">
+                            {comments[event.id]?.map((comment, i) => (
+                              <div key={i} className="text-sm text-gray-300 bg-white/5 p-2 rounded">
+                                {comment}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex space-x-2">
+                            <input
+                              type="text"
+                              value={newComment[event.id] || ''}
+                              onChange={(e) => setNewComment(prev => ({ ...prev, [event.id]: e.target.value }))}
+                              placeholder="Add a comment..."
+                              className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded text-white text-sm placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                              onKeyPress={(e) => e.key === 'Enter' && addComment(event.id)}
+                            />
+                            <button
+                              onClick={() => addComment(event.id)}
+                              className="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors"
+                            >
+                              Post
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>
@@ -272,26 +312,54 @@ export default function EnhancedLatestContent({ events, projects, blogs }: Props
                           <div className="flex items-center space-x-3">
                             <div 
                               className="flex items-center space-x-1 hover:text-red-400 cursor-pointer transition-colors"
-                              onClick={() => handleLike('project', project.id)}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleLike('project', project.id); }}
                             >
                               <Heart className={`h-4 w-4 ${projectLikes[project.id] ? 'fill-red-400 text-red-400' : ''}`} />
                               <span>{(project.likes || 0) + (projectLikes[project.id] ? 1 : 0)}</span>
                             </div>
                             <div 
                               className="flex items-center space-x-1 hover:text-blue-400 cursor-pointer transition-colors"
-                              onClick={() => handleComment('project', project.title)}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleComment('project', project.title, project.id); }}
                             >
                               <MessageCircle className="h-4 w-4" />
-                              <span>{Array.isArray(project.comments) ? project.comments.length : project.comments || 0}</span>
+                              <span>{(comments[project.id]?.length || 0) + (Array.isArray(project.comments) ? project.comments.length : project.comments || 0)}</span>
                             </div>
                             <Bookmark 
                               className={`h-4 w-4 cursor-pointer transition-colors ${
                                 bookmarks[project.id] ? 'text-yellow-400' : 'hover:text-yellow-400'
                               }`}
-                              onClick={() => handleBookmark(project.id)}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleBookmark(project.id); }}
                             />
                           </div>
                         </div>
+                        
+                        {showComments[project.id] && (
+                          <div className="mt-4 pt-4 border-t border-white/10" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                            <div className="space-y-2 mb-3">
+                              {comments[project.id]?.map((comment, i) => (
+                                <div key={i} className="text-sm text-gray-300 bg-white/5 p-2 rounded">
+                                  {comment}
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex space-x-2">
+                              <input
+                                type="text"
+                                value={newComment[project.id] || ''}
+                                onChange={(e) => setNewComment(prev => ({ ...prev, [project.id]: e.target.value }))}
+                                placeholder="Add a comment..."
+                                className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded text-white text-sm placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                                onKeyPress={(e) => e.key === 'Enter' && addComment(project.id)}
+                              />
+                              <button
+                                onClick={() => addComment(project.id)}
+                                className="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors"
+                              >
+                                Post
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -395,24 +463,52 @@ export default function EnhancedLatestContent({ events, projects, blogs }: Props
                         <div className="flex items-center space-x-3">
                           <div 
                             className="flex items-center space-x-1 hover:text-red-400 cursor-pointer transition-colors"
-                            onClick={() => handleLike('blog', blog.id)}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleLike('blog', blog.id); }}
                           >
                             <Heart className={`h-4 w-4 ${blogLikes[blog.id] ? 'fill-red-400 text-red-400' : ''}`} />
                             <span>{(blog.likes || 0) + (blogLikes[blog.id] ? 1 : 0)}</span>
                           </div>
                           <div 
                             className="flex items-center space-x-1 hover:text-blue-400 cursor-pointer transition-colors"
-                            onClick={() => handleComment('blog', blog.title)}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleComment('blog', blog.title, blog.id); }}
                           >
                             <MessageCircle className="h-4 w-4" />
-                            <span>{Array.isArray(blog.comments) ? blog.comments.length : blog.comments || 0}</span>
+                            <span>{(comments[blog.id]?.length || 0) + (Array.isArray(blog.comments) ? blog.comments.length : blog.comments || 0)}</span>
                           </div>
                           <Share2 
                             className="h-4 w-4 hover:text-green-400 cursor-pointer transition-colors" 
-                            onClick={() => handleShare(blog.title, blog.id, 'blog')}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleShare(blog.title, blog.id, 'blog'); }}
                           />
                         </div>
                       </div>
+                      
+                      {showComments[blog.id] && (
+                        <div className="mt-4 pt-4 border-t border-white/10" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                          <div className="space-y-2 mb-3">
+                            {comments[blog.id]?.map((comment, i) => (
+                              <div key={i} className="text-sm text-gray-300 bg-white/5 p-2 rounded">
+                                {comment}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex space-x-2">
+                            <input
+                              type="text"
+                              value={newComment[blog.id] || ''}
+                              onChange={(e) => setNewComment(prev => ({ ...prev, [blog.id]: e.target.value }))}
+                              placeholder="Add a comment..."
+                              className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded text-white text-sm placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                              onKeyPress={(e) => e.key === 'Enter' && addComment(blog.id)}
+                            />
+                            <button
+                              onClick={() => addComment(blog.id)}
+                              className="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors"
+                            >
+                              Post
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>

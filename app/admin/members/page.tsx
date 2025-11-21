@@ -97,8 +97,8 @@ export default function AdminMembers() {
   const fetchMembers = async () => {
     try {
       const membersData = await getMembers()
-      const approved = membersData.filter(member => member.approved !== false)
-      const pending = membersData.filter(member => member.approved === false)
+      const approved = membersData.filter((member: Member) => member.approved !== false)
+      const pending = membersData.filter((member: Member) => member.approved === false)
       setMembers(approved)
       setPendingMembers(pending)
     } catch (error) {

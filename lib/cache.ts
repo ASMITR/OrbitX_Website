@@ -1,26 +1,23 @@
-// Simple in-memory cache for performance
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
+// Simple in-memory cache for client-side data
+const cache = new Map<string, { data: any, timestamp: number }>()
+const CACHE_DURATION = 2 * 60 * 1000 // 2 minutes
 
-export const setCache = (key: string, data: any, ttlMs: number = 300000) => {
-  cache.set(key, {
-    data,
-    timestamp: Date.now(),
-    ttl: ttlMs
-  })
-}
-
-export const getCache = (key: string) => {
-  const item = cache.get(key)
-  if (!item) return null
-  
-  if (Date.now() - item.timestamp > item.ttl) {
-    cache.delete(key)
-    return null
+export function getCache(key: string) {
+  const cached = cache.get(key)
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data
   }
-  
-  return item.data
+  return null
 }
 
-export const clearCache = () => {
-  cache.clear()
+export function setCache(key: string, data: any, duration: number = CACHE_DURATION) {
+  cache.set(key, { data, timestamp: Date.now() })
+}
+
+export function clearCache(key?: string) {
+  if (key) {
+    cache.delete(key)
+  } else {
+    cache.clear()
+  }
 }

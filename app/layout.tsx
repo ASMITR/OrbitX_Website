@@ -10,6 +10,7 @@ import Chatbox from '@/components/Chatbox'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { CartProvider } from '@/contexts/CartContext'
 import { Suspense } from 'react'
+import InitFirebase from '@/components/InitFirebase'
 
 
 
@@ -67,6 +68,7 @@ export default function RootLayout({
               <Suspense fallback={null}>
                 <Chatbox />
               </Suspense>
+              <InitFirebase />
             </div>
           </CartProvider>
           <Suspense fallback={null}>

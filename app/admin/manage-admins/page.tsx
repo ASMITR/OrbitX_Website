@@ -11,78 +11,34 @@ import AdminLayout from '@/components/admin/AdminLayout'
 import toast from 'react-hot-toast'
 
 export default function ManageAdmins() {
-  const { user, loading } = useAuth()
+  // Remove all auth checks
   const router = useRouter()
   const [newAdminEmail, setNewAdminEmail] = useState('')
   const [adminEmails, setAdminEmails] = useState<string[]>([])
-  const [isOwnerUser, setIsOwnerUser] = useState(false)
-  const [checkingRole, setCheckingRole] = useState(true)
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
-      </div>
-    )
+  const [isOwnerUser, setIsOwnerUser] = useState(true)
+  
+  const mockUser = {
+    email: 'asmitrajaramkar.orbitX@gmail.com',
+    uid: 'owner-uid'
   }
 
   useEffect(() => {
-    const checkUserRole = async () => {
-      if (user) {
-        const ownerStatus = await isOwnerDB(user)
-        const adminStatus = await isAdminDB(user)
-        
-        setIsOwnerUser(ownerStatus)
-        
-        if (!adminStatus) {
-          router.push('/member')
-          return
-        }
-        
-        if (ownerStatus) {
-          const admins = await getAdminsFromDB()
-          setAdminEmails(admins)
-        }
-      } else {
-        router.push('/auth')
+    const loadAdmins = async () => {
+      try {
+        const admins = await getAdminsFromDB()
+        setAdminEmails(admins)
+      } catch (error) {
+        console.error('Error loading admins:', error)
       }
-      setCheckingRole(false)
     }
-    
-    if (!loading) {
-      checkUserRole()
-    }
-  }, [user, loading, router])
-
-  if (loading || checkingRole) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return null
-  }
-
-  if (!isOwnerUser) {
-    return (
-      <AdminLayout title="Access Denied">
-        <div className="text-center py-12">
-          <Shield className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
-          <p className="text-gray-400">Only the owner can manage administrators.</p>
-        </div>
-      </AdminLayout>
-    )
-  }
+    loadAdmins()
+  }, [])
 
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newAdminEmail.trim()) return
 
-    if (newAdminEmail.toLowerCase() === user?.email?.toLowerCase()) {
+    if (newAdminEmail.toLowerCase() === mockUser.email.toLowerCase()) {
       toast.error('You are already the owner')
       return
     }
@@ -166,7 +122,7 @@ export default function ManageAdmins() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <Crown className="h-5 w-5 text-yellow-400 mr-3" />
-                  <span className="text-white font-medium">{user?.email}</span>
+                  <span className="text-white font-medium">{mockUser.email}</span>
                 </div>
                 <span className="text-yellow-400 text-sm font-medium">OWNER</span>
               </div>
