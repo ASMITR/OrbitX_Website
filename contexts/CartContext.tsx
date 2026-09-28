@@ -7,10 +7,14 @@ interface CartItem {
   merchandiseId: string
   name: string
   price: number
+  originalPrice?: number
   image: string
   size?: string
   color?: string
   quantity: number
+  stock?: number
+  category?: string
+  discount?: number
 }
 
 interface CartContextType {
@@ -21,23 +25,55 @@ interface CartContextType {
   clearCart: () => void
   getTotalItems: () => number
   getTotalPrice: () => number
+  getSubtotal: () => number
+  getTotalDiscount: () => number
+  getShippingCost: () => number
+  applyPromoCode: (code: string) => boolean
+  removePromoCode: () => void
+  promoCode: string | null
+  promoDiscount: number
+  recentlyRemoved: CartItem | null
+  restoreItem: () => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
+const PROMO_CODES = {
+  'ORBITX10': 10,
+  'SPACE20': 20,
+  'WELCOME15': 15,
+  'STUDENT25': 25
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
+  const [promoCode, setPromoCode] = useState<string | null>(null)
+  const [promoDiscount, setPromoDiscount] = useState(0)
+  const [recentlyRemoved, setRecentlyRemoved] = useState<CartItem | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('cart')
-    if (saved) {
-      setItems(JSON.parse(saved))
-    }
+    const savedPromo = localStorage.getItem('promoCode')
+    const savedDiscount = localStorage.getItem('promoDiscount')
+    
+    if (saved) setItems(JSON.parse(saved))
+    if (savedPromo) setPromoCode(savedPromo)
+    if (savedDiscount) setPromoDiscount(Number(savedDiscount))
   }, [])
 
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(items))
   }, [items])
+
+  useEffect(() => {
+    if (promoCode) {
+      localStorage.setItem('promoCode', promoCode)
+      localStorage.setItem('promoDiscount', promoDiscount.toString())
+    } else {
+      localStorage.removeItem('promoCode')
+      localStorage.removeItem('promoDiscount')
+    }
+  }, [promoCode, promoDiscount])
 
   const addToCart = (item: Omit<CartItem, 'id'>) => {
     const existingItem = items.find(i => 
@@ -55,6 +91,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const removeFromCart = (id: string) => {
+    const itemToRemove = items.find(item => item.id === id)
+    if (itemToRemove) {
+      setRecentlyRemoved(itemToRemove)
+      setTimeout(() => setRecentlyRemoved(null), 10000) // Clear after 10 seconds
+    }
     setItems(prev => prev.filter(item => item.id !== id))
   }
 
@@ -76,8 +117,48 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return items.reduce((total, item) => total + item.quantity, 0)
   }
 
-  const getTotalPrice = () => {
+  const getSubtotal = () => {
     return items.reduce((total, item) => total + (item.price * item.quantity), 0)
+  }
+
+  const getTotalDiscount = () => {
+    const itemDiscount = items.reduce((total, item) => {
+      const discount = item.originalPrice ? (item.originalPrice - item.price) * item.quantity : 0
+      return total + discount
+    }, 0)
+    const promoDiscountAmount = (getSubtotal() * promoDiscount) / 100
+    return itemDiscount + promoDiscountAmount
+  }
+
+  const getShippingCost = () => {
+    const subtotal = getSubtotal()
+    return subtotal >= 500 ? 0 : 50 // Free shipping above ₹500
+  }
+
+  const getTotalPrice = () => {
+    return getSubtotal() - getTotalDiscount() + getShippingCost()
+  }
+
+  const applyPromoCode = (code: string) => {
+    const discount = PROMO_CODES[code as keyof typeof PROMO_CODES]
+    if (discount) {
+      setPromoCode(code)
+      setPromoDiscount(discount)
+      return true
+    }
+    return false
+  }
+
+  const removePromoCode = () => {
+    setPromoCode(null)
+    setPromoDiscount(0)
+  }
+
+  const restoreItem = () => {
+    if (recentlyRemoved) {
+      setItems(prev => [...prev, recentlyRemoved])
+      setRecentlyRemoved(null)
+    }
   }
 
   return (
@@ -88,7 +169,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       updateQuantity,
       clearCart,
       getTotalItems,
-      getTotalPrice
+      getTotalPrice,
+      getSubtotal,
+      getTotalDiscount,
+      getShippingCost,
+      applyPromoCode,
+      removePromoCode,
+      promoCode,
+      promoDiscount,
+      recentlyRemoved,
+      restoreItem
     }}>
       {children}
     </CartContext.Provider>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, MessageCircle, X, Sparkles, Rocket, Trash2, Bot, User, Zap, Stars } from 'lucide-react'
+import { Send, X, Trash2, Bot, User, Sparkles, MessageCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Message {
@@ -11,727 +11,264 @@ interface Message {
   timestamp: Date
 }
 
+const WELCOME = 'Hi! I\'m OrbitX AI. Ask me anything about our space science club, teams, events, or space in general 🚀'
+const MAX_LEN = 500
+
 export default function Chatbox() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
-  const [inputText, setInputText] = useState('')
+  const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  const MAX_MESSAGE_LENGTH = 500
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setIsMounted(true)
-    setMessages([
-      {
-        id: '1',
-        text: 'Hello! I can help you search for information. Just type your question!',
-        isUser: false,
-        timestamp: new Date()
-      }
-    ])
+    setMessages([{ id: '1', text: WELCOME, isUser: false, timestamp: new Date() }])
   }, [])
 
   useEffect(() => {
-    if (isMounted) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [messages, isMounted])
-
-  if (!isMounted) {
-    return null
-  }
-
-  const clearChat = () => {
-    if (isMounted) {
-      setMessages([
-        {
-          id: '1',
-          text: 'Hello! I can help you search for information. Just type your question!',
-          isUser: false,
-          timestamp: new Date()
-        }
-      ])
-    }
-  }
-
-  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  }, [messages, isLoading])
 
-  const getAnswer = async (query: string): Promise<string> => {
-    try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
-      
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          message: query.trim(),
-          conversationHistory: messages.slice(-6)
-        }),
-        signal: controller.signal
-      })
-      
-      if (response.status === 404) {
-        throw new Error('Chat service is currently unavailable. Please try again later.')
-      }
-      
-      clearTimeout(timeoutId)
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(errorData.error || `Server error: ${response.status}`)
-      }
-      
-      const data = await response.json()
-      return data.response || 'I apologize, but I couldn\'t generate a proper response. Please try asking differently.'
-      
-    } catch (error: any) {
-      console.error('Chat API error:', error)
-      
-      if (error.name === 'AbortError') {
-        return '⏰ Request timed out. Please try with a shorter question or check your connection.'
-      }
-      
-      if (error.message?.includes('Failed to fetch') || error.message?.includes('network')) {
-        return 'Connection issue. Please check your internet and try again.'
-      }
-      
-      return error.message || 'Something went wrong. Please try again or contact us at orbitx@zcoer.edu.in'
-    }
-  }
+  useEffect(() => {
+    if (isOpen) setTimeout(() => inputRef.current?.focus(), 300)
+  }, [isOpen])
+
+  if (!isMounted) return null
+
+  const clearChat = () => setMessages([{ id: '1', text: WELCOME, isUser: false, timestamp: new Date() }])
 
   const handleSend = async () => {
-    const trimmedInput = inputText.trim()
-    if (!trimmedInput) return
-    
-    if (trimmedInput.length > MAX_MESSAGE_LENGTH) {
-      setError(`Message too long. Please keep it under ${MAX_MESSAGE_LENGTH} characters.`)
-      return
-    }
-    
+    const trimmed = input.trim()
+    if (!trimmed || isLoading) return
+    if (trimmed.length > MAX_LEN) { setError(`Max ${MAX_LEN} characters`); return }
     setError(null)
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: trimmedInput,
-      isUser: true,
-      timestamp: new Date()
-    }
-
-    setMessages(prev => [...prev, userMessage])
-    setInputText('')
+    const userMsg: Message = { id: Date.now().toString(), text: trimmed, isUser: true, timestamp: new Date() }
+    setMessages(prev => [...prev, userMsg])
+    setInput('')
     setIsLoading(true)
 
     try {
-      const answer = await getAnswer(trimmedInput)
-      
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: answer,
-        isUser: false,
-        timestamp: new Date()
-      }
-
-      setMessages(prev => [...prev, botMessage])
-    } catch (error) {
-      console.error('Send message error:', error)
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: 'I\'m having trouble right now. Please try again in a moment.',
-        isUser: false,
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, errorMessage])
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 15000)
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: trimmed, conversationHistory: messages.slice(-6) }),
+        signal: controller.signal
+      })
+      clearTimeout(timeout)
+      const data = await res.json()
+      const text = res.ok
+        ? (data.response || 'Sorry, I couldn\'t generate a response.')
+        : (data.error || 'Something went wrong.')
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text, isUser: false, timestamp: new Date() }])
+    } catch (err: any) {
+      const text = err.name === 'AbortError'
+        ? 'Request timed out. Please try again.'
+        : 'Connection error. Please check your internet.'
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text, isUser: false, timestamp: new Date() }])
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
   }
 
   return (
     <>
-      {/* Enhanced Chat Toggle Button */}
-      <motion.div
-        className="fixed bottom-6 right-6 z-[9999]"
-        style={{ position: 'fixed', bottom: '24px', right: '24px' }}
-      >
-        {/* Outer glow ring */}
-        <motion.div
-          className="absolute inset-0 rounded-full"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3]
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          style={{
-            background: 'conic-gradient(from 0deg, #06b6d4, #3b82f6, #8b5cf6, #06b6d4)',
-            filter: 'blur(8px)'
-          }}
-        />
-        
+      {/* FAB */}
+      <div className="fixed bottom-6 right-6 z-[9999]">
         <motion.button
-          onClick={() => setIsOpen(!isOpen)}
-          className="relative bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 text-white p-4 rounded-full shadow-2xl overflow-hidden"
-          whileHover={{ scale: 1.1, y: -3 }}
-          whileTap={{ scale: 0.9 }}
-          animate={{
-            y: [0, -3, 0],
-            rotate: isOpen ? 0 : [0, 5, -5, 0]
-          }}
-          transition={{
-            y: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-            rotate: { duration: 4, repeat: isOpen ? 0 : Infinity }
-          }}
+          onClick={() => setIsOpen(o => !o)}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.93 }}
+          className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-2xl shadow-cyan-500/30 flex items-center justify-center overflow-hidden"
         >
-          {/* Animated background gradient */}
-          <motion.div
-            className="absolute inset-0 opacity-50"
-            animate={{
-              background: [
-                'linear-gradient(45deg, #06b6d4, #3b82f6)',
-                'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                'linear-gradient(225deg, #8b5cf6, #06b6d4)',
-                'linear-gradient(315deg, #06b6d4, #3b82f6)'
-              ]
-            }}
-            transition={{ duration: 4, repeat: Infinity }}
-          />
-          
-          {/* Floating particles */}
-          <div className="absolute inset-0">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-white rounded-full"
-                style={{
-                  left: `${15 + (i * 12)}%`,
-                  top: `${20 + ((i % 3) * 20)}%`
-                }}
-                animate={{
-                  y: [0, -10, 0],
-                  opacity: [0.4, 1, 0.4],
-                  scale: [0.5, 1, 0.5]
-                }}
-                transition={{
-                  duration: 2 + (i * 0.2),
-                  repeat: Infinity,
-                  delay: i * 0.3
-                }}
-              />
-            ))}
-          </div>
-          
-          {/* Icon with smooth transition */}
-          <motion.div
-            className="relative z-10"
-            animate={{ 
-              rotate: isOpen ? 180 : 0,
-              scale: isOpen ? 0.9 : 1
-            }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-          >
-            <AnimatePresence mode="wait">
-              {isOpen ? (
-                <motion.div
-                  key="close"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <X size={24} />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="chat"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <MessageCircle size={24} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-          
-          {/* Pulse effect */}
-          <motion.div
-            className="absolute inset-0 rounded-full border-2 border-white/30"
-            animate={{
-              scale: [1, 1.5, 1],
-              opacity: [0.5, 0, 0.5]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'easeOut'
-            }}
-          />
+          {/* pulse ring */}
+          {!isOpen && (
+            <motion.span
+              className="absolute inset-0 rounded-2xl border-2 border-cyan-400/50"
+              animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
+              transition={{ duration: 1.8, repeat: Infinity }}
+            />
+          )}
+          <AnimatePresence mode="wait">
+            {isOpen ? (
+              <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                <X className="w-5 h-5" />
+              </motion.div>
+            ) : (
+              <motion.div key="chat" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                <MessageCircle className="w-5 h-5" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.button>
-      </motion.div>
+      </div>
 
-      {/* Enhanced Chatbox with Backdrop */}
+      {/* Chat panel */}
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Fast Backdrop */}
+            {/* Backdrop */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-              className="fixed inset-0 bg-gradient-to-br from-black/60 via-cyan-900/20 to-blue-900/30 backdrop-blur-lg z-[9997]"
+              key="backdrop"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9997]"
               onClick={() => setIsOpen(false)}
             />
-            
-            {/* Enhanced Chatbox */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.7, y: 50, rotateX: -15 }}
-              animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
-              exit={{ opacity: 0, scale: 0.7, y: 50, rotateX: 15 }}
-              transition={{ 
-                duration: 0.4, 
-                ease: [0.25, 0.46, 0.45, 0.94],
-                staggerChildren: 0.1
-              }}
-              className="fixed bottom-24 right-6 z-[9998] w-80 h-[32rem] max-w-[calc(100vw-3rem)] max-h-[calc(100vh-8rem)] rounded-3xl shadow-2xl flex flex-col backdrop-blur-2xl transform-gpu overflow-hidden"
-              style={{ 
-                position: 'fixed', 
-                bottom: '96px', 
-                right: '24px',
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 50%, rgba(51, 65, 85, 0.85) 100%)',
-                border: '1px solid rgba(6, 182, 212, 0.3)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(6, 182, 212, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-              }}
-            >
-              {/* Animated border */}
-              <motion.div
-                className="absolute inset-0 rounded-3xl"
-                animate={{
-                  background: [
-                    'conic-gradient(from 0deg, transparent, rgba(6, 182, 212, 0.3), transparent)',
-                    'conic-gradient(from 180deg, transparent, rgba(6, 182, 212, 0.3), transparent)',
-                    'conic-gradient(from 360deg, transparent, rgba(6, 182, 212, 0.3), transparent)'
-                  ]
-                }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                style={{ padding: '1px' }}
-              >
-                <div className="w-full h-full rounded-3xl bg-slate-900/50" />
-              </motion.div>
-              {/* Enhanced Header */}
-              <motion.div 
-                className="relative p-4 flex items-center gap-3 z-10"
-                initial={{ opacity: 0, y: -30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.3 }}
-              >
-                {/* Header background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 backdrop-blur-sm" />
-                
-                {/* Floating particles */}
-                <div className="absolute inset-0 overflow-hidden">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="absolute w-1 h-1 bg-cyan-400/60 rounded-full"
-                      style={{
-                        left: `${Math.random() * 100}%`,
-                        top: `${Math.random() * 100}%`
-                      }}
-                      animate={{
-                        y: [0, -20, 0],
-                        opacity: [0.3, 1, 0.3],
-                        scale: [0.5, 1.2, 0.5]
-                      }}
-                      transition={{
-                        duration: 3 + Math.random() * 2,
-                        repeat: Infinity,
-                        delay: Math.random() * 2
-                      }}
-                    />
-                  ))}
-                </div>
-                
-                {/* AI Avatar */}
-                <motion.div
-                  className="relative"
-                  animate={{ 
-                    rotate: [0, 5, -5, 0],
-                    scale: [1, 1.05, 1]
-                  }}
-                  transition={{ duration: 4, repeat: Infinity }}
-                >
-                  <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center relative overflow-hidden">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                    >
-                      <Bot size={20} className="text-white" />
-                    </motion.div>
-                    {/* Avatar glow */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-br from-cyan-300/50 to-blue-500/50 rounded-full"
-                      animate={{ opacity: [0.5, 0.8, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                  </div>
-                  {/* Status indicator */}
-                  <motion.div
-                    className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-slate-900"
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  />
-                </motion.div>
-                
-                {/* Title */}
-                <div className="flex-1 relative z-10">
-                  <motion.h3 
-                    className="font-bold text-white text-lg"
-                    animate={{ 
-                      backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-                    }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                    style={{
-                      background: 'linear-gradient(90deg, #ffffff, #06b6d4, #3b82f6, #ffffff)',
-                      backgroundSize: '200% 100%',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent'
-                    }}
-                  >
-                    OrbitX AI
-                  </motion.h3>
-                  <motion.p 
-                    className="text-xs text-cyan-300"
-                    animate={{ opacity: [0.7, 1, 0.7] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    Space Explorer Assistant
-                  </motion.p>
-                </div>
-                
-                {/* Action buttons */}
-                <div className="flex items-center gap-2 relative z-10">
-                  <motion.button
-                    onClick={clearChat}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    whileTap={{ scale: 0.9 }}
-                    title="Clear Chat"
-                  >
-                    <Trash2 size={16} className="text-gray-400 group-hover:text-red-400 transition-colors" />
-                  </motion.button>
-                  
-                  <motion.div
-                    animate={{ 
-                      x: [0, 2, 0],
-                      rotate: [0, 10, 0]
-                    }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  >
-                    <Rocket size={16} className="text-orange-400" />
-                  </motion.div>
-                </div>
-              </motion.div>
 
-              {/* Enhanced Messages */}
-              <motion.div 
-                className="flex-1 overflow-y-auto p-4 space-y-4 relative z-10"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.3 }}
-                style={{
-                  scrollbarWidth: 'thin',
-                  scrollbarColor: 'rgba(6, 182, 212, 0.3) transparent'
-                }}
-              >
-                {messages.map((message, index) => (
-                  <motion.div
-                    key={message.id}
-                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ 
-                      delay: index * 0.1,
-                      duration: 0.3,
-                      ease: 'easeOut'
-                    }}
-                    className={`flex items-end gap-2 ${message.isUser ? 'justify-end' : 'justify-start'}`}
+            {/* Panel */}
+            <motion.div
+              key="panel"
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="fixed bottom-24 right-6 z-[9998] w-[340px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-8rem)] rounded-2xl flex flex-col overflow-hidden shadow-2xl"
+              style={{ background: '#0c0c14', border: '1px solid rgba(255,255,255,0.08)' }}
+            >
+              {/* Subtle top glow */}
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+
+              {/* Header */}
+              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/6 flex-shrink-0">
+                <div className="relative">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                    <Bot className="w-4.5 h-4.5 text-white w-[18px] h-[18px]" />
+                  </div>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-[#0c0c14]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-semibold leading-tight">OrbitX AI</p>
+                  <p className="text-green-400 text-[11px]">Online · Space Assistant</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={clearChat}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    title="Clear chat"
                   >
-                    {/* Avatar for bot messages */}
-                    {!message.isUser && (
-                      <motion.div
-                        className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center mb-1"
-                        animate={{ rotate: [0, 5, -5, 0] }}
-                        transition={{ duration: 4, repeat: Infinity }}
-                      >
-                        <Bot size={14} className="text-white" />
-                      </motion.div>
-                    )}
-                    
-                    {/* Message bubble */}
-                    <motion.div
-                      className={`max-w-[75%] relative ${
-                        message.isUser ? 'order-1' : 'order-2'
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div
-                        className={`p-3 rounded-2xl text-sm shadow-lg relative overflow-hidden ${
-                          message.isUser
-                            ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white ml-auto'
-                            : 'bg-slate-800/80 text-gray-100 backdrop-blur-sm border border-slate-600/40'
-                        }`}
-                        style={{
-                          borderRadius: message.isUser 
-                            ? '20px 20px 5px 20px' 
-                            : '20px 20px 20px 5px'
-                        }}
-                      >
-                        {/* Message background animation */}
-                        {message.isUser && (
-                          <motion.div
-                            className="absolute inset-0 opacity-20"
-                            animate={{
-                              background: [
-                                'linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent)',
-                                'linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent)'
-                              ]
-                            }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          />
-                        )}
-                        
-                        <p className="whitespace-pre-wrap leading-relaxed relative z-10">
-                          {message.text}
-                        </p>
-                        
-                        <div className="flex items-center justify-between mt-2 relative z-10">
-                          <span className="text-xs opacity-60">
-                            {message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                          </span>
-                          
-                          {!message.isUser && (
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                            >
-                              <Sparkles size={12} className="text-cyan-400" />
-                            </motion.div>
-                          )}
-                        </div>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/8 transition-all"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+                {messages.map((msg) => (
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className={`flex items-end gap-2 ${msg.isUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {!msg.isUser && (
+                      <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0 mb-0.5">
+                        <Bot className="w-3 h-3 text-white" />
                       </div>
-                    </motion.div>
-                    
-                    {/* Avatar for user messages */}
-                    {message.isUser && (
-                      <motion.div
-                        className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mb-1"
-                        whileHover={{ scale: 1.1 }}
-                      >
-                        <User size={14} className="text-white" />
-                      </motion.div>
+                    )}
+                    <div className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                      msg.isUser
+                        ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-br-sm'
+                        : 'bg-white/6 text-gray-200 border border-white/8 rounded-bl-sm'
+                    }`}>
+                      <p className="whitespace-pre-wrap">{msg.text}</p>
+                      <p className={`text-[10px] mt-1.5 ${msg.isUser ? 'text-cyan-200/70 text-right' : 'text-gray-500'}`}>
+                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    {msg.isUser && (
+                      <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0 mb-0.5">
+                        <User className="w-3 h-3 text-gray-300" />
+                      </div>
                     )}
                   </motion.div>
                 ))}
-            
-                {/* Enhanced loading indicator */}
+
+                {/* Typing indicator */}
                 {isLoading && (
-                  <motion.div 
-                    className="flex items-end gap-2 justify-start"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    className="flex items-end gap-2"
                   >
-                    {/* Bot avatar */}
-                    <motion.div
-                      className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center mb-1"
-                      animate={{ 
-                        rotate: [0, 360],
-                        scale: [1, 1.1, 1]
-                      }}
-                      transition={{ 
-                        rotate: { duration: 2, repeat: Infinity, ease: 'linear' },
-                        scale: { duration: 1, repeat: Infinity }
-                      }}
-                    >
-                      <Bot size={14} className="text-white" />
-                    </motion.div>
-                    
-                    {/* Typing indicator */}
-                    <motion.div 
-                      className="bg-slate-800/80 text-gray-100 p-4 rounded-2xl backdrop-blur-sm border border-slate-600/40 relative overflow-hidden"
-                      style={{ borderRadius: '20px 20px 20px 5px' }}
-                    >
-                      {/* Background pulse */}
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10"
-                        animate={{ opacity: [0.3, 0.6, 0.3] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      />
-                      
-                      <div className="flex items-center gap-3 relative z-10">
-                        {/* Animated dots */}
-                        <div className="flex gap-1">
-                          {[0, 1, 2].map((i) => (
-                            <motion.div
-                              key={i}
-                              className="w-2 h-2 bg-cyan-400 rounded-full"
-                              animate={{
-                                y: [0, -8, 0],
-                                opacity: [0.4, 1, 0.4]
-                              }}
-                              transition={{
-                                duration: 1.2,
-                                repeat: Infinity,
-                                delay: i * 0.2
-                              }}
-                            />
-                          ))}
-                        </div>
-                        
-                        <span className="text-sm font-medium text-cyan-300">AI is thinking</span>
-                        
-                        <motion.div
-                          animate={{ 
-                            rotate: 360,
-                            scale: [1, 1.2, 1]
-                          }}
-                          transition={{ 
-                            rotate: { duration: 2, repeat: Infinity, ease: 'linear' },
-                            scale: { duration: 1, repeat: Infinity }
-                          }}
-                        >
-                          <Zap size={14} className="text-yellow-400" />
-                        </motion.div>
-                      </div>
-                    </motion.div>
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-3 h-3 text-white" />
+                    </div>
+                    <div className="bg-white/6 border border-white/8 px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-1.5">
+                      {[0, 1, 2].map(i => (
+                        <motion.span
+                          key={i}
+                          className="w-1.5 h-1.5 bg-cyan-400 rounded-full block"
+                          animate={{ y: [0, -5, 0] }}
+                          transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
+                        />
+                      ))}
+                    </div>
                   </motion.div>
                 )}
-            
-            <div ref={messagesEndRef} />
-          </motion.div>
 
-              {/* Enhanced Input Section */}
-              <motion.div 
-                className="p-4 relative z-10"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.3 }}
-              >
-                {/* Background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent" />
-                
-                {/* Error message */}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input */}
+              <div className="px-4 py-3 border-t border-white/6 flex-shrink-0">
                 <AnimatePresence>
                   {error && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10, scale: 0.9 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.9 }}
-                      className="mb-3 p-3 bg-red-500/20 border border-red-500/40 rounded-xl text-sm text-red-300 relative overflow-hidden"
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                      className="text-red-400 text-xs mb-2 px-1"
                     >
-                      <motion.div
-                        className="absolute inset-0 bg-red-500/10"
-                        animate={{ opacity: [0.2, 0.4, 0.2] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      />
-                      <span className="relative z-10">{error}</span>
-                    </motion.div>
+                      {error}
+                    </motion.p>
                   )}
                 </AnimatePresence>
-                
-                {/* Input container */}
-                <div className="relative">
-                  {/* Input field */}
-                  <motion.div
-                    className="relative"
-                    whileFocus={{ scale: 1.01 }}
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={e => { setInput(e.target.value); if (error) setError(null) }}
+                    onKeyDown={handleKey}
+                    placeholder="Ask me anything..."
+                    maxLength={MAX_LEN}
+                    disabled={isLoading}
+                    className="flex-1 bg-white/5 border border-white/10 text-gray-100 text-sm px-4 py-2.5 rounded-xl placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:bg-white/8 transition-all disabled:opacity-50"
+                  />
+                  <motion.button
+                    onClick={handleSend}
+                    disabled={isLoading || !input.trim()}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 transition-opacity"
                   >
-                    <input
-                      type="text"
-                      value={inputText}
-                      onChange={(e) => {
-                        setInputText(e.target.value)
-                        if (error) setError(null)
-                      }}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Ask about space, OrbitX, or anything cosmic..."
-                      className="w-full bg-slate-800/60 text-gray-100 p-4 pr-16 rounded-2xl border border-slate-600/40 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20 text-sm placeholder-gray-400 backdrop-blur-sm transition-all duration-300"
-                      disabled={isLoading}
-                      maxLength={MAX_MESSAGE_LENGTH}
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(51, 65, 85, 0.6) 100%)'
-                      }}
-                    />
-                    
-                    {/* Send button */}
-                    <motion.button
-                      onClick={handleSend}
-                      disabled={isLoading || !inputText.trim() || inputText.trim().length > MAX_MESSAGE_LENGTH}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl transition-all duration-200 shadow-lg relative overflow-hidden flex items-center justify-center"
-                      whileHover={{ scale: 1.05, rotate: 5 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {/* Button background animation */}
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-br from-cyan-400/30 to-blue-500/30"
-                        animate={{ 
-                          scale: [1, 1.2, 1],
-                          opacity: [0.5, 0.8, 0.5]
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                      
-                      <motion.div
-                        className="relative z-10"
-                        animate={isLoading ? { rotate: 360 } : { rotate: 0 }}
-                        transition={{ duration: 1, repeat: isLoading ? Infinity : 0, ease: 'linear' }}
-                      >
-                        <Send size={16} />
-                      </motion.div>
-                    </motion.button>
-                  </motion.div>
-                  
-                  {/* Character counter */}
-                  <motion.div 
-                    className="flex justify-between items-center mt-2 text-xs relative z-10"
-                    animate={{ opacity: inputText.length > 0 ? 1 : 0.5 }}
-                  >
-                    <span className="text-gray-500 flex items-center gap-1">
-                      <Stars size={12} className="text-cyan-400" />
-                      Powered by OrbitX AI
-                    </span>
-                    <span className={`transition-colors ${
-                      inputText.length > MAX_MESSAGE_LENGTH * 0.8 
-                        ? 'text-orange-400' 
-                        : inputText.length > MAX_MESSAGE_LENGTH * 0.9 
-                        ? 'text-red-400' 
-                        : 'text-gray-500'
-                    }`}>
-                      {inputText.length}/{MAX_MESSAGE_LENGTH}
-                    </span>
-                  </motion.div>
+                    <Send className="w-3.5 h-3.5" />
+                  </motion.button>
                 </div>
-              </motion.div>
+                <div className="flex items-center justify-between mt-2 px-1">
+                  <span className="text-[10px] text-gray-600 flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5 text-cyan-600" /> Powered by Gemini AI
+                  </span>
+                  <span className={`text-[10px] ${input.length > MAX_LEN * 0.9 ? 'text-red-400' : 'text-gray-600'}`}>
+                    {input.length}/{MAX_LEN}
+                  </span>
+                </div>
+              </div>
             </motion.div>
           </>
         )}

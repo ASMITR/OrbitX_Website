@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { Search, Filter, Linkedin, Github, Instagram, X } from 'lucide-react'
+import { Search, Filter, Linkedin, Github, Instagram, X, BookOpen, Briefcase, Award } from 'lucide-react'
 import { getMembers } from '@/lib/db'
 import { Member } from '@/lib/types'
 import { POSITIONS } from '@/lib/constants'
@@ -702,588 +702,208 @@ export default function Members() {
 
         {/* Member Detail Modal */}
         {selectedMember && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4"
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-end sm:items-center justify-center sm:p-4"
             onClick={() => setSelectedMember(null)}
           >
             <motion.div
-              initial={{ 
-                opacity: 0, 
-                scale: 0.3, 
-                rotateY: -90, 
-                z: -1000,
-                filter: "blur(10px)"
-              }}
-              animate={{ 
-                opacity: 1, 
-                scale: 1, 
-                rotateY: 0, 
-                z: 0,
-                filter: "blur(0px)",
-                transition: {
-                  type: "spring",
-                  damping: 15,
-                  stiffness: 300,
-                  duration: 0.3
-                }
-              }}
-              exit={{ 
-                opacity: 0, 
-                scale: 0.3, 
-                rotateY: 90, 
-                z: -1000,
-                filter: "blur(10px)",
-                transition: { duration: 0.2 }
-              }}
-              whileHover={{ 
-                scale: 1.01,
-                rotateX: 1,
-                y: -5,
-                boxShadow: "0 25px 50px rgba(6, 182, 212, 0.3)",
-                transition: { duration: 0.3 }
-              }}
-              className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 max-w-5xl w-full max-h-[95vh] overflow-y-auto relative overflow-hidden"
+              initial={{ opacity: 0, y: 60 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 60 }}
+              transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="relative bg-[#0a0a12] border border-white/10 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-2xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col"
               onClick={(e) => e.stopPropagation()}
-              style={{ 
-                perspective: 1500,
-                transformStyle: 'preserve-3d'
-              }}
             >
-              {/* Holographic grid overlay */}
-              <div className="absolute inset-0 rounded-3xl overflow-hidden">
-                <motion.div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage: `
-                      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
-                    `,
-                    backgroundSize: '20px 20px'
-                  }}
-                  animate={{
-                    backgroundPosition: ['0px 0px', '20px 20px']
-                  }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                />
-                <motion.div
-                  className="absolute inset-0 opacity-20"
-                  style={{
-                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)'
-                  }}
-                  animate={{ x: ['-100%', '100%'] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                />
+              {/* drag handle on mobile */}
+              <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                <div className="w-10 h-1 rounded-full bg-white/20" />
               </div>
-              {/* Futuristic data streams */}
-              <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
-                {[...Array(15)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-px h-full bg-gradient-to-b from-transparent via-white/20 to-transparent"
-                    style={{ left: Math.random() * 100 + '%' }}
-                    animate={{
-                      opacity: [0, 1, 0],
-                      scaleY: [0, 1, 0]
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: Math.random() * 2,
-                      ease: "easeInOut"
-                    }}
-                  />
-                ))}
-                {[...Array(8)].map((_, i) => (
-                  <motion.div
-                    key={`hex-${i}`}
-                    className="absolute w-12 h-12 border border-white/10"
-                    style={{
-                      left: Math.random() * 90 + '%',
-                      top: Math.random() * 90 + '%',
-                      clipPath: 'polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%)'
-                    }}
-                    animate={{
-                      rotate: [0, 360],
-                      scale: [0.8, 1.2, 0.8],
-                      opacity: [0.1, 0.3, 0.1]
-                    }}
-                    transition={{
-                      duration: 8 + i,
-                      repeat: Infinity,
-                      ease: "linear"
-                    }}
-                  />
-                ))}
-              </div>
-              {/* Header */}
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.3 }}
-                className="flex justify-between items-center mb-6"
-              >
-                <motion.div
-                  initial={{ x: -20 }}
-                  animate={{ x: 0 }}
-                  transition={{ delay: 0.2, duration: 0.3 }}
-                >
-                  <h2 className="text-2xl font-bold text-white/90">Member Profile</h2>
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: '100%' }}
-                    transition={{ delay: 0.4, duration: 0.5 }}
-                    className="h-0.5 bg-white/30 rounded-full mt-1"
-                  />
-                </motion.div>
-                <motion.button
-                  initial={{ scale: 0, rotate: -360, opacity: 0 }}
-                  animate={{ 
-                    scale: 1, 
-                    rotate: 0, 
-                    opacity: 1,
-                    transition: {
-                      type: "spring",
-                      damping: 8,
-                      stiffness: 400,
-                      delay: 0.8
-                    }
-                  }}
-                  whileHover={{ 
-                    scale: 1.2, 
-                    rotate: [0, -10, 10, 0],
-                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                    boxShadow: "0 0 20px rgba(239, 68, 68, 0.5)",
-                    transition: { duration: 0.3 }
-                  }}
-                  whileTap={{ 
-                    scale: 0.8,
-                    rotate: 180,
-                    transition: { duration: 0.1 }
-                  }}
-                  onClick={() => setSelectedMember(null)}
-                  className="p-2 text-gray-400 hover:text-white rounded-xl transition-all duration-200 border border-white/10 hover:border-white/30 relative overflow-hidden group backdrop-blur-sm"
-                >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                    initial={{ x: '-100%' }}
-                    whileHover={{ x: '100%' }}
-                    transition={{ duration: 0.6 }}
-                  />
-                  <motion.div
-                    animate={{ rotate: [0, 180, 360] }}
-                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                  >
-                    <X className="h-5 w-5 relative z-10" />
-                  </motion.div>
-                </motion.button>
-              </motion.div>
 
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Photo Section */}
-                <motion.div 
-                  initial={{ opacity: 0, x: -30, rotateY: -20 }}
-                  animate={{ opacity: 1, x: 0, rotateY: 0 }}
-                  transition={{ delay: 0.1, duration: 0.3, type: "spring" }}
-                  className="flex-shrink-0 text-center lg:text-left"
-                >
-                  <div className="relative inline-block">
-                    <motion.div
-                      initial={{ scale: 0.5, opacity: 0, rotateX: 45, rotateY: -30 }}
-                      animate={{ 
-                        scale: 1, 
-                        opacity: 1, 
-                        rotateX: 0, 
-                        rotateY: 0,
-                        transition: {
-                          type: "spring",
-                          damping: 12,
-                          stiffness: 200,
-                          delay: 0.3
-                        }
-                      }}
-                      whileHover={{
-                        scale: 1.05,
-                        rotateY: 5,
-                        rotateX: -5,
-                        transition: { duration: 0.3 }
-                      }}
-                      className="w-40 h-48 lg:w-48 lg:h-60 rounded-2xl border-2 border-cyan-500/30 shadow-2xl shadow-cyan-500/20 overflow-hidden mx-auto lg:mx-0 relative cursor-pointer"
-                      style={{ transformStyle: 'preserve-3d' }}
+              {/* ── Responsive layout ── */}
+              {/* Mobile: photo hero top + details below | Tablet+: photo left + details right */}
+              <div className="flex flex-col sm:flex-row flex-1 min-h-0">
+
+                {/* PHOTO PANEL */}
+                {/* Mobile: fixed height hero | sm+: fixed width full height */}
+                <div className="relative w-full h-52 sm:h-auto sm:w-52 md:w-64 flex-shrink-0 bg-slate-900">
+                  <Image
+                    src={selectedMember.photo}
+                    alt={selectedMember.name}
+                    fill
+                    loader={imageLoader}
+                    priority
+                    className="object-cover object-top"
+                    onError={(e) => {
+                      const t = e.target as HTMLImageElement
+                      t.style.display = 'none'
+                      t.nextElementSibling?.classList.remove('hidden')
+                    }}
+                  />
+                  <div className="hidden absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+                    <span className="text-white/20 text-5xl font-bold">
+                      {selectedMember.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                    </span>
+                  </div>
+
+                  {/* bottom gradient */}
+                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/90 to-transparent" />
+
+                  {/* role badge bottom-left */}
+                  <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border backdrop-blur-sm ${getRoleColor(selectedMember.position)}`}>
+                      {selectedMember.position}
+                    </span>
+                    {/* close btn visible on mobile over photo */}
+                    <button
+                      onClick={() => setSelectedMember(null)}
+                      className="sm:hidden p-1.5 rounded-full bg-black/60 text-gray-300 hover:text-white transition-all"
                     >
-                      {/* Glowing border animation */}
-                      <motion.div
-                        className="absolute inset-0 rounded-2xl"
-                        animate={{
-                          boxShadow: [
-                            '0 0 20px rgba(6, 182, 212, 0.3)',
-                            '0 0 40px rgba(6, 182, 212, 0.6)',
-                            '0 0 20px rgba(6, 182, 212, 0.3)'
-                          ]
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                      <Image
-                        src={selectedMember.photo}
-                        alt={selectedMember.name}
-                        width={192}
-                        height={240}
-                        loader={imageLoader}
-                        priority
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.style.display = 'none'
-                          target.nextElementSibling?.classList.remove('hidden')
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                    </motion.div>
-                    <div className="hidden w-40 h-48 lg:w-48 lg:h-60 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center border-2 border-cyan-500/30 shadow-2xl">
-                      <span className="text-6xl opacity-30">👤</span>
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* accent bar — left on desktop, top on mobile */}
+                  <div className={`absolute sm:top-0 sm:left-0 sm:w-1 sm:h-full top-0 left-0 right-0 h-1 sm:h-auto ${
+                    ['president','chairman','secretary','treasurer'].some(p => selectedMember.position.toLowerCase().includes(p))
+                      ? 'bg-gradient-to-r sm:bg-gradient-to-b from-yellow-400 to-orange-500'
+                      : selectedMember.position.toLowerCase().includes('team leader')
+                      ? 'bg-gradient-to-r sm:bg-gradient-to-b from-indigo-400 to-blue-500'
+                      : 'bg-gradient-to-r sm:bg-gradient-to-b from-cyan-400 to-teal-500'
+                  }`} />
+                </div>
+
+                {/* DETAILS PANEL */}
+                <div className="flex-1 overflow-y-auto overscroll-contain">
+
+                  {/* header */}
+                  <div className="flex items-start justify-between px-4 sm:px-5 pt-4 sm:pt-5 pb-2">
+                    <div className="min-w-0 pr-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-white leading-tight truncate">{selectedMember.name}</h3>
+                      {selectedMember.team && selectedMember.team !== 'NA' && (
+                        <p className="text-gray-400 text-xs mt-0.5 truncate">{selectedMember.team}</p>
+                      )}
                     </div>
-                    {/* Advanced floating elements */}
-                    <motion.div 
-                      animate={{ 
-                        scale: [1, 1.5, 1], 
-                        opacity: [0.7, 1, 0.7],
-                        rotate: [0, 180, 360],
-                        x: [0, 5, 0],
-                        y: [0, -5, 0]
-                      }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute -top-3 -right-3 w-4 h-4 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-lg shadow-cyan-400/50"
-                    />
-                    <motion.div 
-                      animate={{ 
-                        scale: [1, 1.3, 1], 
-                        opacity: [0.5, 1, 0.5],
-                        rotate: [360, 180, 0],
-                        x: [0, -3, 0],
-                        y: [0, 3, 0]
-                      }}
-                      transition={{ duration: 2.5, repeat: Infinity, delay: 0.5, ease: "easeInOut" }}
-                      className="absolute -bottom-3 -left-3 w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full shadow-lg shadow-purple-400/50"
-                    />
-                    {/* Orbiting particles */}
-                    {[...Array(3)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className="absolute w-1.5 h-1.5 bg-cyan-300 rounded-full"
-                        animate={{
-                          rotate: [0, 360],
-                          scale: [0.5, 1, 0.5]
-                        }}
-                        transition={{
-                          duration: 4 + i,
-                          repeat: Infinity,
-                          ease: "linear"
-                        }}
-                        style={{
-                          left: '50%',
-                          top: '50%',
-                          transformOrigin: `${60 + i * 20}px 0px`
-                        }}
-                      />
+                    {/* close btn hidden on mobile (shown on photo), visible on sm+ */}
+                    <button
+                      onClick={() => setSelectedMember(null)}
+                      className="hidden sm:flex p-1.5 rounded-full bg-white/8 text-gray-400 hover:text-white hover:bg-white/15 transition-all flex-shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* social links */}
+                  {(selectedMember.socialLinks?.linkedin || selectedMember.socialLinks?.github || selectedMember.socialLinks?.instagram) && (
+                    <div className="flex flex-wrap gap-2 px-4 sm:px-5 mb-3" onClick={e => e.stopPropagation()}>
+                      {selectedMember.socialLinks?.linkedin && (
+                        <a href={selectedMember.socialLinks.linkedin.startsWith('http') ? selectedMember.socialLinks.linkedin : `https://${selectedMember.socialLinks.linkedin}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/15 border border-blue-500/25 text-blue-400 text-xs font-medium hover:bg-blue-600/30 transition-colors">
+                          <Linkedin className="w-3 h-3" /> LinkedIn
+                        </a>
+                      )}
+                      {selectedMember.socialLinks?.github && (
+                        <a href={selectedMember.socialLinks.github.startsWith('http') ? selectedMember.socialLinks.github : `https://${selectedMember.socialLinks.github}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/8 border border-white/12 text-gray-300 text-xs font-medium hover:bg-white/15 transition-colors">
+                          <Github className="w-3 h-3" /> GitHub
+                        </a>
+                      )}
+                      {selectedMember.socialLinks?.instagram && (
+                        <a href={selectedMember.socialLinks.instagram.startsWith('http') ? selectedMember.socialLinks.instagram : `https://${selectedMember.socialLinks.instagram}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-pink-600/15 border border-pink-500/25 text-pink-400 text-xs font-medium hover:bg-pink-600/30 transition-colors">
+                          <Instagram className="w-3 h-3" /> Instagram
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="mx-4 sm:mx-5 h-px bg-white/8 mb-3" />
+
+                  {/* stats */}
+                  <div className="px-4 sm:px-5 mb-3 grid grid-cols-3 gap-2">
+                    {[
+                      { icon: <BookOpen className="w-3.5 h-3.5 text-blue-400" />, label: 'Events', value: selectedMember.eventsParticipated?.length ?? 0 },
+                      { icon: <Briefcase className="w-3.5 h-3.5 text-purple-400" />, label: 'Projects', value: selectedMember.projectsParticipated?.length ?? 0 },
+                      { icon: <Award className="w-3.5 h-3.5 text-yellow-400" />, label: 'Badges', value: selectedMember.badges?.length ?? 0 },
+                    ].map(stat => (
+                      <div key={stat.label} className="bg-white/[0.04] rounded-xl p-2.5 text-center border border-white/8 flex flex-col items-center gap-1">
+                        {stat.icon}
+                        <p className="text-white text-base font-bold leading-none">{stat.value}</p>
+                        <p className="text-gray-500 text-[10px]">{stat.label}</p>
+                      </div>
                     ))}
                   </div>
-                </motion.div>
 
-                {/* Details Section */}
-                <motion.div 
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2, duration: 0.3 }}
-                  className="flex-1 space-y-4 relative"
-                >
-                  {/* Scroll-triggered animations */}
-                  <motion.div
-                    className="absolute -inset-4 bg-gradient-to-r from-cyan-500/5 via-blue-500/10 to-emerald-500/5 rounded-2xl"
-                    animate={{
-                      opacity: [0.3, 0.7, 0.3],
-                      scale: [0.98, 1.02, 0.98]
-                    }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  />
-                  {/* Name and Role */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.3 }}
-                  >
-                    <motion.h3 
-                      initial={{ scale: 0.5, opacity: 0, y: 20 }}
-                      animate={{ 
-                        scale: 1, 
-                        opacity: 1, 
-                        y: 0,
-                        transition: {
-                          type: "spring",
-                          damping: 10,
-                          stiffness: 200,
-                          delay: 0.5
-                        }
-                      }}
-                      whileHover={{
-                        scale: 1.05,
-                        textShadow: "0px 0px 8px rgba(6, 182, 212, 0.8)",
-                        transition: { duration: 0.2 }
-                      }}
-                      className="text-3xl font-bold mb-3 text-white/90 whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer"
-                    >
-                      <motion.span
-                        animate={{
-                          backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-                        }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                        style={{
-                          backgroundSize: '200% 200%'
-                        }}
-                      >
-                        {selectedMember.name}
-                      </motion.span>
-                    </motion.h3>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      <motion.span 
-                        initial={{ scale: 0, rotate: -180, opacity: 0 }}
-                        animate={{ 
-                          scale: 1, 
-                          rotate: 0, 
-                          opacity: 1,
-                          transition: {
-                            type: "spring",
-                            damping: 8,
-                            stiffness: 300,
-                            delay: 0.6
-                          }
-                        }}
-                        whileHover={{ 
-                          scale: 1.1, 
-                          y: -3,
-                          rotate: [0, -2, 2, 0],
-                          transition: { duration: 0.3 }
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`px-3 py-1.5 rounded-full text-sm font-semibold ${getRoleColor(selectedMember.position)} border shadow-lg cursor-pointer relative overflow-hidden`}
-                      >
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                          initial={{ x: '-100%' }}
-                          whileHover={{ x: '100%' }}
-                          transition={{ duration: 0.6 }}
-                        />
-                        <span className="relative z-10">{selectedMember.position}</span>
-                      </motion.span>
-                      {selectedMember.team && selectedMember.team !== 'NA' && (
-                        <motion.span 
-                          initial={{ scale: 0, rotate: 180, opacity: 0 }}
-                          animate={{ 
-                            scale: 1, 
-                            rotate: 0, 
-                            opacity: 1,
-                            transition: {
-                              type: "spring",
-                              damping: 8,
-                              stiffness: 300,
-                              delay: 0.7
-                            }
-                          }}
-                          whileHover={{ 
-                            scale: 1.1, 
-                            y: -3,
-                            boxShadow: "0 10px 25px rgba(6, 182, 212, 0.4)",
-                            transition: { duration: 0.3 }
-                          }}
-                          whileTap={{ scale: 0.95 }}
-                          className="px-3 py-1.5 rounded-full text-sm bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg cursor-pointer relative overflow-hidden"
-                        >
-                          <motion.div
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
-                            initial={{ x: '-100%' }}
-                            whileHover={{ x: '100%' }}
-                            transition={{ duration: 0.6 }}
-                          />
-                          <span className="relative z-10">{selectedMember.team}</span>
-                        </motion.span>
-                      )}
-                    </div>
-                  </motion.div>
-
-                  {/* Personal Info */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    whileInView={{ 
-                      boxShadow: "0 0 30px rgba(6, 182, 212, 0.2)",
-                      borderColor: "rgba(6, 182, 212, 0.4)"
-                    }}
-                    transition={{ delay: 0.3, duration: 0.3 }}
-                    className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 relative overflow-hidden"
-                  >
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                      animate={{ x: ['-100%', '100%'] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    />
-                    <motion.h4 
-                      initial={{ x: -10 }}
-                      animate={{ x: 0 }}
-                      whileInView={{ 
-                        textShadow: "0 0 10px rgba(6, 182, 212, 0.5)"
-                      }}
-                      transition={{ delay: 0.4 }}
-                      className="text-lg font-semibold text-white mb-3 flex items-center relative z-10"
-                    >
-                      <motion.div 
-                        animate={{ 
-                          scale: [1, 1.3, 1],
-                          boxShadow: [
-                            '0 0 5px rgba(6, 182, 212, 0.5)',
-                            '0 0 15px rgba(6, 182, 212, 0.8)',
-                            '0 0 5px rgba(6, 182, 212, 0.5)'
-                          ]
-                        }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="w-2 h-2 bg-white/50 rounded-full mr-3"
-                      />
-                      Personal Information
-                    </motion.h4>
-                    <div className="grid grid-cols-1 gap-4 text-sm">
-                      {selectedMember.dateOfBirth && (
-                        <motion.div
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.6 }}
-                          className="bg-white/5 rounded-lg p-3"
-                        >
-                          <span className="text-gray-400 text-xs uppercase tracking-wide">Date of Birth</span>
-                          <p className="text-white font-medium text-lg">
-                            {new Date(selectedMember.dateOfBirth).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </p>
-                          <p className="text-blue-400 text-xs mt-1">
-                            Age: {Math.floor((new Date().getTime() - new Date(selectedMember.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years
-                          </p>
-                        </motion.div>
-                      )}
-                    </div>
-                  </motion.div>
-
-                  {/* Academic Info */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="bg-white/5 rounded-2xl p-6 border border-white/10"
-                  >
-                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
-                      Academic Information
-                    </h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                  {/* academic */}
+                  <div className="px-4 sm:px-5 mb-3">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-2">Academic</p>
+                    <div className="grid grid-cols-2 gap-1.5">
                       {[
                         { label: 'Branch', value: selectedMember.branch },
                         { label: 'Year', value: selectedMember.year },
                         { label: 'Division', value: selectedMember.division },
-                        { label: 'Roll No', value: selectedMember.rollNo }
-                      ].map((item, index) => (
-                        <motion.div
-                          key={item.label}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.7 + index * 0.1 }}
-                          className="bg-white/5 rounded-lg p-3"
-                        >
-                          <span className="text-gray-400 text-xs uppercase tracking-wide">{item.label}</span>
-                          <p className="text-white font-medium text-lg">{item.value}</p>
-                        </motion.div>
+                        { label: 'Roll No', value: selectedMember.rollNo },
+                      ].filter(i => i.value).map(item => (
+                        <div key={item.label} className="bg-white/[0.04] rounded-lg px-3 py-2 border border-white/8">
+                          <p className="text-gray-500 text-[9px] uppercase tracking-wide">{item.label}</p>
+                          <p className="text-white text-sm font-semibold mt-0.5">{item.value}</p>
+                        </div>
                       ))}
                     </div>
-                  </motion.div>
+                  </div>
 
+                  {/* DOB */}
+                  {selectedMember.dateOfBirth && (
+                    <div className="px-4 sm:px-5 mb-3">
+                      <div className="bg-white/[0.04] rounded-lg px-3 py-2.5 border border-white/8 flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-gray-500 text-[9px] uppercase tracking-wide">Date of Birth</p>
+                          <p className="text-white text-sm font-semibold mt-0.5">
+                            {new Date(selectedMember.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                          </p>
+                        </div>
+                        <span className="text-blue-400 text-xs font-bold bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20 flex-shrink-0 whitespace-nowrap">
+                          {Math.floor((Date.now() - new Date(selectedMember.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} yrs
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
-
-                  {/* Skills */}
+                  {/* skills */}
                   {selectedMember.skills && selectedMember.skills.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.8 }}
-                      className="bg-white/5 rounded-2xl p-6 border border-white/10"
-                    >
-                      <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-                        <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                        Skills & Expertise
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedMember.skills.map((skill, index) => (
-                          <span key={index} className="px-3 py-2 bg-blue-500/20 text-blue-300 text-sm rounded-full border border-blue-500/30 hover:bg-blue-500/30 transition-colors">
-                            {skill}
-                          </span>
+                    <div className="px-4 sm:px-5 mb-3">
+                      <p className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-2">Skills</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedMember.skills.map((skill, i) => (
+                          <span key={i} className="px-2.5 py-1 bg-blue-500/10 text-blue-300 text-xs rounded-lg border border-blue-500/20">{skill}</span>
                         ))}
                       </div>
-                    </motion.div>
+                    </div>
                   )}
 
-                  {/* Social Links */}
-                  {(selectedMember.socialLinks?.linkedin || selectedMember.socialLinks?.github || selectedMember.socialLinks?.instagram) && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.9 }}
-                      className="bg-white/5 rounded-2xl p-6 border border-white/10"
-                    >
-                      <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-                        <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
-                        Social Media
-                      </h4>
-                      <div className="flex space-x-4 relative z-10">
-                        {selectedMember.socialLinks?.linkedin && (
-                          <motion.a
-                            whileHover={{ scale: 1.1, y: -2 }}
-                            whileTap={{ scale: 0.95 }}
-                            href={selectedMember.socialLinks.linkedin.startsWith('http') ? selectedMember.socialLinks.linkedin : `https://${selectedMember.socialLinks.linkedin}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-12 h-12 bg-blue-600/20 border border-blue-500/30 rounded-xl flex items-center justify-center hover:bg-blue-600/40 transition-all duration-200 shadow-lg"
-                          >
-                            <Linkedin className="h-6 w-6 text-blue-400" />
-                          </motion.a>
-                        )}
-                        {selectedMember.socialLinks?.github && (
-                          <motion.a
-                            whileHover={{ scale: 1.1, y: -2 }}
-                            whileTap={{ scale: 0.95 }}
-                            href={selectedMember.socialLinks.github.startsWith('http') ? selectedMember.socialLinks.github : `https://${selectedMember.socialLinks.github}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-12 h-12 bg-gray-600/20 border border-gray-500/30 rounded-xl flex items-center justify-center hover:bg-gray-600/40 transition-all duration-200 shadow-lg"
-                          >
-                            <Github className="h-6 w-6 text-gray-400" />
-                          </motion.a>
-                        )}
-                        {selectedMember.socialLinks?.instagram && (
-                          <motion.a
-                            whileHover={{ scale: 1.1, y: -2 }}
-                            whileTap={{ scale: 0.95 }}
-                            href={selectedMember.socialLinks.instagram.startsWith('http') ? selectedMember.socialLinks.instagram : `https://${selectedMember.socialLinks.instagram}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-12 h-12 bg-pink-600/20 border border-pink-500/30 rounded-xl flex items-center justify-center hover:bg-pink-600/40 transition-all duration-200 shadow-lg"
-                          >
-                            <Instagram className="h-6 w-6 text-pink-400" />
-                          </motion.a>
-                        )}
+                  {/* badges */}
+                  {selectedMember.badges && selectedMember.badges.length > 0 && (
+                    <div className="px-4 sm:px-5 mb-3">
+                      <p className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-2">Badges</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedMember.badges.map(badge => (
+                          <div key={badge.id} title={badge.description}
+                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/10 bg-white/[0.04] text-xs text-gray-300">
+                            <span>{badge.icon}</span><span>{badge.name}</span>
+                          </div>
+                        ))}
                       </div>
-                    </motion.div>
+                    </div>
                   )}
-                </motion.div>
+
+                  <div className="pb-6" />
+                </div>
               </div>
             </motion.div>
           </motion.div>

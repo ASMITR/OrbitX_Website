@@ -57,22 +57,150 @@ export default function CheckoutPage() {
         status: 'pending'
       }
 
-      const response = await fetch('/api/orders', {
+      // Create order first
+      const orderResponse = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
       })
 
-      if (response.ok) {
-        const order = await response.json()
-        clearCart()
-        toast.success('Order placed successfully!')
-        router.push(`/orders/${order.id}`)
-      } else {
-        toast.error('Failed to place order')
+      if (!orderResponse.ok) {
+        toast.error('Failed to create order')
+        return
+      }
+
+      const order = await orderResponse.json()
+      const amount = getTotalPrice()
+
+      // Handle different payment methods
+      switch (method) {
+        case 'phonepe':
+          await handlePhonePePayment(order.orderId, amount)
+          break
+        case 'googlepay':
+          await handleGooglePayPayment(order.orderId, amount)
+          break
+        case 'paytm':
+          await handlePaytmPayment(order.orderId, amount)
+          break
+        case 'upi':
+        case 'qr':
+          await handleUPIPayment(order.orderId, amount)
+          break
+        default:
+          clearCart()
+          toast.success('Order placed successfully!')
+          router.push(`/orders/${order.id}`)
       }
     } catch (error) {
       toast.error('Payment failed')
+    }
+  }
+
+  const handlePhonePePayment = async (orderId: string, amount: number) => {
+    try {
+      const response = await fetch('/api/payment/phonepe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          amount,
+          customerPhone: customerDetails.phone
+        })
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        window.location.href = result.paymentUrl
+      } else {
+        toast.error('PhonePe payment failed')
+      }
+    } catch (error) {
+      toast.error('PhonePe payment error')
+    }
+  }
+
+  const handleGooglePayPayment = async (orderId: string, amount: number) => {
+    try {
+      const response = await fetch('/api/payment/googlepay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, amount })
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        window.location.href = result.upiLink
+      } else {
+        toast.error('Google Pay payment failed')
+      }
+    } catch (error) {
+      toast.error('Google Pay payment error')
+    }
+  }
+
+  const handlePaytmPayment = async (orderId: string, amount: number) => {
+    try {
+      const response = await fetch('/api/payment/paytm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          amount,
+          customerEmail: customerDetails.email,
+          customerPhone: customerDetails.phone
+        })
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        // Create form and submit to Paytm
+        const form = document.createElement('form')
+        form.method = 'POST'
+        form.action = result.paymentData.url
+        
+        Object.keys(result.paymentData).forEach(key => {
+          if (key !== 'url' && key !== 'transactionId') {
+            const input = document.createElement('input')
+            input.type = 'hidden'
+            input.name = key
+            input.value = result.paymentData[key]
+            form.appendChild(input)
+          }
+        })
+        
+        document.body.appendChild(form)
+        form.submit()
+      } else {
+        toast.error('Paytm payment failed')
+      }
+    } catch (error) {
+      toast.error('Paytm payment error')
+    }
+  }
+
+  const handleUPIPayment = async (orderId: string, amount: number) => {
+    try {
+      const response = await fetch('/api/payment/googlepay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, amount })
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        // Show QR code or UPI link
+        const upiLink = result.upiLink
+        navigator.clipboard.writeText(upiLink)
+        toast.success('UPI link copied to clipboard!')
+        
+        // Try to open UPI app
+        window.location.href = upiLink
+      } else {
+        toast.error('UPI payment failed')
+      }
+    } catch (error) {
+      toast.error('UPI payment error')
     }
   }
 

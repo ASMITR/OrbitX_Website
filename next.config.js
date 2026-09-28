@@ -37,30 +37,8 @@ const nextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  // Performance optimizations
   reactStrictMode: true,
   productionBrowserSourceMaps: false,
-  // Bundle analyzer
-  webpack: (config, { dev, isServer }) => {
-    if (!dev && !isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-          },
-          framerMotion: {
-            test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
-            name: 'framer-motion',
-            chunks: 'all',
-          },
-        },
-      }
-    }
-    return config
-  },
 }
 
 module.exports = nextConfig

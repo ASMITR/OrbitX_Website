@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, LogOut, User, Settings, ChevronLeft, ChevronRight, Home, Users, Calendar, FolderOpen, PenTool, ShoppingBag, Mail, Info, ChevronDown } from 'lucide-react'
+import {
+  Menu, X, LogOut, User, Settings, Home, Users, Calendar,
+  FolderOpen, PenTool, ShoppingBag, Mail, Info, ChevronRight,
+  Rocket, ArrowUpRight
+} from 'lucide-react'
 import Logo from './Logo'
 import { useAuth } from './admin/AuthProvider'
 import { signOut } from 'firebase/auth'
@@ -12,990 +16,280 @@ import { getUserRoleFromDB } from '@/lib/roles'
 import toast from 'react-hot-toast'
 import { usePathname } from 'next/navigation'
 
+const navGroups = [
+  {
+    label: 'Explore',
+    items: [
+      { name: 'Home', href: '/', icon: Home },
+      { name: 'About', href: '/about', icon: Info },
+      { name: 'Teams', href: '/teams', icon: Users },
+    ]
+  },
+  {
+    label: 'Content',
+    items: [
+      { name: 'Events', href: '/events', icon: Calendar },
+      { name: 'Projects', href: '/projects', icon: FolderOpen },
+      { name: 'Blogs', href: '/blogs', icon: PenTool },
+      { name: 'Members', href: '/members', icon: Users },
+    ]
+  },
+  {
+    label: 'Connect',
+    items: [
+      { name: 'Merchandise', href: '/merchandise', icon: ShoppingBag },
+      { name: 'Contact', href: '/contact', icon: Mail },
+    ]
+  },
+]
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [adminName, setAdminName] = useState('')
   const [adminPhoto, setAdminPhoto] = useState('')
-  const [memberData, setMemberData] = useState<any>(null)
-  const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [userRole, setUserRole] = useState<'owner' | 'admin' | 'member'>('member')
   const [scrolled, setScrolled] = useState(false)
-  const [sidebarMinimized, setSidebarMinimized] = useState(false)
-  const [sidebarVisible, setSidebarVisible] = useState(false)
   const { user } = useAuth()
   const pathname = usePathname()
 
-  // Handle scroll effect
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    document.body.style.overflow = drawerOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [drawerOpen])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => { setDrawerOpen(false) }, [pathname])
+
+  useEffect(() => {
+    if (!user) { setUserRole('member'); return }
+    getUserRoleFromDB(user).then(setUserRole)
+  }, [user])
+
+  useEffect(() => {
+    if (!user) { setAdminName(''); setAdminPhoto(''); return }
+    const load = async () => {
+      try {
+        const role = await getUserRoleFromDB(user)
+        if (role === 'owner') {
+          const res = await fetch(`/api/admin/profile/${user.uid}`)
+          const p = res.ok ? await res.json() : null
+          setAdminName(p?.name || user.displayName || user.email?.split('@')[0] || '')
+          setAdminPhoto(p?.photo || '')
+        } else {
+          const { getMember, getMemberByEmail } = await import('@/lib/db')
+          const m = await getMember(user.uid) || await getMemberByEmail(user.email!)
+          if (m) { setAdminName(m.name || ''); setAdminPhoto(m.photo || '') }
+          else {
+            const res = await fetch(`/api/admin/profile/${user.uid}`)
+            const p = res.ok ? await res.json() : null
+            setAdminName(p?.name || user.displayName || user.email?.split('@')[0] || '')
+            setAdminPhoto(p?.photo || '')
+          }
+        }
+      } catch { setAdminName(user.displayName || user.email?.split('@')[0] || '') }
+    }
+    load()
+  }, [user])
 
   const handleLogout = async () => {
     try {
       await signOut(auth)
       toast.success('Logged out successfully')
-      setShowProfileMenu(false)
+      setDrawerOpen(false)
       window.location.href = '/auth'
-    } catch (error) {
-      toast.error('Failed to logout')
-    }
+    } catch { toast.error('Failed to logout') }
   }
 
-  // Close profile menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element
-      if (showProfileMenu && !target.closest('.profile-menu')) {
-        setShowProfileMenu(false)
-      }
-    }
+  const avatarSrc = adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || 'User')}&background=3b82f6&color=ffffff&size=200`
+  const displayName = adminName || user?.displayName || 'User'
+  const roleLabel = userRole === 'owner' ? 'Owner' : userRole === 'admin' ? 'Administrator' : 'Member'
+  const roleBadgeColor = userRole === 'owner' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : userRole === 'admin' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showProfileMenu])
-
-  useEffect(() => {
-    const checkUserRole = async () => {
-      if (user) {
-        const role = await getUserRoleFromDB(user)
-        setUserRole(role)
-      } else {
-        setUserRole('member')
-      }
-    }
-    checkUserRole()
-  }, [user])
-
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (user) {
-        try {
-          const role = await getUserRoleFromDB(user)
-          
-          if (role === 'owner') {
-            // For owners, prioritize admin profile
-            const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
-            if (adminResponse.ok) {
-              const profile = await adminResponse.json()
-              setAdminName(profile?.name || user?.displayName || user?.email?.split('@')[0] || '')
-              setAdminPhoto(profile?.photo || '')
-            } else {
-              setAdminName(user?.displayName || user?.email?.split('@')[0] || '')
-              setAdminPhoto('')
-            }
-          } else {
-            // For members and admins, prioritize member data
-            const { getMember, getMemberByEmail } = await import('@/lib/db')
-            let member = await getMember(user.uid)
-            if (!member) {
-              member = await getMemberByEmail(user.email!)
-            }
-            
-            if (member) {
-              setMemberData(member)
-              setAdminName(member.name || user?.displayName || user?.email?.split('@')[0] || '')
-              setAdminPhoto(member.photo || '')
-            } else {
-              // Fallback to admin profile
-              const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
-              if (adminResponse.ok) {
-                const profile = await adminResponse.json()
-                setAdminName(profile?.name || user?.displayName || user?.email?.split('@')[0] || '')
-                setAdminPhoto(profile?.photo || '')
-              } else {
-                setAdminName(user?.displayName || user?.email?.split('@')[0] || '')
-                setAdminPhoto('')
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching user profile:', error)
-          setAdminName(user?.displayName || user?.email?.split('@')[0] || '')
-          setAdminPhoto('')
-        }
-      } else {
-        setAdminName('')
-        setAdminPhoto('')
-        setMemberData(null)
-      }
-    }
-    fetchUserProfile()
-  }, [user])
-
-  // Refresh user profile more frequently to catch updates
-  useEffect(() => {
-    if (user) {
-      const interval = setInterval(async () => {
-        try {
-          if (userRole === 'owner') {
-            // For owners, check admin profile
-            const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
-            if (adminResponse.ok) {
-              const profile = await adminResponse.json()
-              const newName = profile?.name || user?.displayName || user?.email?.split('@')[0] || ''
-              if (newName !== adminName) {
-                setAdminName(newName)
-              }
-              if (profile?.photo && profile.photo !== adminPhoto) {
-                setAdminPhoto(profile.photo)
-              }
-            }
-          } else {
-            // For members and admins, check member data first
-            const { getMember, getMemberByEmail } = await import('@/lib/db')
-            let member = await getMember(user.uid)
-            if (!member) {
-              member = await getMemberByEmail(user.email!)
-            }
-            
-            if (member) {
-              const newName = member.name || user?.displayName || user?.email?.split('@')[0] || ''
-              if (newName !== adminName) {
-                setMemberData(member)
-                setAdminName(newName)
-                setAdminPhoto(member.photo || '')
-              }
-            } else {
-              // Fallback to admin profile
-              const adminResponse = await fetch(`/api/admin/profile/${user.uid}`)
-              if (adminResponse.ok) {
-                const profile = await adminResponse.json()
-                const newName = profile?.name || user?.displayName || user?.email?.split('@')[0] || ''
-                if (newName !== adminName) {
-                  setAdminName(newName)
-                }
-                if (profile?.photo && profile.photo !== adminPhoto) {
-                  setAdminPhoto(profile.photo)
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error refreshing user profile:', error)
-        }
-      }, 5000) // Check every 5 seconds for faster updates
-
-      return () => clearInterval(interval)
-    }
-  }, [user, adminName, adminPhoto, userRole])
-
-  // Listen for storage events to refresh immediately when profile is updated
-  useEffect(() => {
-    const handleStorageChange = () => {
-      if (user) {
-        // Trigger immediate refresh
-        const refreshProfile = async () => {
-          try {
-            const { getMember, getMemberByEmail } = await import('@/lib/db')
-            let member = await getMember(user.uid)
-            if (!member) {
-              member = await getMemberByEmail(user.email!)
-            }
-            if (member) {
-              setMemberData(member)
-              setAdminName(member.name || user?.displayName || user?.email?.split('@')[0] || '')
-              setAdminPhoto(member.photo || '')
-            }
-          } catch (error) {
-            console.error('Error refreshing profile:', error)
-          }
-        }
-        refreshProfile()
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    window.addEventListener('profile-updated', handleStorageChange)
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('profile-updated', handleStorageChange)
-    }
-  }, [user])
-
-
-
-  const navItems = [
-    { name: 'Home', href: '/', icon: Home },
-    { name: 'About', href: '/about', icon: Info },
-    { name: 'Teams', href: '/teams', icon: Users },
-    { name: 'Events', href: '/events', icon: Calendar },
-    { name: 'Projects', href: '/projects', icon: FolderOpen },
-    { name: 'Blogs', href: '/blogs', icon: PenTool },
-    { name: 'Members', href: '/members', icon: Users },
-    { name: 'Merchandise', href: '/merchandise', icon: ShoppingBag },
-    { name: 'Contact', href: '/contact', icon: Mail }
-  ]
+  if (pathname?.startsWith('/admin')) return null
 
   return (
     <>
-      {/* Desktop Top Navbar */}
-      <motion.nav 
+      {/* Top Navbar */}
+      <motion.nav
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className={`fixed top-0 w-full z-50 transition-all duration-500 hidden lg:block ${
-          scrolled 
-            ? 'bg-black/80 backdrop-blur-2xl border-b border-white/20 shadow-2xl shadow-cyan-500/10' 
+        transition={{ duration: 0.5 }}
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-black/80 backdrop-blur-2xl border-b border-white/20 shadow-2xl shadow-cyan-500/10'
             : 'bg-black/20 backdrop-blur-xl border-b border-white/10'
         }`}
       >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`flex items-center transition-all duration-500 ${
-          scrolled ? 'h-14' : 'h-16'
-        }`}>
-          {/* Logo */}
-          <motion.div
-            whileHover={{ scale: 1.05, rotate: [0, -5, 5, 0] }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-            className="relative"
-          >
-            <Link href="/" className="flex items-center space-x-2 group">
-              <div className="relative">
-                <Logo className={`transition-all duration-500 ${scrolled ? 'h-8 lg:h-10' : 'h-10 lg:h-12'} w-auto`} />
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full blur-xl"
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                />
-              </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className={`flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-14' : 'h-16'}`}>
+            <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
+              <Logo className={`transition-all duration-300 ${scrolled ? 'h-8' : 'h-10'} w-auto`} />
             </Link>
-          </motion.div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center flex-1 justify-center ml-8">
-            <div className="flex items-center space-x-0.5">
-            {navItems.map((item, index) => {
-              const isActive = pathname === item.href
-              return (
-                <motion.div
-                  key={item.name}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative"
-                >
-                  <Link
-                    href={item.href}
-                    className={`relative group px-3 py-2 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden flex items-center gap-1.5 ${
-                      isActive 
-                        ? 'text-white bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 shadow-lg shadow-cyan-500/20' 
-                        : 'text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 border border-transparent hover:border-cyan-500/30'
-                    }`}
-                  >
-                    <item.icon className="w-3.5 h-3.5" />
-                    <span className="relative z-20 whitespace-nowrap">{item.name}</span>
-                    {isActive && (
-                      <motion.div 
-                        layoutId="activeTab"
-                        className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-xl"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                      />
-                    )}
-                    <motion.div 
-                      className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-400 transition-all duration-300"
-                      animate={{ width: isActive ? '80%' : '0%' }}
-                    />
-                  </Link>
-                </motion.div>
-              )
-            })}
-            </div>
-          </div>
-
-          {/* Right Section - Auth/Profile */}
-          <div className="hidden lg:flex items-center">
-            {/* Auth Buttons - Show only when not logged in */}
-            {!user && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Link
-                  href="/auth"
-                  className="relative group bg-gradient-to-r from-blue-500 to-purple-500 text-cyan-100 p-2 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 text-sm font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 overflow-hidden"
-                >
-                  <span className="relative z-10">Get Started</span>
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-600 opacity-0 group-hover:opacity-100"
-                    transition={{ duration: 0.3 }}
-                  />
-                </Link>
-              </motion.div>
-            )}
-            
-            {/* Profile Section - Show only when logged in */}
-            {user && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                className="relative profile-menu"
-              >
-                <motion.button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 group"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <motion.div 
-                    className="relative flex-shrink-0"
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <motion.img
-                      src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=ffffff&size=200`}
-                      alt={adminName || user?.displayName || 'Profile'}
-                      className="w-8 h-8 rounded-full object-cover"
-                      animate={{ rotate: [0, 5, -5, 0] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <motion.div
-                      className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/20 to-blue-500/20"
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                  </motion.div>
-                  <div className="flex flex-col text-left flex-1">
-                    <motion.span 
-                      className="text-white text-base font-semibold"
-                      animate={{ opacity: [0.8, 1, 0.8] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      {adminName || user?.displayName || 'User'}
-                    </motion.span>
-                    <span className="text-xs text-blue-400">
-                      {userRole === 'owner' ? 'Owner' : userRole === 'admin' ? 'Administrator' : 'Member'}
-                    </span>
-                  </div>
-                  <motion.div
-                    animate={{ rotate: showProfileMenu ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="text-gray-400 transition-colors"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </motion.div>
-                </motion.button>
-                
-                {/* Profile Dropdown */}
-                <AnimatePresence>
-                  {showProfileMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="absolute right-0 top-full mt-3 w-56 bg-black/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl shadow-cyan-500/10 z-50 overflow-hidden"
-                    >
-                      <div className="p-2">
-                        {/* My Orders */}
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Link
-                            href="/orders"
-                            className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-orange-500/10 hover:to-red-500/10 transition-all duration-300 rounded-xl border-b border-white/10 mb-1 group"
-                            onClick={() => setShowProfileMenu(false)}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium">My Orders</span>
-                              <motion.div
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                animate={{ x: [0, 5, 0] }}
-                                transition={{ duration: 1, repeat: Infinity }}
-                              >
-                                →
-                              </motion.div>
-                            </div>
-                          </Link>
-                        </motion.div>
-
-                        {/* Member Dashboard - Show for members and admins, not owners */}
-                        {userRole !== 'owner' && (
-                          <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <Link
-                              href="/member"
-                              className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 transition-all duration-300 rounded-xl border-b border-white/10 mb-1 group"
-                              onClick={() => setShowProfileMenu(false)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium">Member Dashboard</span>
-                                <motion.div
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                  animate={{ x: [0, 5, 0] }}
-                                  transition={{ duration: 1, repeat: Infinity }}
-                                >
-                                  →
-                                </motion.div>
-                              </div>
-                            </Link>
-                          </motion.div>
-                        )}
-                        
-                        {/* Admin Dashboard - Only show for admins and owners */}
-                        {(userRole === 'admin' || userRole === 'owner') && (
-                          <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <Link
-                              href="/admin/dashboard"
-                              className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 transition-all duration-300 rounded-xl border-b border-white/10 mb-1 group"
-                              onClick={() => setShowProfileMenu(false)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium">
-                                  {userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}
-                                </span>
-                                <motion.div
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                  animate={{ x: [0, 5, 0] }}
-                                  transition={{ duration: 1, repeat: Infinity }}
-                                >
-                                  →
-                                </motion.div>
-                              </div>
-                            </Link>
-                          </motion.div>
-                        )}
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <button
-                            onClick={handleLogout}
-                            className="w-full text-left px-4 py-3 text-gray-300 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 flex items-center rounded-xl group"
-                          >
-                            <LogOut className="h-4 w-4 mr-3 group-hover:rotate-12 transition-transform duration-300" />
-                            <span className="font-medium">Logout</span>
-                          </button>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="lg:hidden">
-            <motion.button
-              onClick={() => setIsOpen(!isOpen)}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="text-gray-300 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20"
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="flex items-center justify-center w-10 h-10 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-all"
+              aria-label="Open menu"
             >
-              <motion.div
-                animate={{ rotate: isOpen ? 180 : 0 }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
-              >
-                <AnimatePresence mode="wait">
-                  {isOpen ? (
-                    <motion.div
-                      key="close"
-                      initial={{ rotate: -90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: 90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <X className="h-5 w-5" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="menu"
-                      initial={{ rotate: 90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: -90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Menu className="h-5 w-5" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            </motion.button>
+              <Menu className="w-5 h-5" />
+            </button>
           </div>
         </div>
+      </motion.nav>
 
-        {/* Mobile Navigation Backdrop */}
-        <AnimatePresence>
-          {isOpen && (
+      {/* Drawer */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
             <motion.div
+              key="backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
-              onClick={() => setIsOpen(false)}
+              transition={{ duration: 0.25 }}
+              className="fixed inset-0 bg-black/70 backdrop-blur-md z-50"
+              onClick={() => setDrawerOpen(false)}
             />
-          )}
-        </AnimatePresence>
 
-        {/* Mobile Side Navigation */}
-        <AnimatePresence>
-          {isOpen && (
             <motion.div
-              initial={{ x: '-100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '-100%', opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="fixed inset-0 h-full w-full bg-black/95 backdrop-blur-2xl z-50 lg:hidden overflow-y-auto"
+              key="drawer"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="fixed top-0 right-0 h-full w-[85vw] sm:w-[360px] bg-[#080810] border-l border-white/8 z-50 flex flex-col"
             >
-              {/* Mobile Header */}
-              <div className="flex items-center justify-between p-6 border-b border-white/10">
-                <div className="flex items-center space-x-3">
-                  <img 
-                    src="/Logo_without_background.png" 
-                    alt="OrbitX Logo" 
-                    className="h-8 w-auto"
-                  />
+              {/* Ambient glow */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Header */}
+              <div className="relative flex items-center justify-between px-6 py-5 border-b border-white/6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                    <Rocket className="w-4 h-4 text-white" />
+                  </div>
                   <div>
-                    <span className="text-lg font-bold text-white">OrbitX</span>
-                    <p className="text-xs text-gray-400">Space Exploration</p>
+                    <p className="text-white font-bold text-sm leading-tight">OrbitX</p>
+                    <p className="text-gray-500 text-xs">Space Exploration</p>
                   </div>
                 </div>
                 <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={() => setDrawerOpen(false)}
+                  className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Navigation Items */}
-              <div className="px-4 py-6 space-y-1">
-                {navItems.map((item, index) => {
-                  const isActive = pathname === item.href
-                  return (
-                    <motion.div
-                      key={item.name}
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Link
-                        href={item.href}
-                        className={`flex items-center py-4 px-4 rounded-xl font-semibold transition-all duration-300 group relative overflow-hidden ${
-                          isActive 
-                            ? 'text-white bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40' 
-                            : 'text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10'
-                        }`}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <item.icon className={`w-5 h-5 mr-3 transition-all duration-300 ${
-                          isActive ? 'text-cyan-400' : 'text-gray-400 group-hover:text-cyan-400'
-                        }`} />
-                        <span className="text-base flex-1">{item.name}</span>
-                        <motion.div
-                          className={`transition-opacity ${
-                            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                          }`}
-                          animate={{ x: [0, 5, 0] }}
-                          transition={{ duration: 1, repeat: Infinity }}
-                        >
-                          →
-                        </motion.div>
-                        {isActive && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-blue-400 rounded-r" />
-                        )}
-                      </Link>
-                    </motion.div>
-                  )
-                })}
+              {/* Nav groups */}
+              <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 space-y-6">
+                {navGroups.map((group, gi) => (
+                  <div key={group.label}>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-600 px-3 mb-2">
+                      {group.label}
+                    </p>
+                    <div className="space-y-0.5">
+                      {group.items.map((item, i) => {
+                        const isActive = pathname === item.href
+                        return (
+                          <motion.div
+                            key={item.name}
+                            initial={{ opacity: 0, x: 16 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.2, delay: (gi * 4 + i) * 0.03 }}
+                          >
+                            <Link
+                              href={item.href}
+                              onClick={() => setDrawerOpen(false)}
+                              className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative ${
+                                isActive
+                                  ? 'text-white bg-white/8 border border-white/10'
+                                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                              }`}
+                            >
+                              <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
+                                isActive ? 'bg-cyan-500/20' : 'bg-white/5 group-hover:bg-white/8'
+                              }`}>
+                                <item.icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : 'text-gray-500 group-hover:text-gray-300'}`} />
+                              </div>
+                              <span className="flex-1">{item.name}</span>
+                              {isActive
+                                ? <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                                : <ChevronRight className="w-3.5 h-3.5 text-gray-700 group-hover:text-gray-500 transition-colors" />
+                              }
+                            </Link>
+                          </motion.div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              {/* User Profile Section */}
-              <div className="border-t border-white/10 p-4">
+              {/* Footer */}
+              <div className="relative flex-shrink-0 border-t border-white/6 px-4 py-4 space-y-2">
                 {user ? (
-                  <div className="space-y-3">
-                    {/* User Info */}
-                    <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-xl">
-                      <motion.img
-                        src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || 'User')}&background=3b82f6&color=ffffff&size=200`}
-                        alt={adminName || user?.displayName || 'Profile'}
-                        className="w-12 h-12 rounded-full object-cover"
-                        animate={{ rotate: [0, 5, -5, 0] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                      />
-                      <div className="flex-1">
-                        <p className="text-white font-semibold">{adminName || user?.displayName || 'User'}</p>
-                        <p className="text-xs text-blue-400">{userRole === 'owner' ? 'Owner' : userRole === 'admin' ? 'Administrator' : 'Member'}</p>
+                  <>
+                    {/* Profile card */}
+                    <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/[0.03] border border-white/8 mb-3">
+                      <img src={avatarSrc} alt={displayName} className="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-2 ring-white/10" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white text-sm font-semibold truncate leading-tight">{displayName}</p>
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border mt-0.5 ${roleBadgeColor}`}>
+                          {roleLabel}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Dashboard Links */}
-                    <div className="space-y-2">
-                      {/* Member Dashboard */}
-                      {userRole !== 'owner' && (
-                        <Link
-                          href="/member"
-                          className="flex items-center py-3 px-4 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 transition-all duration-300 rounded-xl group"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          <User className="h-5 w-5 mr-3" />
-                          <span className="font-medium">Member Dashboard</span>
-                          <motion.div
-                            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{ duration: 1, repeat: Infinity }}
-                          >
-                            →
-                          </motion.div>
-                        </Link>
-                      )}
+                    {/* Action links */}
+                    <Link href="/orders" onClick={() => setDrawerOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-all group">
+                      <ShoppingBag className="w-4 h-4 text-gray-600 group-hover:text-gray-400" />
+                      <span className="flex-1">My Orders</span>
+                      <ArrowUpRight className="w-3.5 h-3.5 text-gray-700 group-hover:text-gray-500" />
+                    </Link>
 
-                      {/* Admin/Owner Dashboard */}
-                      {(userRole === 'admin' || userRole === 'owner') && (
-                        <Link
-                          href="/admin/dashboard"
-                          className="flex items-center py-3 px-4 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 transition-all duration-300 rounded-xl group"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          <Settings className="h-5 w-5 mr-3" />
-                          <span className="font-medium">{userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}</span>
-                          <motion.div
-                            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{ duration: 1, repeat: Infinity }}
-                          >
-                            →
-                          </motion.div>
-                        </Link>
-                      )}
+                    {userRole !== 'owner' && (
+                      <Link href="/member" onClick={() => setDrawerOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 text-gray-400 hover:text-white hover:bg-cyan-500/8 rounded-lg text-sm transition-all group">
+                        <User className="w-4 h-4 text-cyan-600 group-hover:text-cyan-400" />
+                        <span className="flex-1">Member Dashboard</span>
+                        <ArrowUpRight className="w-3.5 h-3.5 text-gray-700 group-hover:text-gray-500" />
+                      </Link>
+                    )}
 
-                      {/* Logout */}
-                      <button
-                        onClick={() => {
-                          handleLogout()
-                          setIsOpen(false)
-                        }}
-                        className="w-full flex items-center py-3 px-4 text-gray-300 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 rounded-xl"
-                      >
-                        <LogOut className="h-5 w-5 mr-3" />
-                        <span className="font-medium">Logout</span>
-                      </button>
-                    </div>
-                  </div>
+                    {(userRole === 'admin' || userRole === 'owner') && (
+                      <Link href="/admin/dashboard" onClick={() => setDrawerOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 text-gray-400 hover:text-white hover:bg-purple-500/8 rounded-lg text-sm transition-all group">
+                        <Settings className="w-4 h-4 text-purple-600 group-hover:text-purple-400" />
+                        <span className="flex-1">{userRole === 'owner' ? 'Owner' : 'Admin'} Dashboard</span>
+                        <ArrowUpRight className="w-3.5 h-3.5 text-gray-700 group-hover:text-gray-500" />
+                      </Link>
+                    )}
+
+                    <button onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-red-500/80 hover:text-red-400 hover:bg-red-500/8 rounded-lg text-sm transition-all group">
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </>
                 ) : (
-                  <Link
-                    href="/auth"
-                    className="block p-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-all duration-300 rounded-lg font-medium text-center"
-                    onClick={() => setIsOpen(false)}
-                  >
+                  <Link href="/auth" onClick={() => setDrawerOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
+                    <Rocket className="w-4 h-4" />
                     Get Started
                   </Link>
                 )}
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      </motion.nav>
-
-      {/* Mobile/Tablet Side Menu Bar */}
-      <AnimatePresence>
-        {sidebarVisible && (
-          <motion.nav
-            initial={{ x: '-100%', opacity: 0 }}
-            animate={{ 
-              x: sidebarMinimized ? -60 : 0, 
-              opacity: 1 
-            }}
-            exit={{ x: '-100%', opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className={`fixed left-0 top-0 h-full bg-black/95 backdrop-blur-2xl border-r border-white/20 z-40 lg:hidden flex flex-col py-4 transition-all duration-150 group mobile-nav-safe ${
-              sidebarMinimized ? 'w-16 items-center' : 'w-72 sm:w-80 items-start px-4'
-            }`}
-      >
-        {/* Close/Minimize Toggle */}
-        <motion.button
-          onClick={() => {
-            if (sidebarMinimized) {
-              setSidebarMinimized(false)
-            } else {
-              setSidebarVisible(false)
-              setSidebarMinimized(false)
-            }
-          }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="absolute top-4 right-4 w-10 h-10 bg-black/90 border border-white/20 rounded-xl flex items-center justify-center transition-all duration-150 group touch-target"
-          title={sidebarMinimized ? 'Expand Menu' : 'Close Menu'}
-        >
-          <motion.div
-            animate={{ rotate: sidebarMinimized ? 180 : 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            {sidebarMinimized ? (
-              <ChevronRight className="h-5 w-5 text-white" />
-            ) : (
-              <X className="h-5 w-5 text-white" />
-            )}
-          </motion.div>
-        </motion.button>
-        {/* Logo */}
-        {!sidebarMinimized && (
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="mb-6 sm:mb-8 flex items-center space-x-3 mt-2"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Link href="/" className="flex items-center space-x-3 touch-target">
-              <img 
-                src="/Logo_without_background.png" 
-                alt="OrbitX Logo" 
-                className="h-10 sm:h-12 w-auto"
-              />
-              <div>
-                <span className="text-lg sm:text-xl font-bold text-white">OrbitX</span>
-                <p className="text-xs sm:text-sm text-gray-400">Space Exploration</p>
-              </div>
-            </Link>
-          </motion.div>
-        )}
-
-        {/* Navigation Items */}
-        <div className={`flex flex-col space-y-2 flex-1 ${sidebarMinimized ? 'mt-8 items-center' : 'w-full'}`}>
-          {navItems.map((item, index) => (
-            <motion.div
-              key={item.name}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.2, delay: index * 0.02 }}
-              whileHover={{ scale: sidebarMinimized ? 1.1 : 1.02 }}
-              whileTap={{ scale: 0.95 }}
-              className={sidebarMinimized ? '' : 'w-full'}
-            >
-              <Link
-                href={item.href}
-                onClick={() => {
-                  setSidebarVisible(false)
-                  setSidebarMinimized(false)
-                }}
-                className={`rounded-xl bg-white/10 hover:bg-white/20 flex items-center transition-all duration-150 group relative touch-target ${
-                  sidebarMinimized 
-                    ? 'w-10 h-10 justify-center' 
-                    : 'w-full px-4 py-3 space-x-3'
-                }`}
-                title={sidebarMinimized ? item.name : ''}
-              >
-                {sidebarMinimized ? (
-                  <span className="text-gray-300 group-hover:text-white font-bold text-sm">
-                    {item.name.charAt(0)}
-                  </span>
-                ) : (
-                  <>
-                    <span className="text-gray-300 group-hover:text-white font-bold text-base sm:text-lg">
-                      {item.name.charAt(0)}
-                    </span>
-                    <span className="text-gray-300 group-hover:text-white font-medium text-sm sm:text-base">
-                      {item.name}
-                    </span>
-                    <motion.div
-                      className="ml-auto opacity-100 transition-opacity"
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                    >
-                      →
-                    </motion.div>
-                  </>
-                )}
-              </Link>
-
-            </motion.div>
-          ))}
-        </div>
-
-        {/* User Profile */}
-        {user && (
-          <div className={`mt-auto space-y-3 pb-4 ${sidebarMinimized ? '' : 'w-full'}`}>
-            {/* Profile Photo */}
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="relative group"
-            >
-              <img
-                src={adminPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminName || user?.displayName || 'User')}&background=3b82f6&color=ffffff&size=200`}
-                alt={adminName || user?.displayName || 'Profile'}
-                className={`rounded-full object-cover border-2 border-white/20 transition-all duration-300 touch-target ${
-                  sidebarMinimized ? 'w-10 h-10' : 'w-12 h-12 sm:w-14 sm:h-14'
-                }`}
-              />
-
-            </motion.div>
-
-            {/* Dashboard Links */}
-            {userRole !== 'owner' && (
-              <motion.div
-                whileHover={{ scale: sidebarMinimized ? 1.1 : 1.02 }}
-                whileTap={{ scale: 0.95 }}
-                className={sidebarMinimized ? '' : 'w-full'}
-              >
-                <Link
-                  href="/member"
-                  onClick={() => {
-                    setSidebarVisible(false)
-                    setSidebarMinimized(false)
-                  }}
-                  className={`rounded-xl bg-blue-500/20 hover:bg-blue-500/30 flex items-center transition-all duration-300 group relative touch-target ${
-                    sidebarMinimized 
-                      ? 'w-10 h-10 justify-center' 
-                      : 'w-full px-4 py-3 space-x-3'
-                  }`}
-                  title={sidebarMinimized ? 'Member Dashboard' : ''}
-                >
-                  <User className={`text-blue-300 ${
-                    sidebarMinimized ? 'h-4 w-4' : 'h-5 w-5'
-                  }`} />
-                  {!sidebarMinimized && (
-                    <span className="text-blue-300 font-medium text-sm sm:text-base">Member Dashboard</span>
-                  )}
-                </Link>
-              </motion.div>
-            )}
-
-            {(userRole === 'admin' || userRole === 'owner') && (
-              <motion.div
-                whileHover={{ scale: sidebarMinimized ? 1.1 : 1.02 }}
-                whileTap={{ scale: 0.95 }}
-                className={sidebarMinimized ? '' : 'w-full'}
-              >
-                <Link
-                  href="/admin/dashboard"
-                  onClick={() => {
-                    setSidebarVisible(false)
-                    setSidebarMinimized(false)
-                  }}
-                  className={`rounded-xl bg-purple-500/20 hover:bg-purple-500/30 flex items-center transition-all duration-300 group relative touch-target ${
-                    sidebarMinimized 
-                      ? 'w-10 h-10 justify-center' 
-                      : 'w-full px-4 py-3 space-x-3'
-                  }`}
-                  title={sidebarMinimized ? (userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard') : ''}
-                >
-                  <Settings className={`text-purple-300 ${
-                    sidebarMinimized ? 'h-4 w-4' : 'h-5 w-5'
-                  }`} />
-                  {!sidebarMinimized && (
-                    <span className="text-purple-300 font-medium text-sm sm:text-base">
-                      {userRole === 'owner' ? 'Owner Dashboard' : 'Admin Dashboard'}
-                    </span>
-                  )}
-                </Link>
-              </motion.div>
-            )}
-
-            {/* Logout */}
-            <motion.div
-              whileHover={{ scale: sidebarMinimized ? 1.1 : 1.02 }}
-              whileTap={{ scale: 0.95 }}
-              className={sidebarMinimized ? '' : 'w-full'}
-            >
-              <button
-                onClick={handleLogout}
-                className={`rounded-xl bg-red-500/20 hover:bg-red-500/30 flex items-center transition-all duration-300 group relative touch-target ${
-                  sidebarMinimized 
-                    ? 'w-10 h-10 justify-center' 
-                    : 'w-full px-4 py-3 space-x-3'
-                }`}
-                title={sidebarMinimized ? 'Logout' : ''}
-              >
-                <LogOut className={`text-red-300 ${
-                  sidebarMinimized ? 'h-4 w-4' : 'h-5 w-5'
-                }`} />
-                {!sidebarMinimized && (
-                  <span className="text-red-300 font-medium text-sm sm:text-base">Logout</span>
-                )}
-              </button>
-            </motion.div>
-          </div>
-        )}
-
-        {/* Auth Button for non-logged users */}
-        {!user && (
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="mt-auto pb-4"
-          >
-            <Link
-              href="/auth"
-              onClick={() => {
-                setSidebarVisible(false)
-                setSidebarMinimized(false)
-              }}
-              className={`rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 flex items-center transition-all duration-300 group relative touch-target ${
-                sidebarMinimized 
-                  ? 'w-10 h-10 justify-center' 
-                  : 'w-full p-2 space-x-3'
-              }`}
-              title="Get Started"
-            >
-              <span className={`text-white font-bold ${
-                sidebarMinimized ? 'text-base' : 'text-lg'
-              }`}>+</span>
-              {!sidebarMinimized && (
-                <span className="text-white font-medium text-sm sm:text-base">Get Started</span>
-              )}
-            </Link>
-          </motion.div>
-        )}
-          </motion.nav>
+          </>
         )}
       </AnimatePresence>
-
-      {/* Floating Toggle Button for Opening Menu */}
-      {!sidebarVisible && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          onClick={() => setSidebarVisible(true)}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="fixed top-4 left-4 w-12 h-12 bg-black/90 backdrop-blur-2xl border border-white/20 rounded-xl flex items-center justify-center z-30 lg:hidden shadow-lg shadow-cyan-500/20 touch-target"
-          title="Open Menu"
-        >
-          <Menu className="h-6 w-6 text-white" />
-        </motion.button>
-      )}
-
-      {/* Minimize Button when sidebar is open but not minimized */}
-      {sidebarVisible && !sidebarMinimized && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          onClick={() => setSidebarMinimized(true)}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="fixed top-20 left-4 w-10 h-10 bg-black/90 backdrop-blur-2xl border border-white/20 rounded-xl flex items-center justify-center z-30 lg:hidden shadow-lg shadow-cyan-500/20 touch-target"
-          title="Minimize Menu"
-        >
-          <ChevronLeft className="h-5 w-5 text-white" />
-        </motion.button>
-      )}
     </>
   )
 }

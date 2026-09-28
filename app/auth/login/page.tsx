@@ -78,7 +78,14 @@ export default function Login() {
         router.push('/member')
       }
     } catch (error: any) {
-      toast.error(error.message || 'Google login failed')
+      console.error('Google login error:', error.code, error.message)
+      const msg =
+        error.code === 'auth/popup-blocked' ? 'Popup was blocked. Allow popups for this site.' :
+        error.code === 'auth/popup-closed-by-user' ? 'Sign-in popup was closed.' :
+        error.code === 'auth/unauthorized-domain' ? 'This domain is not authorized in Firebase Console.' :
+        error.code === 'auth/cancelled-popup-request' ? 'Another popup is already open.' :
+        error.message || 'Google login failed'
+      toast.error(msg)
     } finally {
       setIsLoading(false)
     }
