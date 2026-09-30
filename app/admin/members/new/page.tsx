@@ -54,14 +54,12 @@ export default function AddMember() {
   ]
 
   const positions = [
-    'Faculty Coordinator',
     'President',
-    'Vice President',
+    'Chairman',
     'Secretary',
     'Treasurer',
     'Co-Treasurer',
-    'Team Lead',
-    'Core Member',
+    'Team Leader',
     'Member'
   ]
 

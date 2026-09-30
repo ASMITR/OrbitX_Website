@@ -608,14 +608,12 @@ export default function MemberPanel() {
                       style={{ colorScheme: 'dark' }}
                     >
                       <option value="" className="bg-gray-800 text-gray-400">Select position</option>
-                      <option value="Faculty Coordinator" className="bg-gray-800 text-white">Faculty Coordinator</option>
                       <option value="President" className="bg-gray-800 text-white">President</option>
-                      <option value="Vice President" className="bg-gray-800 text-white">Vice President</option>
+                      <option value="Chairman" className="bg-gray-800 text-white">Chairman</option>
                       <option value="Secretary" className="bg-gray-800 text-white">Secretary</option>
                       <option value="Treasurer" className="bg-gray-800 text-white">Treasurer</option>
                       <option value="Co-Treasurer" className="bg-gray-800 text-white">Co-Treasurer</option>
-                      <option value="Team Lead" className="bg-gray-800 text-white">Team Lead</option>
-                      <option value="Core Member" className="bg-gray-800 text-white">Core Member</option>
+                      <option value="Team Leader" className="bg-gray-800 text-white">Team Leader</option>
                       <option value="Member" className="bg-gray-800 text-white">Member</option>
                     </select>
                   </div>

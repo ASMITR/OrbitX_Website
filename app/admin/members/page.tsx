@@ -23,6 +23,8 @@ export default function AdminMembers() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [showBadgeModal, setShowBadgeModal] = useState(false)
   const [showParticipationModal, setShowParticipationModal] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [detailMember, setDetailMember] = useState<Member | null>(null)
   const [memberBadges, setMemberBadges] = useState<string[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [projects, setProjects] = useState<Project[]>([])
@@ -510,6 +512,7 @@ export default function AdminMembers() {
                 ) : (
                   <div className="flex justify-center space-x-2">
                     <motion.button 
+                      onClick={() => { setDetailMember(member); setShowDetailModal(true) }}
                       className="p-3 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-xl transition-all duration-300 shadow-lg"
                       whileHover={{ scale: 1.1, y: -2 }}
                       whileTap={{ scale: 0.9 }}
@@ -584,6 +587,125 @@ export default function AdminMembers() {
                   : 'Try selecting a different team.'
               }
             </p>
+          </div>
+        )}
+
+        {/* Member Detail Modal */}
+        {showDetailModal && detailMember && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="glass-card max-w-lg w-full max-h-[85vh] overflow-y-auto p-6"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="text-xl font-bold text-white">Member Details</h3>
+                <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-white transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Avatar + name */}
+              <div className="flex items-center gap-4 mb-6">
+                <img
+                  src={detailMember.photo}
+                  alt={detailMember.name}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
+                  onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(detailMember.name)}&background=3b82f6&color=fff&size=200` }}
+                />
+                <div>
+                  <p className="text-white font-bold text-lg">{detailMember.name}</p>
+                  <p className="text-gray-400 text-sm">{detailMember.position}</p>
+                  <p className="text-cyan-400 text-xs">{detailMember.team}</p>
+                </div>
+              </div>
+
+              {/* Info grid */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                {[
+                  { label: 'Branch', value: detailMember.branch },
+                  { label: 'Year', value: detailMember.year },
+                  { label: 'Division', value: detailMember.division },
+                  { label: 'Roll No', value: detailMember.rollNo },
+                  { label: 'Email', value: detailMember.email },
+                  { label: 'Phone', value: detailMember.phone || '—' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-white/5 rounded-lg p-3">
+                    <p className="text-gray-500 text-xs mb-0.5">{label}</p>
+                    <p className="text-white text-sm font-medium truncate">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Skills */}
+              {detailMember.skills && detailMember.skills.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-gray-400 text-xs mb-2">Skills</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {detailMember.skills.map((s, i) => (
+                      <span key={i} className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Badges */}
+              {detailMember.badges && detailMember.badges.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-gray-400 text-xs mb-2">Badges ({detailMember.badges.length})</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {detailMember.badges.map((b, i) => (
+                      <span key={i} className={`px-2 py-1 text-white text-xs rounded-full ${b.color || 'bg-gray-600'}`}>🏆 {b.name}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Participation */}
+              <div className="flex gap-3 mb-5">
+                <div className="flex-1 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-blue-400">{detailMember.eventsParticipated?.length || 0}</p>
+                  <p className="text-gray-400 text-xs">Events</p>
+                </div>
+                <div className="flex-1 bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-green-400">{detailMember.projectsParticipated?.length || 0}</p>
+                  <p className="text-gray-400 text-xs">Projects</p>
+                </div>
+                <div className="flex-1 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-yellow-400">
+                    {(detailMember.eventsParticipated?.length || 0) * 5 + (detailMember.projectsParticipated?.length || 0) * 10 + (detailMember.badges?.reduce((s, b) => s + (availableBadges.find(ab => ab.name === b.name)?.points || 0), 0) || 0)}
+                  </p>
+                  <p className="text-gray-400 text-xs">Points</p>
+                </div>
+              </div>
+
+              {/* Social links */}
+              {detailMember.socialLinks && Object.values(detailMember.socialLinks).some(Boolean) && (
+                <div className="mb-5">
+                  <p className="text-gray-400 text-xs mb-2">Social Links</p>
+                  <div className="flex gap-2">
+                    {detailMember.socialLinks.linkedin && (
+                      <a href={detailMember.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-blue-600/20 text-blue-400 text-xs rounded-lg border border-blue-600/30 hover:bg-blue-600/30 transition-colors">LinkedIn</a>
+                    )}
+                    {detailMember.socialLinks.github && (
+                      <a href={detailMember.socialLinks.github} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-gray-600/20 text-gray-400 text-xs rounded-lg border border-gray-600/30 hover:bg-gray-600/30 transition-colors">GitHub</a>
+                    )}
+                    {detailMember.socialLinks.instagram && (
+                      <a href={detailMember.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-pink-600/20 text-pink-400 text-xs rounded-lg border border-pink-600/30 hover:bg-pink-600/30 transition-colors">Instagram</a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3">
+                <button onClick={() => setShowDetailModal(false)} className="px-4 py-2 border border-white/20 text-gray-300 rounded-lg hover:bg-white/10 transition-colors text-sm">
+                  Close
+                </button>
+                <Link href={`/admin/members/${detailMember.id}/edit`} onClick={() => setShowDetailModal(false)}>
+                  <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">Edit Member</button>
+                </Link>
+              </div>
+            </motion.div>
           </div>
         )}
 
